@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#fafaf9">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="QuizSnap">
+    <meta name="format-detection" content="telephone=no">
+    <title>@yield('title', 'QuizSnap')</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+    <style>
+        .quizsnap-nojs #quizsnap-app { display: none !important; }
+        .quizsnap-nojs .quizsnap-noscript-msg { display: flex !important; }
+        .quizsnap-blocked #quizsnap-app { display: none !important; }
+        .quizsnap-app--hidden { display: none !important; }
+        #quizsnap-block-overlay { display: none; position: fixed; inset: 0; z-index: 99999; background: #fafaf9; align-items: center; justify-content: center; padding: 1.5rem; }
+        .quizsnap-blocked #quizsnap-block-overlay { display: flex !important; }
+        #quizsnap-block-overlay .quizsnap-block-card { max-width: 28rem; text-align: center; background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .quizsnap-select-none { -webkit-user-select: none; user-select: none; }
+        .quizsnap-select-none input, .quizsnap-select-none textarea { -webkit-user-select: text; user-select: text; }
+    </style>
+    @stack('copy_restrict_styles')
+    @stack('styles')
+</head>
+<body class="font-sans text-gray-800 quizsnap-nojs @yield('body_extra_class') @yield('body_class', 'bg-offwhite')">
+    <noscript>
+        <div class="fixed inset-0 z-[99999] flex items-center justify-center bg-offwhite p-6" role="alert">
+            <div class="bg-white border border-gray-200 rounded-xl p-8 max-w-md text-center shadow-lg">
+                <h1 class="text-xl font-bold text-gray-900 mb-2">JavaScript required</h1>
+                <p class="text-gray-600 mb-4">Please enable JavaScript to use this website. Do not use extensions that disable JavaScript or allow copying—doing so may result in losing your quiz.</p>
+                <p class="text-sm text-gray-500">Reload the page after enabling JavaScript.</p>
+            </div>
+        </div>
+    </noscript>
+    <!-- No-JS fallback (shown via CSS when body has quizsnap-nojs) -->
+    <div class="quizsnap-noscript-msg hidden fixed inset-0 z-[99999] bg-offwhite items-center justify-center p-6" aria-live="polite">
+        <div class="bg-white border border-gray-200 rounded-xl p-8 max-w-md text-center shadow-lg">
+            <h1 class="text-xl font-bold text-gray-900 mb-2">JavaScript required</h1>
+            <p class="text-gray-600 mb-4">Please enable JavaScript to use this website. Do not use extensions that disable JavaScript or allow copying—doing so may result in losing your quiz.</p>
+            <p class="text-sm text-gray-500">Reload the page after enabling JavaScript.</p>
+        </div>
+    </div>
+    <div id="quizsnap-block-overlay" class="hidden" aria-live="polite" role="alert">
+        <div class="quizsnap-block-card">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                <svg class="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <p id="quizsnap-block-message" class="text-gray-700 text-base font-medium">This system is only available on desktop.</p>
+        </div>
+    </div>
+    @yield('copy_restriction_modal')
+    <!-- Main content (shown only when JS allowed and device/screen allowed) -->
+    <div id="quizsnap-app" class="quizsnap-app quizsnap-app--hidden">
+    <!-- Flash Messages (single container so multiple messages stack; auto-hide only these) -->
+    @if(session('success') || session('error') || session('warning') || session('info'))
+        <div id="flash-container" class="fixed top-4 right-4 z-50 max-w-md flex flex-col gap-2 mt-[env(safe-area-inset-top)] mr-[env(safe-area-inset-right)]">
+            @if(session('success'))
+                <div class="alert alert-success flash-alert">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-error flash-alert">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+            @if(session('warning'))
+                <div class="alert alert-warning flash-alert">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ session('warning') }}</span>
+                </div>
+            @endif
+            @if(session('info'))
+                <div class="alert bg-primary-50 border border-primary-200 text-primary-800 flash-alert">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ session('info') }}</span>
+                </div>
+            @endif
+        </div>
+    @endif
+
+    {{-- Mobile notice: red exclamation and info when on phone (hidden on md and up) --}}
+    @include('partials.mobile-notice')
+
+    @yield('content')
+    
+    </div><!-- /#quizsnap-app -->
+    <script src="{{ asset('js/quizsnap-guard.js') }}"></script>
+    @yield('copy_restriction_script')
+    <script src="{{ asset('js/app.js') }}" defer></script>
+    @stack('scripts')
+
+    @if(config('broadcasting.default') === 'reverb' && config('broadcasting.connections.reverb.app_id'))
+    <!-- Real-time: Reverb WebSocket - no auto-reload to keep pages light -->
+    <script>
+    window.REVERB_CONFIG = {
+        key: @json(config('broadcasting.connections.reverb.key')),
+        host: @json(config('broadcasting.connections.reverb.options.host')),
+        port: @json(config('broadcasting.connections.reverb.options.port')),
+        scheme: @json(config('broadcasting.connections.reverb.options.scheme') ?? 'http')
+    };
+    </script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js" crossorigin="anonymous" defer></script>
+    <script>
+    (function() {
+        var c = window.REVERB_CONFIG;
+        if (!c || !c.key) return;
+        function init() {
+            try {
+                var pusher = new Pusher(c.key, {
+                    wsHost: c.host,
+                    wsPort: parseInt(c.port, 10) || 8080,
+                    wssPort: 443,
+                    forceTLS: (c.scheme || 'http') === 'https',
+                    disableStats: true,
+                    enabledTransports: ['ws', 'wss'],
+                    cluster: 'mt1'
+                });
+                pusher.subscribe('quizsnap').bind('DataUpdated', function(data) {
+                    window.dispatchEvent(new CustomEvent('quizsnap-data-updated', { detail: data || {} }));
+                });
+            } catch (e) { console.warn('Reverb:', e); }
+        }
+        if (typeof Pusher !== 'undefined') init(); else window.addEventListener('load', init);
+    })();
+    </script>
+    @endif
+
+    <!-- Auto-hide flash messages only -->
+    <script>
+        setTimeout(function() {
+            var container = document.getElementById('flash-container');
+            if (container) container.remove();
+        }, 5000);
+    </script>
+</body>
+</html>

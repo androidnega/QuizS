@@ -1,0 +1,227 @@
+@extends('layouts.student')
+
+@section('title', 'Quiz - ' . $session->quiz->title)
+@section('body_class', 'bg-offwhite')
+
+@push('styles')
+<style>
+    .quiz-timer-green { color: #059669; }
+    .quiz-timer-blue { color: #2563eb; }
+    .quiz-timer-red { color: #dc2626; }
+</style>
+@endpush
+
+@section('content')
+<div class="min-h-screen min-w-0 w-full">
+    {{-- Sticky header --}}
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shrink-0">
+        <div class="w-full px-4 sm:px-6 py-3 flex items-center min-w-0">
+            <h1 class="text-base font-semibold text-gray-800 truncate min-w-0">{{ $session->quiz->title }}</h1>
+        </div>
+    </header>
+
+    {{-- Timer: simple square card, right side, sticky, minimal, no extra text --}}
+    @if($remainingSeconds > 0)
+    <div id="quiz-timer-card" class="fixed right-4 top-24 z-50 w-16 h-16 sm:w-20 sm:h-20 bg-white border border-gray-200 rounded-lg flex items-center justify-center shadow-sm pointer-events-none">
+        <p id="quiz-timer" class="text-xl sm:text-2xl font-bold tabular-nums quiz-timer quiz-timer-green" aria-live="polite">--:--</p>
+    </div>
+    @endif
+
+    {{-- Violation warnings --}}
+    <div id="blur-warning" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-lg">
+            <h4 class="font-semibold text-primary-600 mb-1">Tab switch detected</h4>
+            <p class="text-sm text-gray-600 mb-3">Stay on this tab. Multiple tab switches will auto-submit your quiz.</p>
+            <button type="button" onclick="this.closest('#blur-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
+        </div>
+    </div>
+    <div id="right-click-warning" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+        <div class="bg-warning-50 border border-warning-300 rounded-lg p-4 shadow-lg">
+            <h4 class="font-semibold text-warning-800 mb-1">Do not right-click</h4>
+            <p class="text-sm text-gray-700 mb-3">Stay on this tab. Right-click is not allowed; your attempt has been noted.</p>
+            <button type="button" onclick="this.closest('#right-click-warning').classList.add('hidden')" class="btn btn-secondary py-2.5 px-5 text-sm font-semibold">OK</button>
+        </div>
+    </div>
+
+    {{-- Main: full width --}}
+    <main class="w-full px-4 sm:px-6 py-6 min-w-0 overflow-hidden">
+        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start w-full max-w-[1600px] mx-auto">
+            {{-- Questions + pagination --}}
+            <div id="quiz-container" class="min-w-0 flex-1 w-full lg:max-w-[calc(100%-220px)]">
+
+                <form id="quiz-form" class="space-y-6">
+                    @foreach($questions as $idx => $question)
+                    @php
+                        $pageNum = (int) floor($idx / $perPage) + 1;
+                    @endphp
+                    <div class="quiz-page-question bg-white border border-gray-200 rounded-xl p-5 min-w-0 overflow-hidden" data-page="{{ $pageNum }}" data-question-id="{{ $question->id }}">
+                        <div class="flex gap-3 mb-4">
+                            <span class="flex-shrink-0 w-8 h-8 bg-action rounded-lg flex items-center justify-center text-gray-900 font-bold text-sm">{{ $idx + 1 }}</span>
+                            <p class="flex-1 min-w-0 text-gray-800 font-medium text-base leading-relaxed break-words">{{ $question->text }}</p>
+                        </div>
+                        @if($question->type === 'mcq')
+                            @php
+                                $optionsForQuestion = $shuffledOptionsByQuestion[$question->id] ?? $question->options;
+                            @endphp
+                            @if(is_array($optionsForQuestion) && !empty($optionsForQuestion))
+                            <div class="ml-11 space-y-2 min-w-0">
+                                @foreach($optionsForQuestion as $opt)
+                                    @php $key = $opt['key'] ?? $opt; $saved = $savedAnswers[$question->id] ?? null; @endphp
+                                    <label class="flex gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-primary-300 has-[:checked]:border-action has-[:checked]:bg-action-50 block min-h-[44px] min-w-0">
+                                        <input type="radio" name="q_{{ $question->id }}" value="{{ $key }}" data-question-id="{{ $question->id }}" {{ $saved === $key ? 'checked' : '' }} class="mt-0.5 w-5 h-5 flex-shrink-0 text-primary-600 border-gray-300 focus:ring-2 focus:ring-primary-500">
+                                        <span class="flex-1 min-w-0 text-gray-700 text-sm break-words">{{ $opt['text'] ?? $opt }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            @endif
+                        @else
+                            <div class="ml-11 min-w-0">
+                                <textarea name="q_{{ $question->id }}" data-question-id="{{ $question->id }}" rows="4" placeholder="Type your answer here..." class="input min-h-[100px] w-full min-w-0">{{ $savedAnswers[$question->id] ?? '' }}</textarea>
+                            </div>
+                        @endif
+                    </div>
+                    @endforeach
+
+                    {{-- Submit (last page only): summary + finish — do not show which questions or skipped --}}
+                    <div id="quiz-submit-block" class="bg-white border border-gray-200 rounded-xl p-5 min-w-0">
+                        <p id="quiz-answered-summary" class="text-sm text-gray-700 mb-2" data-total="{{ $questions->count() }}">{{ $answeredCount ?? 0 }} of {{ $questions->count() }} questions answered.</p>
+                        <p class="text-sm text-gray-600 mb-4">When you finish, you will go to a final photo screen to complete your submission.</p>
+                        <button type="button" class="btn btn-action w-full sm:w-auto py-2.5 px-5 text-sm font-semibold" id="post-face-btn">
+                            Finish quiz
+                        </button>
+                    </div>
+                </form>
+
+                @if($totalPages > 1)
+                <div id="quiz-pagination-bottom" class="flex items-center justify-between gap-4 mt-8 mb-2 py-5 flex-wrap">
+                    <button type="button" id="quiz-prev-bottom" class="btn btn-secondary py-2.5 px-5 text-sm" disabled>Previous</button>
+                    <span id="quiz-page-info-bottom" class="text-sm font-medium text-gray-700">Page 1 of {{ $totalPages }}</span>
+                    <button type="button" id="quiz-next-bottom" class="btn btn-secondary py-2.5 px-5 text-sm">Next</button>
+                </div>
+                @endif
+            </div>
+
+            {{-- Side: question nav (desktop); timer is in floating card on right --}}
+            <aside class="hidden lg:block w-[200px] flex-shrink-0" aria-label="Question navigation">
+                <div class="bg-white border border-gray-200 rounded-xl p-4 sticky top-24 min-w-0">
+                    <p class="text-xs text-gray-500 mb-2">Questions</p>
+                    <div id="quiz-side-nav" class="flex flex-wrap gap-1">
+                        @foreach($questions as $idx => $q)
+                            @php $qPage = (int) floor($idx / $perPage) + 1; @endphp
+                            <a href="#quiz-container" class="quiz-side-num w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-sm font-medium text-gray-600 hover:border-primary-300 hover:bg-primary-50 shrink-0" data-question-id="{{ $q->id }}" data-page="{{ $qPage }}">{{ $idx + 1 }}</a>
+                        @endforeach
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>
+
+@push('scripts')
+<script src="{{ asset('js/quiz-proctoring.js') }}" defer></script>
+<script>
+window.QuizSnapQuiz = {
+    saveAnswerUrl: "{{ route('student.quiz.save') }}",
+    saveAnswersBatchUrl: "{{ route('student.quiz.save.batch') }}",
+    violationUrl: "{{ route('student.quiz.violation') }}",
+    finalPhotoUrl: "{{ route('student.final-photo.capture') }}",
+    timeSyncUrl: "{{ route('student.quiz.time-sync') }}",
+    csrfToken: "{{ csrf_token() }}",
+    durationSeconds: {{ $durationSeconds }},
+    remainingSeconds: {{ $remainingSeconds }},
+    totalPages: {{ $totalPages }},
+    perPage: {{ $perPage }}
+};
+document.addEventListener('DOMContentLoaded', function() {
+    window.QuizSnapQuiz.showRightClickWarning = function() {
+        var el = document.getElementById('right-click-warning');
+        if (el) { el.classList.remove('hidden'); }
+    };
+
+    var totalPages = window.QuizSnapQuiz.totalPages || 1;
+    var storageKey = 'quizsnap_quiz_page_{{ $session->id ?? 0 }}';
+    var currentPage = 1;
+    try {
+        var saved = sessionStorage.getItem(storageKey);
+        if (saved) { currentPage = Math.max(1, Math.min(totalPages, parseInt(saved, 10))); }
+    } catch (e) {}
+
+    function updateAnsweredSummary() {
+        var total = parseInt(document.getElementById('quiz-answered-summary')?.getAttribute('data-total') || '0', 10);
+        if (total === 0) return;
+        var form = document.getElementById('quiz-form');
+        if (!form) return;
+        var answered = 0;
+        var seenNames = {};
+        form.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+            var name = radio.name;
+            if (!seenNames[name]) {
+                seenNames[name] = true;
+                if (form.querySelector('input[name="' + name + '"]:checked')) answered++;
+            }
+        });
+        form.querySelectorAll('textarea[data-question-id]').forEach(function(ta) {
+            if (ta.name && !seenNames[ta.name]) {
+                seenNames[ta.name] = true;
+                if (ta.value && ta.value.trim() !== '') answered++;
+            }
+        });
+        var el = document.getElementById('quiz-answered-summary');
+        if (el) el.textContent = answered + ' of ' + total + ' questions answered.';
+    }
+
+    function showPage(page) {
+        currentPage = Math.max(1, Math.min(totalPages, page));
+        try { sessionStorage.setItem(storageKey, String(currentPage)); } catch (e) {}
+        var questions = document.querySelectorAll('.quiz-page-question');
+        questions.forEach(function(el) {
+            var p = parseInt(el.getAttribute('data-page'), 10);
+            el.style.display = p === currentPage ? '' : 'none';
+        });
+        var submitBlock = document.getElementById('quiz-submit-block');
+        if (submitBlock) submitBlock.style.display = currentPage === totalPages ? '' : 'none';
+
+        if (currentPage === totalPages) updateAnsweredSummary();
+
+        var infoBottom = document.getElementById('quiz-page-info-bottom');
+        if (infoBottom) infoBottom.textContent = 'Page ' + currentPage + ' of ' + totalPages;
+
+        var prevBottom = document.getElementById('quiz-prev-bottom');
+        var nextBottom = document.getElementById('quiz-next-bottom');
+        if (prevBottom) prevBottom.disabled = currentPage <= 1;
+        if (nextBottom) nextBottom.disabled = currentPage >= totalPages;
+
+        document.querySelectorAll('.quiz-side-num').forEach(function(a) {
+            var p = parseInt(a.getAttribute('data-page'), 10);
+            a.classList.toggle('border-primary-500', p === currentPage);
+            a.classList.toggle('bg-primary-50', p === currentPage);
+            a.classList.toggle('text-primary-700', p === currentPage);
+        });
+    }
+
+    if (totalPages > 1) {
+        showPage(currentPage);
+        var prevBtn = document.getElementById('quiz-prev-bottom');
+        var nextBtn = document.getElementById('quiz-next-bottom');
+        if (prevBtn) prevBtn.addEventListener('click', function() { showPage(currentPage - 1); });
+        if (nextBtn) nextBtn.addEventListener('click', function() { showPage(currentPage + 1); });
+        document.querySelectorAll('.quiz-side-num').forEach(function(a) {
+            a.addEventListener('click', function(e) {
+                var p = parseInt(a.getAttribute('data-page'), 10);
+                if (p) { e.preventDefault(); showPage(p); }
+            });
+        });
+        var form = document.getElementById('quiz-form');
+        if (form) {
+            form.addEventListener('change', function() { if (currentPage === totalPages) updateAnsweredSummary(); });
+            form.addEventListener('input', function() { if (currentPage === totalPages) updateAnsweredSummary(); });
+        }
+    } else {
+        var submitBlock = document.getElementById('quiz-submit-block');
+        if (submitBlock) submitBlock.style.display = '';
+        updateAnsweredSummary();
+    }
+});
+</script>
+@endpush
+@endsection

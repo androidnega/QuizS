@@ -1,0 +1,188 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
+
+class Quiz extends Model
+{
+    /** Result visibility: score_only, full_review_after_end, disabled */
+    public const RESULT_VISIBILITY_SCORE_ONLY = 'score_only';
+    public const RESULT_VISIBILITY_FULL_REVIEW_AFTER_END = 'full_review_after_end';
+    public const RESULT_VISIBILITY_DISABLED = 'disabled';
+
+    /** Exam type for PDF/reports: quiz, midsem, end_of_semester */
+    public const EXAM_TYPE_QUIZ = 'quiz';
+    public const EXAM_TYPE_MIDSEM = 'midsem';
+    public const EXAM_TYPE_END_OF_SEMESTER = 'end_of_semester';
+
+    protected $fillable = [
+        'link_token', 'class_group_id', 'title', 'exam_type', 'topics', 'number_of_questions', 'duration_minutes',
+        'course_id', 'is_active', 'is_published', 'starts_at', 'ends_at', 'result_visibility',
+    ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Quiz $quiz) {
+            if (empty($quiz->link_token)) {
+                $quiz->link_token = self::generateUniqueLinkToken();
+            }
+        });
+    }
+
+    /** Generate a unique token: alphanumeric with hyphen (e.g. KTdie54-3Sx9). */
+    public static function generateUniqueLinkToken(): string
+    {
+        $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        do {
+            $part1 = '';
+            $part2 = '';
+            for ($i = 0; $i < 8; $i++) {
+                $part1 .= $chars[random_int(0, strlen($chars) - 1)];
+            }
+            for ($i = 0; $i < 6; $i++) {
+                $part2 .= $chars[random_int(0, strlen($chars) - 1)];
+            }
+            $token = $part1 . '-' . $part2;
+        } while (static::where('link_token', $token)->exists());
+        return $token;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'is_published' => 'boolean',
+            'starts_at' => 'datetime',
+            'ends_at' => 'datetime',
+        ];
+    }
+
+    public function classGroup(): BelongsTo
+    {
+        return $this->belongsTo(ClassGroup::class);
+    }
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function questions(): HasMany
+    {
+        return $this->hasMany(Question::class);
+    }
+
+    public function questionPools(): HasMany
+    {
+        return $this->hasMany(QuestionPool::class);
+    }
+
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(QuizSession::class, 'quiz_id');
+    }
+
+    /**
+     * Whether the quiz has enough approved questions for students to take it.
+     */
+    public function hasEnoughApprovedQuestions(): bool
+    {
+        return $this->questions()->count() >= (int) $this->number_of_questions;
+    }
+
+    /**
+     * Whether the quiz is active and ready (enough approved questions).
+     * Students cannot take the quiz until approval is complete.
+     */
+    public function isActive(): bool
+    {
+        if (!$this->is_active) {
+            return false;
+        }
+        if (!$this->hasEnoughApprovedQuestions()) {
+            return false;
+        }
+        $now = now();
+        if ($this->starts_at && $now->lt($this->starts_at)) {
+            return false;
+        }
+        if ($this->ends_at && $now->gt($this->ends_at)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Whether at least one student has started this quiz (session has start_time set).
+     * Once true, examiner cannot edit the quiz.
+     */
+    public function hasStarted(): bool
+    {
+        return $this->sessions()->whereNotNull('start_time')->exists();
+    }
+
+    /**
+     * Whether the quiz window is still open for review (no ends_at or ends_at in the future).
+     */
+    public function isReviewAvailable(): bool
+    {
+        return $this->ends_at === null || $this->ends_at->isFuture();
+    }
+
+    /**
+     * Whether the student can see full answer review (questions, their answers, correct answers, explanations).
+     * When result_visibility is "full_review_after_end", review is shown on the result page once the student has submitted.
+     */
+    public function canShowFullReview(): bool
+    {
+        $visibility = $this->getAttribute('result_visibility') ?? self::RESULT_VISIBILITY_FULL_REVIEW_AFTER_END;
+        if ($visibility === self::RESULT_VISIBILITY_DISABLED) {
+            return false;
+        }
+        if ($visibility === self::RESULT_VISIBILITY_SCORE_ONLY) {
+            return false;
+        }
+        if ($visibility === self::RESULT_VISIBILITY_FULL_REVIEW_AFTER_END) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Whether the student can see their score and stats (correct count, etc.).
+     */
+    public function canShowScore(): bool
+    {
+        $visibility = $this->getAttribute('result_visibility') ?? self::RESULT_VISIBILITY_FULL_REVIEW_AFTER_END;
+        return $visibility !== self::RESULT_VISIBILITY_DISABLED;
+    }
+
+    public static function resultVisibilityOptions(): array
+    {
+        return [
+            self::RESULT_VISIBILITY_SCORE_ONLY => 'Score only (no correct answers)',
+            self::RESULT_VISIBILITY_FULL_REVIEW_AFTER_END => 'Full review after quiz end',
+            self::RESULT_VISIBILITY_DISABLED => 'Disabled (no score or review)',
+        ];
+    }
+
+    public static function examTypeOptions(): array
+    {
+        return [
+            self::EXAM_TYPE_QUIZ => 'Quiz',
+            self::EXAM_TYPE_MIDSEM => 'Midsem',
+            self::EXAM_TYPE_END_OF_SEMESTER => 'End of Semester',
+        ];
+    }
+
+    /** Human-readable exam type for PDF/reports. */
+    public function getExamTypeLabel(): string
+    {
+        $options = self::examTypeOptions();
+        return $options[$this->exam_type] ?? $this->title;
+    }
+}

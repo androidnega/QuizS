@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Serve static files from public/ if they exist
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} ^/(css|js|storage|images|fonts)/
+    RewriteCond %{DOCUMENT_ROOT}/QuizSnap/public%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ public/$1 [L]
+    # All other requests go to index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>

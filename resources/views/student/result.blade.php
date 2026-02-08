@@ -1,0 +1,207 @@
+@extends('layouts.student')
+
+@section('title', 'Quiz Result')
+@section('body_class', 'bg-offwhite')
+
+@section('content')
+<div class="min-h-[100dvh] px-4 py-6 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div class="max-w-4xl mx-auto w-full">
+        {{-- Header --}}
+        <div class="text-center mb-6">
+            <h1 class="text-xl font-semibold text-gray-900">{{ $session->quiz->title }}</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Index: {{ $session->student_index }}</p>
+        </div>
+
+        {{-- Student feedback: clear summary after exam --}}
+        @if($session->result)
+            @if($session->quiz->canShowScore())
+            <div class="mb-6 rounded-xl border-2 border-primary-200 bg-primary-50 p-5">
+                <h2 class="text-lg font-bold text-gray-900 mb-2">Your exam result</h2>
+                @if($session->result->score >= 70)
+                    <p class="text-success-700 font-medium">Well done. You passed this assessment.</p>
+                    <p class="text-sm text-gray-700 mt-1">You got {{ $session->result->correct_count }} out of {{ $session->result->total_questions }} questions correct. Keep it up.</p>
+                @elseif($session->result->score >= 50)
+                    <p class="text-warning-700 font-medium">You completed the exam. There’s room to improve.</p>
+                    <p class="text-sm text-gray-700 mt-1">You got {{ $session->result->correct_count }} out of {{ $session->result->total_questions }} correct. Review the feedback below to do better next time.</p>
+                @else
+                    <p class="text-danger-700 font-medium">You completed the exam. We recommend reviewing the material.</p>
+                    <p class="text-sm text-gray-700 mt-1">You got {{ $session->result->correct_count }} out of {{ $session->result->total_questions }} correct. Check the review below and focus on the topics you missed.</p>
+                @endif
+            </div>
+            @endif
+        @endif
+
+        @if($session->result)
+            @if($session->quiz->canShowScore())
+            @php $wasAutoSubmitted = ($session->post_face_skipped_reason ?? '') === 'auto_submit'; @endphp
+            @if($wasAutoSubmitted)
+            {{-- Auto-submitted: well-wrapped score with clear notice --}}
+            <div class="mb-6 rounded-2xl border-2 border-warning-300 bg-warning-50 p-6 sm:p-8">
+                <p class="text-center text-sm font-semibold text-warning-800 mb-4">Your quiz was auto-submitted due to tab switching. Your score is below.</p>
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 max-w-sm mx-auto">
+                    <div class="flex flex-col items-center gap-4 text-center">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center
+                            @if($session->result->score >= 70) bg-success-100
+                            @elseif($session->result->score >= 50) bg-warning-100
+                            @else bg-danger-100 @endif">
+                            <span class="text-3xl font-bold tabular-nums
+                                @if($session->result->score >= 70) text-success-700
+                                @elseif($session->result->score >= 50) text-warning-700
+                                @else text-danger-700 @endif">{{ round($session->result->score, 0) }}%</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">Your Score</p>
+                            <p class="text-sm text-gray-500">{{ $session->result->correct_count }} / {{ $session->result->total_questions }} correct</p>
+                        </div>
+                        <div class="flex flex-wrap justify-center gap-2 text-sm">
+                            <span class="px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">{{ $session->result->total_questions }} questions</span>
+                            @if($session->result->violations_count > 0)
+                                <span class="px-2.5 py-1 rounded-full bg-danger-100 text-danger-700">{{ $session->result->violations_count }} violation(s)</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @else
+            {{-- Normal completion: score & stats card --}}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 mb-4">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <div class="w-14 h-14 rounded-full flex items-center justify-center
+                            @if($session->result->score >= 70) bg-success-100
+                            @elseif($session->result->score >= 50) bg-warning-100
+                            @else bg-danger-100 @endif">
+                            <span class="text-2xl font-bold tabular-nums
+                                @if($session->result->score >= 70) text-success-700
+                                @elseif($session->result->score >= 50) text-warning-700
+                                @else text-danger-700 @endif">{{ round($session->result->score, 0) }}%</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">Your Score</p>
+                            <p class="text-sm text-gray-500">{{ $session->result->correct_count }} / {{ $session->result->total_questions }} correct</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 text-sm">
+                        <span class="px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">{{ $session->result->total_questions }} questions</span>
+                        @if($session->result->violations_count > 0)
+                            <span class="px-2.5 py-1 rounded-full bg-danger-100 text-danger-700">{{ $session->result->violations_count }} violation(s)</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Performance reflection --}}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 mb-4
+                @if($session->result->score >= 70) border-l-4 border-l-success-500
+                @elseif($session->result->score >= 50) border-l-4 border-l-warning-500
+                @else border-l-4 border-l-danger-500 @endif">
+                <h2 class="text-sm font-semibold text-gray-900 mb-2">How you did</h2>
+                @if($session->result->score >= 70)
+                    <p class="text-sm text-gray-700">Strong performance. You showed good understanding of the material.</p>
+                @elseif($session->result->score >= 50)
+                    <p class="text-sm text-gray-700">Decent effort. Review the questions you missed and the topics below to improve next time.</p>
+                @else
+                    <p class="text-sm text-gray-700">Review the material and the questions you got wrong. Focus on the correct answers and topics so you’re ready next time.</p>
+                @endif
+                @php
+                    $wrongCount = $session->result->total_questions - $session->result->correct_count;
+                @endphp
+                @if($session->quiz->canShowFullReview() && $wrongCount > 0 && $session->result->total_questions > 0)
+                    <p class="text-sm text-gray-600 mt-2">{{ $wrongCount }} question(s) were incorrect. Check the review below to see what you missed and what the correct answers are.</p>
+                @endif
+            </div>
+
+            @if($session->result->violations_count > 0)
+                <div class="bg-danger-50 border border-danger-200 rounded-xl p-4 mb-4">
+                    <p class="text-sm text-danger-800">{{ $session->result->violations_count }} proctoring violation(s) were recorded. Your instructor may review them.</p>
+                </div>
+            @endif
+            @else
+            {{-- result_visibility = disabled: no score or review --}}
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-4 text-center">
+                <p class="text-gray-700 font-medium">You have completed this quiz.</p>
+                <p class="text-sm text-gray-500 mt-1">Results are not shown for this assessment.</p>
+            </div>
+            @endif
+
+            {{-- View results button: links to /quiz/result#answer-review; only when full review is available --}}
+            @if($session->quiz->canShowFullReview() && $session->answers->isNotEmpty())
+                <div class="text-center mb-4">
+                    <a href="{{ ($resultUrl ?? route('student.result')) }}#answer-review" class="btn btn-action text-sm py-2.5 px-5 inline-flex items-center gap-2">
+                        View results
+                        <span class="text-xs opacity-80">(questions &amp; answers)</span>
+                    </a>
+                </div>
+            @endif
+
+            {{-- Review: only when quiz allows full review after end (and quiz window has ended) --}}
+            @if($session->quiz->canShowFullReview() && $session->answers->isNotEmpty())
+                <div id="answer-review" class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 mb-4 scroll-mt-4">
+                    <h2 class="text-sm font-semibold text-gray-900 mb-3">Review your answers</h2>
+                    <p class="text-xs text-gray-500 mb-4">Full review is available now that the quiz window has ended. See your answers, the correct answers, and why any were wrong.</p>
+                    <div class="space-y-4">
+                        @foreach($session->answers as $idx => $answer)
+                            @if($answer->question)
+                                @php
+                                    $sessionCorrect = $session->assigned_correct_answers[$answer->question_id] ?? $session->assigned_correct_answers[(string)$answer->question_id] ?? $answer->question->correct_answer;
+                                    $correct = trim((string)$answer->student_answer) === trim((string)$sessionCorrect);
+                                    $shuffledOpts = $session->shuffled_question_options[$answer->question_id] ?? $session->shuffled_question_options[(string)$answer->question_id] ?? null;
+                                    $yourText = null;
+                                    $correctText = null;
+                                    if (is_array($shuffledOpts)) {
+                                        foreach ($shuffledOpts as $o) {
+                                            $k = $o['key'] ?? $o;
+                                            $t = $o['text'] ?? $o;
+                                            if ((string)$k === trim((string)$answer->student_answer)) $yourText = $t;
+                                            if ((string)$k === trim((string)$sessionCorrect)) $correctText = $t;
+                                        }
+                                    }
+                                @endphp
+                                <div class="border border-gray-200 rounded-lg p-3 {{ $correct ? 'bg-success-50/50 border-success-200' : 'bg-danger-50/50 border-danger-200' }}">
+                                    <p class="text-sm font-medium text-gray-900 mb-1">{{ $idx + 1 }}. {{ $answer->question->text }}</p>
+                                    <div class="flex flex-wrap gap-2 text-xs mt-2">
+                                        <span class="text-gray-600">Your answer: <strong>{{ $yourText !== null ? $answer->student_answer . '. ' . $yourText : ($answer->student_answer ?: '—') }}</strong></span>
+                                        <span class="text-success-700">Correct: <strong>{{ $correctText !== null ? $sessionCorrect . '. ' . $correctText : $sessionCorrect }}</strong></span>
+                                    </div>
+                                    @if(!$correct)
+                                        @php
+                                            $whyWrong = $answer->question->explanation_wrong ?? $answer->explanation_wrong ?? null;
+                                        @endphp
+                                        @if(!empty($whyWrong))
+                                            <div class="mt-3 pt-3 border-t border-gray-200 text-xs">
+                                                <p class="text-danger-700"><strong>Reason:</strong> {{ $whyWrong }}</p>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @elseif($session->quiz->canShowScore() && !$session->quiz->canShowFullReview() && $session->quiz->result_visibility === \App\Models\Quiz::RESULT_VISIBILITY_FULL_REVIEW_AFTER_END)
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+                    <p class="text-sm text-gray-600">Answer review (questions, correct answers, and explanations) will be available after the quiz window has ended.</p>
+                    <p class="text-sm text-gray-600 mt-2">Return to this page to see your score and, after the quiz ends, the full review.</p>
+                    <a href="{{ ($resultUrl ?? route('student.result')) }}" class="btn btn-action text-sm py-2 px-4 mt-3 inline-block">View results</a>
+                </div>
+            @elseif($session->quiz->canShowScore() && $session->quiz->result_visibility === \App\Models\Quiz::RESULT_VISIBILITY_SCORE_ONLY)
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+                    <p class="text-sm text-gray-600">Answer review is not shown for this quiz.</p>
+                </div>
+            @endif
+        @else
+            <div class="bg-white border border-gray-200 rounded-xl p-8 text-center">
+                <p class="text-gray-600">Processing your result…</p>
+            </div>
+        @endif
+
+        <div class="text-center mt-6 flex flex-wrap justify-center gap-3">
+            @if($session->result && $session->quiz->canShowFullReview() && $session->answers->isNotEmpty())
+                <a href="{{ ($resultUrl ?? route('student.result')) }}#answer-review" class="btn btn-action text-sm py-2.5 px-5">View results</a>
+            @endif
+            <a href="{{ route('student.landing') }}" class="btn {{ ($session->result && $session->quiz->canShowFullReview() && $session->answers->isNotEmpty()) ? 'btn-secondary' : 'btn-action' }} text-sm py-2.5 px-5">Back to Home</a>
+        </div>
+    </div>
+</div>
+@endsection
