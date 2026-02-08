@@ -13,3 +13,6 @@ Schedule::command('quizzes:auto-publish')->everyMinute();
 
 // Auto-end quizzes when Ends At is reached or when all students have participated
 Schedule::command('quizzes:auto-end')->everyMinute();
+
+// Auto-submit quiz sessions that stayed in another tab for 30+ seconds
+Schedule::command('quiz-sessions:auto-submit-tab-switch')->everyTenSeconds();

@@ -51,18 +51,16 @@
                         @endif
                     </div>
                 </div>
-                @if($user->role === \App\Models\User::ROLE_SUPER_ADMIN)
+                @if(auth()->user()->isSuperAdmin())
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-1">New password (leave blank to keep current)</label>
-                    <input type="password" name="password" id="password" class="input w-full @error('password') border-danger-500 @enderror">
+                    <input type="password" name="password" id="password" class="input w-full @error('password') border-danger-500 @enderror" placeholder="Set or reset password for this user">
                     @error('password')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirm new password</label>
                     <input type="password" name="password_confirmation" id="password_confirmation" class="input w-full">
                 </div>
-                @else
-                <p class="text-sm text-gray-500">Examiner password can only be changed by the examiner in their own profile.</p>
                 @endif
                 <div class="flex gap-3 pt-2">
                     <button type="submit" class="btn btn-primary">Update user</button>

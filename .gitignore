@@ -32,5 +32,5 @@ Thumbs.db
 /storage/framework/views/*
 !/storage/framework/views/.gitignore
 
-# Optional: exclude SQLite DB if you don't want it in repo
-# /database/*.sqlite
+# SQLite DB (do not commit; may contain sensitive data)
+/database/*.sqlite

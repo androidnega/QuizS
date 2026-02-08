@@ -7,6 +7,7 @@
     const saveAnswerUrl = c.saveAnswerUrl;
     const saveAnswersBatchUrl = c.saveAnswersBatchUrl;
     const violationUrl = c.violationUrl;
+    const heartbeatUrl = c.heartbeatUrl;
     const finalPhotoUrl = c.finalPhotoUrl;
     const timeSyncUrl = c.timeSyncUrl;
     const csrfToken = c.csrfToken;
@@ -190,7 +191,11 @@
     }
 
     if (quizForm) {
-        window.addEventListener('beforeunload', function () { flushSavePending(); });
+        window.addEventListener('beforeunload', function (e) {
+            flushSavePending();
+            e.preventDefault();
+            e.returnValue = '';
+        });
         quizForm.querySelectorAll('input[type="radio"], textarea').forEach(function (el) {
             const questionId = el.dataset.questionId || (el.name && el.name.replace('q_', ''));
             const getVal = function () {
@@ -220,17 +225,59 @@
     window.addEventListener('blur', onBlurOrTabSwitch);
     window.addEventListener('focus', function () {
         if (blurWarning) blurWarning.classList.add('hidden');
+        sendHeartbeat();
     });
 
     document.addEventListener('visibilitychange', function () {
         if (document.hidden) {
             onBlurOrTabSwitch();
+        } else {
+            sendHeartbeat();
         }
     });
 
+    function sendHeartbeat() {
+        if (!heartbeatUrl) return;
+        fetch(heartbeatUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' },
+            body: JSON.stringify({}),
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data && data.show_tab_switch_warning && window.QuizSnapQuiz && window.QuizSnapQuiz.showTabSwitchWarning) {
+                    window.QuizSnapQuiz.showTabSwitchWarning();
+                }
+            })
+            .catch(function () {});
+    }
+
+    (function () {
+        var NEW_TAB_ZONE_PX = 80;
+        var showDelay = null;
+        document.addEventListener('mousemove', function (e) {
+            if (e.clientY < NEW_TAB_ZONE_PX) {
+                if (showDelay) return;
+                showDelay = setTimeout(function () {
+                    showDelay = null;
+                    if (window.QuizSnapQuiz && window.QuizSnapQuiz.showNewTabZoneWarning) {
+                        window.QuizSnapQuiz.showNewTabZoneWarning();
+                    }
+                }, 400);
+            } else {
+                if (showDelay) {
+                    clearTimeout(showDelay);
+                    showDelay = null;
+                }
+                if (window.QuizSnapQuiz && window.QuizSnapQuiz.hideNewTabZoneWarning) {
+                    window.QuizSnapQuiz.hideNewTabZoneWarning();
+                }
+            }
+        });
+    })();
+
     document.addEventListener('contextmenu', function (e) {
         e.preventDefault();
-        recordViolation('right_click');
         if (window.QuizSnapQuiz && window.QuizSnapQuiz.showRightClickWarning) {
             window.QuizSnapQuiz.showRightClickWarning();
         } else {

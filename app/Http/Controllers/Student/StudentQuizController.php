@@ -200,7 +200,7 @@ class StudentQuizController extends Controller
 
     /**
      * Record violation. Right-click = warn only (no auto-submit).
-     * Auto-submit only when: (1) critical (copy_paste, multiple_ip) reaches 1, or (2) tab switch/blur reaches threshold (2).
+     * Auto-submit: (1) critical (copy_paste, multiple_ip) on first, or (2) tab switch/blur: first time = 20s delay; second time = immediate.
      */
     public function recordViolation(Request $request): JsonResponse
     {
@@ -232,21 +232,25 @@ class StudentQuizController extends Controller
                 $session->update([
                     'post_face_skipped_at' => now(),
                     'post_face_skipped_reason' => 'auto_submit',
+                    'auto_submit_after' => null,
                 ]);
                 $this->finalizeQuiz($session);
                 $autoSubmitted = true;
             }
         }
-        // Tab switch / blur only: auto-submit when count reaches threshold (2)
+        // Tab switch / blur: first time = schedule 20s; second time = immediate auto-submit
         if (!$autoSubmitted && in_array($type, ['blur', 'tab_switch'], true)) {
             $tabBlurCount = $session->violations()->whereIn('type', ['blur', 'tab_switch'])->count();
             if ($tabBlurCount >= 2) {
                 $session->update([
                     'post_face_skipped_at' => now(),
                     'post_face_skipped_reason' => 'auto_submit',
+                    'auto_submit_after' => null,
                 ]);
                 $this->finalizeQuiz($session);
                 $autoSubmitted = true;
+            } else {
+                $session->update(['auto_submit_after' => now()->addSeconds(20)]);
             }
         }
         $response = ['success' => true, 'auto_submitted' => $autoSubmitted];
@@ -254,6 +258,27 @@ class StudentQuizController extends Controller
             $response['redirect'] = $this->resultUrlWithToken($session->session_token);
         }
         return response()->json($response);
+    }
+
+    /**
+     * Heartbeat when user returns to the quiz tab. Clears the 20-second auto-submit countdown; returns flag to show "next time immediate" popup.
+     */
+    public function heartbeat(Request $request): JsonResponse
+    {
+        $token = session('quiz_session_token');
+        if (!$token) {
+            return response()->json(['success' => false], 401);
+        }
+        $session = QuizSession::where('session_token', $token)->first();
+        if (!$session || $session->ended_at) {
+            return response()->json(['success' => true]);
+        }
+        $hadScheduledSubmit = $session->auto_submit_after !== null;
+        $session->update(['auto_submit_after' => null]);
+        return response()->json([
+            'success' => true,
+            'show_tab_switch_warning' => $hadScheduledSubmit,
+        ]);
     }
 
     /**
@@ -291,6 +316,14 @@ class StudentQuizController extends Controller
     private function resultUrlWithToken(string $sessionToken): string
     {
         return route('student.result') . '?token=' . urlencode($sessionToken);
+    }
+
+    /**
+     * Public entry point for finalizing a session (e.g. from scheduler/command).
+     */
+    public function finalizeQuizSession(QuizSession $session): void
+    {
+        $this->finalizeQuiz($session);
     }
 
     /**

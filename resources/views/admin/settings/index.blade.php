@@ -171,6 +171,7 @@
                         @endif
                         @error('deepseek_api_key')<p class="text-sm text-danger-600 mt-1">{{ $message }}</p>@enderror
                     </div>
+                    @unless(app()->environment('production'))
                     <div class="pt-2 border-t border-gray-200">
                         <p class="text-sm font-medium text-gray-700 mb-2">Test connection</p>
                         <p class="text-xs text-gray-500 mb-2">Uses the saved API key (Gemini first, then DeepSeek). Save settings first if you just changed a key.</p>
@@ -179,6 +180,7 @@
                         </button>
                         <div id="ai-test-result" class="mt-3 hidden rounded-lg border p-3 text-sm"></div>
                     </div>
+                    @endunless
                 </div>
                 </div>
 
@@ -216,6 +218,7 @@
                         <input type="text" name="cloudinary_folder" id="cloudinary_folder" value="{{ old('cloudinary_folder', $cloudinary_folder ?? '') }}" class="input w-full" placeholder="quizsnap">
                         <p class="text-xs text-gray-500 mt-1">Subfolder for uploads. Default: quizsnap. Images are optimized (quality_auto, fetch_format auto) for lightweight storage.</p>
                     </div>
+                    @unless(app()->environment('production'))
                     <div class="pt-2 border-t border-gray-200">
                         <p class="text-sm font-medium text-gray-700 mb-2">Test connection</p>
                         <p class="text-xs text-gray-500 mb-2">Save settings first, then test. Uploads a tiny test image to verify credentials.</p>
@@ -224,6 +227,7 @@
                         </button>
                         <div id="cloudinary-test-result" class="mt-3 hidden rounded-lg border p-3 text-sm"></div>
                     </div>
+                    @endunless
                 </div>
                 </div>
             </div>
@@ -287,6 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+@unless(app()->environment('production'))
 // Cloudinary Test
 document.addEventListener('DOMContentLoaded', function() {
     var cloudinaryBtn = document.getElementById('cloudinary-test-btn');
@@ -323,9 +328,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // AI Test
-document.getElementById('ai-test-btn').addEventListener('click', function() {
-    var btn = this;
-    var resultEl = document.getElementById('ai-test-result');
+var aiTestBtn = document.getElementById('ai-test-btn');
+if (aiTestBtn) {
+    aiTestBtn.addEventListener('click', function() {
+        var btn = this;
+        var resultEl = document.getElementById('ai-test-result');
     resultEl.classList.remove('hidden', 'bg-success-50', 'border-success-200', 'text-success-800', 'bg-danger-50', 'border-danger-200', 'text-danger-800');
     resultEl.textContent = 'Testing…';
     btn.disabled = true;
@@ -353,6 +360,8 @@ document.getElementById('ai-test-btn').addEventListener('click', function() {
         btn.disabled = false;
     });
 });
+}
+@endunless
 </script>
 @endpush
 @endsection

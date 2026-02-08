@@ -12,7 +12,7 @@ class QuizSession extends Model
     protected $fillable = [
         'quiz_id', 'student_index', 'ip_address', 'start_time', 'ended_at',
         'pre_face_image', 'pre_face_image_hash', 'post_face_image', 'post_face_image_hash', 'post_face_captured_at',
-        'post_face_skipped_at', 'post_face_skipped_reason',
+        'post_face_skipped_at', 'post_face_skipped_reason', 'auto_submit_after',
         'assigned_question_ids', 'assigned_correct_answers', 'shuffled_question_options', 'session_token',
     ];
 
@@ -23,6 +23,7 @@ class QuizSession extends Model
             'ended_at' => 'datetime',
             'post_face_captured_at' => 'datetime',
             'post_face_skipped_at' => 'datetime',
+            'auto_submit_after' => 'datetime',
             'assigned_question_ids' => 'array',
             'assigned_correct_answers' => 'array',
             'shuffled_question_options' => 'array',

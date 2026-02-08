@@ -78,8 +78,8 @@ class UserManagementController extends Controller
             'course_ids' => 'nullable|array',
             'course_ids.*' => 'exists:courses,id',
         ];
-        // Only Super Admin can have password changed here; Examiner must change own password in profile.
-        if ($user->role === User::ROLE_SUPER_ADMIN && $request->filled('password')) {
+        // Super Admin can set/reset password for any staff (super_admin or examiner).
+        if ($request->filled('password')) {
             $rules['password'] = 'min:6|confirmed';
         }
         $request->validate($rules);
@@ -87,7 +87,7 @@ class UserManagementController extends Controller
         $user->username = $request->username;
         $user->name = $request->name ?: $user->username;
         $user->role = $request->role;
-        if ($user->role === User::ROLE_SUPER_ADMIN && $request->filled('password')) {
+        if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
         $user->save();

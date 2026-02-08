@@ -30,6 +30,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned courses</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Password</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -44,13 +45,14 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">••••••</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                                     <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900">Edit</a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center text-gray-500">No staff users yet. Add an admin or examiner.</td>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">No staff users yet. Add an admin or examiner.</td>
                             </tr>
                         @endforelse
                     </tbody>

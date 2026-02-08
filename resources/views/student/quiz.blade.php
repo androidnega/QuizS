@@ -31,7 +31,7 @@
     <div id="blur-warning" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
         <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-lg">
             <h4 class="font-semibold text-primary-600 mb-1">Tab switch detected</h4>
-            <p class="text-sm text-gray-600 mb-3">Stay on this tab. Multiple tab switches will auto-submit your quiz.</p>
+            <p class="text-sm text-gray-600 mb-3">Stay on this tab. If you stay in another tab for 20 seconds, your quiz will be auto-submitted.</p>
             <button type="button" onclick="this.closest('#blur-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>
@@ -40,6 +40,20 @@
             <h4 class="font-semibold text-warning-800 mb-1">Do not right-click</h4>
             <p class="text-sm text-gray-700 mb-3">Stay on this tab. Right-click is not allowed; your attempt has been noted.</p>
             <button type="button" onclick="this.closest('#right-click-warning').classList.add('hidden')" class="btn btn-secondary py-2.5 px-5 text-sm font-semibold">OK</button>
+        </div>
+    </div>
+    <div id="new-tab-zone-warning" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+        <div class="bg-amber-50 border border-amber-300 rounded-lg p-4 shadow-lg">
+            <h4 class="font-semibold text-amber-800 mb-1">Stay in the quiz</h4>
+            <p class="text-sm text-gray-700 mb-3">If you open a new tab or switch to another tab, that will be detected as leaving the page and may result in your quiz being auto-submitted. Stay on this tab and keep your cursor in the quiz area.</p>
+            <button type="button" onclick="this.closest('#new-tab-zone-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
+        </div>
+    </div>
+    <div id="tab-switch-once-warning" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+        <div class="bg-amber-50 border border-amber-400 rounded-lg p-4 shadow-lg">
+            <h4 class="font-semibold text-amber-800 mb-1">You left this tab</h4>
+            <p class="text-sm text-gray-700 mb-3">If you switch tabs again, your quiz will be auto-submitted immediately with no further warning. Stay on this tab to continue.</p>
+            <button type="button" onclick="this.closest('#tab-switch-once-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>
 
@@ -124,6 +138,7 @@ window.QuizSnapQuiz = {
     saveAnswerUrl: "{{ route('student.quiz.save') }}",
     saveAnswersBatchUrl: "{{ route('student.quiz.save.batch') }}",
     violationUrl: "{{ route('student.quiz.violation') }}",
+    heartbeatUrl: "{{ route('student.quiz.heartbeat') }}",
     finalPhotoUrl: "{{ route('student.final-photo.capture') }}",
     timeSyncUrl: "{{ route('student.quiz.time-sync') }}",
     csrfToken: "{{ csrf_token() }}",
@@ -135,6 +150,18 @@ window.QuizSnapQuiz = {
 document.addEventListener('DOMContentLoaded', function() {
     window.QuizSnapQuiz.showRightClickWarning = function() {
         var el = document.getElementById('right-click-warning');
+        if (el) { el.classList.remove('hidden'); }
+    };
+    window.QuizSnapQuiz.showNewTabZoneWarning = function() {
+        var el = document.getElementById('new-tab-zone-warning');
+        if (el) { el.classList.remove('hidden'); }
+    };
+    window.QuizSnapQuiz.hideNewTabZoneWarning = function() {
+        var el = document.getElementById('new-tab-zone-warning');
+        if (el) { el.classList.add('hidden'); }
+    };
+    window.QuizSnapQuiz.showTabSwitchWarning = function() {
+        var el = document.getElementById('tab-switch-once-warning');
         if (el) { el.classList.remove('hidden'); }
     };
 

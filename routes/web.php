@@ -82,6 +82,7 @@ Route::get('/quiz/time-sync', [StudentQuizController::class, 'timeSync'])->name(
 Route::post('/quiz/save-answer', [StudentQuizController::class, 'saveAnswer'])->name('student.quiz.save');
 Route::post('/quiz/save-answers', [StudentQuizController::class, 'saveAnswersBatch'])->name('student.quiz.save.batch');
 Route::post('/quiz/violation', [StudentQuizController::class, 'recordViolation'])->name('student.quiz.violation');
+Route::post('/quiz/heartbeat', [StudentQuizController::class, 'heartbeat'])->name('student.quiz.heartbeat');
 Route::post('/quiz/finalize', [StudentQuizController::class, 'finalize'])->name('student.quiz.finalize');
 Route::get('/quiz/result', [StudentQuizController::class, 'result'])->name('student.result');
 
@@ -91,9 +92,6 @@ Route::post('/quiz/post-face', [PostQuizCaptureController::class, 'store'])->nam
 // Staff login
 Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
-
-// Hidden test admin entry: ensures user "manuel" (super_admin, password Atomic2@2020^) in DB, logs in, redirects to dashboard. Not linked anywhere.
-Route::get('/_t/admin', [AdminAuthController::class, 'testAdminEntry'])->name('test.admin.entry');
 
 // Unified dashboard: all staff pages under /dashboard (admin + examiner)
 Route::middleware('admin.auth')->group(function () {
@@ -166,8 +164,10 @@ Route::middleware('admin.auth')->group(function () {
             Route::delete('/courses/{course}', [\App\Http\Controllers\Admin\CourseController::class, 'destroy'])->name('courses.destroy');
             Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
             Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
-            Route::get('/settings/ai-test', [SettingsController::class, 'aiTest'])->name('settings.ai-test');
-            Route::get('/settings/cloudinary-test', [SettingsController::class, 'cloudinaryTest'])->name('settings.cloudinary-test');
+            if (! app()->environment('production')) {
+                Route::get('/settings/ai-test', [SettingsController::class, 'aiTest'])->name('settings.ai-test');
+                Route::get('/settings/cloudinary-test', [SettingsController::class, 'cloudinaryTest'])->name('settings.cloudinary-test');
+            }
             Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('users.index');
             Route::get('/users/create', [\App\Http\Controllers\Admin\UserManagementController::class, 'create'])->name('users.create');
             Route::post('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('users.store');

