@@ -389,10 +389,14 @@
             <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-2">
                     <h2 class="text-sm font-semibold text-gray-900">Student Results</h2>
-                    <a href="{{ route('dashboard.quizzes.show', ['quiz' => $quiz, 'tab' => 'scores']) }}" class="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-800">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        Export (PDF, Excel, CSV)
-                    </a>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <label for="sessions-search-index" class="sr-only">Search by index number</label>
+                        <input type="text" id="sessions-search-index" placeholder="Search by index…" class="input text-sm py-1.5 px-3 w-40 min-w-0 max-w-xs" autocomplete="off">
+                        <a href="{{ route('dashboard.quizzes.show', ['quiz' => $quiz, 'tab' => 'scores']) }}" class="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-800">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Export (PDF, Excel, CSV)
+                        </a>
+                    </div>
                 </div>
 
                 @if($sessionsPaginator->isEmpty())
@@ -413,9 +417,9 @@
                                     <th scope="col" class="px-4 py-2.5 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">Action</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-100">
+                            <tbody class="bg-white divide-y divide-gray-100" id="sessions-table-body">
                                 @foreach($sessionsPaginator as $session)
-                                    <tr class="hover:bg-gray-50 transition-colors">
+                                    <tr class="hover:bg-gray-50 transition-colors sessions-row" data-student-index="{{ strtoupper($session->student_index ?? '') }}">
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             <span class="text-sm font-medium text-gray-900">{{ $session->student_index }}</span>
                                         </td>
@@ -481,4 +485,28 @@
         </div>
     @endif
 </div>
+
+@if($activeTab === 'sessions' && !$sessionsPaginator->isEmpty())
+@push('scripts')
+<script>
+(function() {
+    var input = document.getElementById('sessions-search-index');
+    var rows = document.querySelectorAll('.sessions-row');
+    if (!input || !rows.length) return;
+    function filter() {
+        var q = (input.value || '').trim().toUpperCase();
+        var visible = 0;
+        for (var i = 0; i < rows.length; i++) {
+            var index = (rows[i].getAttribute('data-student-index') || '').toUpperCase();
+            var show = !q || index.indexOf(q) !== -1;
+            rows[i].style.display = show ? '' : 'none';
+            if (show) visible++;
+        }
+    }
+    input.addEventListener('input', filter);
+    input.addEventListener('keyup', filter);
+})();
+</script>
+@endpush
+@endif
 @endsection
