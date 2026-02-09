@@ -8,6 +8,7 @@
     .quiz-timer-green { color: #059669; }
     .quiz-timer-blue { color: #2563eb; }
     .quiz-timer-red { color: #dc2626; }
+    .quiz-side-num.quiz-side-answered { border-color: #22c55e; background-color: #f0fdf4; color: #15803d; }
 </style>
 @endpush
 
@@ -22,8 +23,8 @@
 
     {{-- Timer: simple square card, right side, sticky, minimal, no extra text --}}
     @if($remainingSeconds > 0)
-    <div id="quiz-timer-card" class="fixed right-4 top-24 z-50 w-16 h-16 sm:w-20 sm:h-20 bg-white border border-gray-200 rounded-lg flex items-center justify-center shadow-sm pointer-events-none">
-        <p id="quiz-timer" class="text-xl sm:text-2xl font-bold tabular-nums quiz-timer quiz-timer-green" aria-live="polite">--:--</p>
+    <div id="quiz-timer-card" class="fixed right-4 top-24 z-50 w-16 h-16 sm:w-20 sm:h-20 bg-white border border-gray-200 rounded-lg flex items-center justify-center shadow-sm pointer-events-none overflow-hidden min-w-0">
+        <p id="quiz-timer" class="text-base sm:text-lg font-bold tabular-nums quiz-timer quiz-timer-green whitespace-nowrap overflow-hidden min-w-0 px-0.5" aria-live="polite">--:--</p>
     </div>
     @endif
 
@@ -173,9 +174,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (saved) { currentPage = Math.max(1, Math.min(totalPages, parseInt(saved, 10))); }
     } catch (e) {}
 
+    function isQuestionAnswered(questionId) {
+        var form = document.getElementById('quiz-form');
+        if (!form) return false;
+        var name = 'q_' + questionId;
+        var radio = form.querySelector('input[name="' + name + '"]:checked');
+        if (radio) return true;
+        var ta = form.querySelector('textarea[name="' + name + '"]');
+        if (ta && ta.value && ta.value.trim() !== '') return true;
+        return false;
+    }
+
     function updateAnsweredSummary() {
         var total = parseInt(document.getElementById('quiz-answered-summary')?.getAttribute('data-total') || '0', 10);
-        if (total === 0) return;
         var form = document.getElementById('quiz-form');
         if (!form) return;
         var answered = 0;
@@ -195,6 +206,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         var el = document.getElementById('quiz-answered-summary');
         if (el) el.textContent = answered + ' of ' + total + ' questions answered.';
+        document.querySelectorAll('.quiz-side-num').forEach(function(a) {
+            var qid = parseInt(a.getAttribute('data-question-id'), 10);
+            if (qid && isQuestionAnswered(qid)) {
+                a.classList.add('quiz-side-answered');
+                a.setAttribute('aria-label', 'Question ' + a.textContent.trim() + ' answered');
+            } else {
+                a.classList.remove('quiz-side-answered');
+                a.removeAttribute('aria-label');
+            }
+        });
     }
 
     function showPage(page) {
@@ -226,6 +247,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    var form = document.getElementById('quiz-form');
+    if (form) {
+        form.addEventListener('change', updateAnsweredSummary);
+        form.addEventListener('input', updateAnsweredSummary);
+    }
     if (totalPages > 1) {
         showPage(currentPage);
         var prevBtn = document.getElementById('quiz-prev-bottom');
@@ -238,16 +264,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (p) { e.preventDefault(); showPage(p); }
             });
         });
-        var form = document.getElementById('quiz-form');
-        if (form) {
-            form.addEventListener('change', function() { if (currentPage === totalPages) updateAnsweredSummary(); });
-            form.addEventListener('input', function() { if (currentPage === totalPages) updateAnsweredSummary(); });
-        }
     } else {
         var submitBlock = document.getElementById('quiz-submit-block');
         if (submitBlock) submitBlock.style.display = '';
-        updateAnsweredSummary();
     }
+    updateAnsweredSummary();
 });
 </script>
 @endpush

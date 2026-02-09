@@ -12,10 +12,11 @@
     const timeSyncUrl = c.timeSyncUrl;
     const csrfToken = c.csrfToken;
     let remainingSeconds = c.remainingSeconds || 0;
+    let endTimeMs = null;
     let timerInterval = null;
     let timeSyncInterval = null;
     let blurCount = 0;
-    const TIME_SYNC_INTERVAL_MS = 60000;
+    const TIME_SYNC_INTERVAL_MS = 30000;
 
     const timerEl = document.getElementById('quiz-timer');
     const timerStickyEl = document.getElementById('quiz-timer-sticky');
@@ -66,6 +67,11 @@
     }
 
     function updateTimer() {
+        if (endTimeMs !== null) {
+            remainingSeconds = Math.max(0, Math.ceil((endTimeMs - Date.now()) / 1000));
+        } else {
+            remainingSeconds = Math.max(0, remainingSeconds - 1);
+        }
         if (remainingSeconds <= 0) {
             if (timerInterval) clearInterval(timerInterval);
             if (timeSyncInterval) clearInterval(timeSyncInterval);
@@ -77,7 +83,6 @@
         if (timerEl) timerEl.textContent = text;
         if (timerStickyEl) timerStickyEl.textContent = text;
         applyTimerColor(remainingSeconds);
-        remainingSeconds--;
     }
 
     function syncTimeFromServer() {
@@ -87,6 +92,7 @@
             .then(function (data) {
                 if (data && typeof data.remaining_seconds === 'number') {
                     remainingSeconds = Math.max(0, data.remaining_seconds);
+                    endTimeMs = Date.now() + remainingSeconds * 1000;
                     var text = formatTime(remainingSeconds);
                     if (timerEl) timerEl.textContent = text;
                     if (timerStickyEl) timerStickyEl.textContent = text;
@@ -174,12 +180,14 @@
     }
 
     if (timerEl && remainingSeconds > 0) {
+        endTimeMs = Date.now() + remainingSeconds * 1000;
         var text = formatTime(remainingSeconds);
         timerEl.textContent = text;
         if (timerStickyEl) timerStickyEl.textContent = text;
         applyTimerColor(remainingSeconds);
         timerInterval = setInterval(updateTimer, 1000);
         if (timeSyncUrl) {
+            syncTimeFromServer();
             timeSyncInterval = setInterval(syncTimeFromServer, TIME_SYNC_INTERVAL_MS);
             document.addEventListener('visibilitychange', function () {
                 if (document.visibilityState === 'visible') syncTimeFromServer();
