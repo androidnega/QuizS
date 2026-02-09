@@ -2,12 +2,12 @@
 /**
  * ONE-TIME: Run migrations on the server by visiting this URL.
  *
- * 1. Before uploading: change the secret below to a random string (e.g. "a8f3k2m9x").
- * 2. Upload this file to public/ on the server (or deploy with Git).
- * 3. Visit: https://quizsnap.ausweblabs.com/run-migrate.php?key=YOUR_SECRET
+ * 1. Change the secret below to a random string (e.g. "a8f3k2m9x") if desired.
+ * 2. Deploy so public/run-migrate.php exists on the server (e.g. git pull).
+ * 3. Visit: https://quizsnap.ausweblabs.com/run-migrate.php?key=YOUR_SECRET&run=yes
  * 4. The script runs migrations, then DELETES ITSELF. Visit only once.
  *
- * Remove this file from the repo after use, or keep it and never share the key.
+ * Keep this file in the repo until you have run it on the server; then remove or leave for future runs.
  */
 $secret = 'QuizSnap2026Xk9m2p7';
 
