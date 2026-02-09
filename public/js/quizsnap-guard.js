@@ -65,6 +65,8 @@
         return null;
     }
 
+    var MOBILE_CONTINUED_KEY = 'quizsnap-mobile-continued';
+
     function showBlockOverlay(reason) {
         var overlay = document.getElementById('quizsnap-block-overlay');
         var msg = document.getElementById('quizsnap-block-message');
@@ -72,8 +74,25 @@
             msg.textContent = reason.message;
             overlay.classList.remove('hidden');
             overlay.setAttribute('aria-hidden', 'false');
+            if (reason.key === 'mobile' || reason.key === 'small') {
+                overlay.classList.add('quizsnap-mobile-caution');
+            } else {
+                overlay.classList.remove('quizsnap-mobile-caution');
+            }
         }
         document.body.classList.add('quizsnap-blocked');
+    }
+
+    function continueToSite() {
+        try { sessionStorage.setItem(MOBILE_CONTINUED_KEY, '1'); } catch (e) {}
+        document.body.classList.remove('quizsnap-blocked');
+        var overlay = document.getElementById('quizsnap-block-overlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('quizsnap-mobile-caution');
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+        allowApp();
     }
 
     function hideApp() {
@@ -94,6 +113,10 @@
 
         var reason = getBlockReason();
         if (reason) {
+            if ((reason.key === 'mobile' || reason.key === 'small') && hasContinuedOnMobile()) {
+                allowApp();
+                return;
+            }
             hideApp();
             showBlockOverlay(reason);
             return;
@@ -101,9 +124,13 @@
         allowApp();
     }
 
+    function hasContinuedOnMobile() {
+        try { return sessionStorage.getItem(MOBILE_CONTINUED_KEY) === '1'; } catch (e) { return false; }
+    }
+
     function onResize() {
         if (document.body.classList.contains('quizsnap-blocked')) return;
-        if (isSmallScreen()) {
+        if (isSmallScreen() && !hasContinuedOnMobile()) {
             var reason = { key: 'small', message: BLOCK_REASONS.small };
             document.body.classList.add('quizsnap-blocked');
             hideApp();
@@ -111,13 +138,20 @@
         }
     }
 
+    function bindContinueButton() {
+        var btn = document.getElementById('quizsnap-block-continue-btn');
+        if (btn) btn.addEventListener('click', continueToSite);
+    }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             runGuard();
+            bindContinueButton();
             window.addEventListener('resize', onResize);
         });
     } else {
         runGuard();
+        bindContinueButton();
         window.addEventListener('resize', onResize);
     }
 

@@ -24,9 +24,15 @@
         .quizsnap-nojs .quizsnap-noscript-msg { display: flex !important; }
         .quizsnap-blocked #quizsnap-app { display: none !important; }
         .quizsnap-app--hidden { display: none !important; }
-        #quizsnap-block-overlay { display: none; position: fixed; inset: 0; z-index: 99999; background: #fafaf9; align-items: center; justify-content: center; padding: 1.5rem; }
+        .quizsnap-blocked html, .quizsnap-blocked body { overflow: hidden !important; position: fixed !important; width: 100% !important; height: 100% !important; }
+        #quizsnap-block-overlay { display: none; position: fixed; inset: 0; z-index: 99999; background: #fafaf9; align-items: center; justify-content: center; padding: 1.5rem; box-sizing: border-box; overflow: hidden; }
         .quizsnap-blocked #quizsnap-block-overlay { display: flex !important; }
-        #quizsnap-block-overlay .quizsnap-block-card { max-width: 28rem; text-align: center; background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        #quizsnap-block-overlay .quizsnap-block-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; max-width: 90vw; max-height: 90vh; }
+        #quizsnap-block-overlay .quizsnap-block-icon { font-size: 5rem; line-height: 1; font-weight: 700; color: #dc2626; margin-bottom: 1rem; }
+        #quizsnap-block-overlay #quizsnap-block-message { font-size: 1.125rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
+        #quizsnap-block-overlay .quizsnap-block-sub { font-size: 0.9375rem; color: #6b7280; margin-bottom: 1.5rem; }
+        #quizsnap-block-overlay .quizsnap-mobile-continue { display: none; }
+        #quizsnap-block-overlay.quizsnap-mobile-caution .quizsnap-mobile-continue { display: inline-block; }
         .quizsnap-select-none { -webkit-user-select: none; user-select: none; }
         .quizsnap-select-none input, .quizsnap-select-none textarea { -webkit-user-select: text; user-select: text; }
     </style>
@@ -52,11 +58,11 @@
         </div>
     </div>
     <div id="quizsnap-block-overlay" class="hidden" aria-live="polite" role="alert">
-        <div class="quizsnap-block-card">
-            <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                <svg class="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            </div>
-            <p id="quizsnap-block-message" class="text-gray-700 text-base font-medium">This system is only available on desktop.</p>
+        <div class="quizsnap-block-inner">
+            <span class="quizsnap-block-icon" aria-hidden="true">!</span>
+            <p id="quizsnap-block-message" class="text-gray-700">This system is only available on desktop.</p>
+            <p class="quizsnap-block-sub">You cannot take any quiz on mobile.</p>
+            <button type="button" id="quizsnap-block-continue-btn" class="quizsnap-mobile-continue btn btn-primary py-2.5 px-5 text-sm font-semibold">Continue to view site</button>
         </div>
     </div>
     @yield('copy_restriction_modal')
