@@ -3,13 +3,6 @@
 @section('title', $quiz->title)
 @section('dashboard_heading', \Illuminate\Support\Str::limit($quiz->title, 40))
 
-@section('dashboard_breadcrumb')
-    <a href="{{ route('dashboard.quizzes.index') }}" class="hover:text-gray-900 inline-flex items-center gap-1">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-        Quizzes
-    </a>
-@endsection
-
 @section('dashboard_content')
 @php $activeTab = request('tab', 'overview'); @endphp
 <div class="w-full min-w-0 space-y-4">

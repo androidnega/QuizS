@@ -19,9 +19,9 @@
                     <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white font-bold text-lg shadow-sm">Q</span>
                     <span class="examiner-sidebar-brand-text truncate text-lg font-bold">QuizSnap</span>
                 </a>
-                <button type="button" id="examiner-sidebar-toggle-inner" data-examiner-collapse class="examiner-sidebar-chevron flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary-300 md:flex" aria-label="Collapse sidebar" title="Collapse sidebar (desktop)">
-                    <svg class="h-5 w-5 transition-transform hidden md:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
-                    <svg class="h-6 w-6 md:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button type="button" id="examiner-sidebar-toggle-inner" data-examiner-collapse class="examiner-sidebar-chevron flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300 md:flex" aria-label="Collapse sidebar" title="Collapse sidebar (desktop)">
+                    <svg class="h-5 w-5 transition-transform hidden md:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+                    <svg class="h-6 w-6 md:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
@@ -81,17 +81,12 @@
     <div class="examiner-main">
         <header class="flex h-14 flex-shrink-0 items-center border-b border-gray-200 bg-white z-10 min-w-0">
             <div class="examiner-page flex h-14 w-full items-center gap-3 px-4 md:px-6">
-                <button type="button" id="examiner-sidebar-toggle" class="examiner-mobile-menu flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:hidden" aria-label="Open menu">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <button type="button" id="examiner-sidebar-toggle" class="examiner-mobile-menu flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 md:hidden" aria-label="Open menu">
+                    <svg class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
-                <button type="button" id="examiner-sidebar-expand" class="hidden h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-300" aria-label="Expand sidebar" title="Expand sidebar">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <button type="button" id="examiner-sidebar-expand" class="hidden h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-300" aria-label="Expand sidebar" title="Expand sidebar">
+                    <svg class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
-                @hasSection('dashboard_breadcrumb')
-                <nav id="examiner-header-breadcrumb" class="flex items-center gap-2 text-sm text-gray-500 flex-shrink-0" aria-label="Breadcrumb">
-                    @yield('dashboard_breadcrumb')
-                </nav>
-                @endif
                 <h1 class="min-w-0 flex-1 truncate text-lg font-semibold text-gray-900">@yield('dashboard_heading', 'Dashboard')</h1>
                 <div class="relative flex flex-shrink-0 items-center ml-2" id="profile-menu-wrap">
                     <button type="button" class="flex items-center gap-2 rounded-full p-0.5 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" aria-expanded="false" aria-haspopup="true" id="profile-menu-btn" title="Profile">
@@ -153,10 +148,6 @@
     document.addEventListener('click', function(e) {
         var collapseBtn = e.target && e.target.closest && e.target.closest('[data-examiner-collapse]');
         if (collapseBtn) { e.preventDefault(); e.stopPropagation(); if (isDesktop()) setCollapsed(!collapsed); else setCollapsed(true); }
-    }, true);
-    document.addEventListener('click', function(e) {
-        var breadcrumbLink = e.target && e.target.closest && e.target.closest('#examiner-header-breadcrumb a[href]');
-        if (breadcrumbLink && isDesktop()) setCollapsed(true);
     }, true);
     window.addEventListener('resize', function() {
         if (!isDesktop()) setCollapsed(true);

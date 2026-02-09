@@ -123,7 +123,7 @@
     width: 14rem;
     min-width: 14rem;
     flex-shrink: 0;
-    transition: width 0.2s ease, min-width 0.2s ease;
+    transition: width 0.28s ease-out, min-width 0.28s ease-out;
     z-index: 40;
 }
 @media (max-width: 767px) {
@@ -209,11 +209,15 @@
 }
 
 .examiner-sidebar-chevron {
-    color: #6b7280;
+    color: #374151;
+}
+
+.examiner-sidebar-chevron svg {
+    color: inherit;
 }
 
 .examiner-sidebar-chevron:hover {
-    background-color: #f3f4f6;
+    background-color: #e5e7eb;
     color: #111827;
 }
 
