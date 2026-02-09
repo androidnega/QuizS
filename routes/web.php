@@ -89,6 +89,21 @@ Route::get('/quiz/result', [StudentQuizController::class, 'result'])->name('stud
 Route::get('/quiz/final-photo', [PostQuizCaptureController::class, 'show'])->name('student.final-photo.capture')->middleware('rules.accepted');
 Route::post('/quiz/post-face', [PostQuizCaptureController::class, 'store'])->name('student.post-face.store');
 
+// Student account login (index → phone → OTP); no quiz link required
+Route::get('/student/account/login', [\App\Http\Controllers\Student\StudentAccountController::class, 'showLoginForm'])->name('student.account.login.form');
+Route::post('/student/account/verify-index', [\App\Http\Controllers\Student\StudentAccountController::class, 'verifyIndex'])->name('student.account.verify-index');
+Route::post('/student/account/send-otp', [\App\Http\Controllers\Student\StudentAccountController::class, 'sendOtp'])->name('student.account.send-otp');
+Route::post('/student/account/verify-otp', [\App\Http\Controllers\Student\StudentAccountController::class, 'verifyOtp'])->name('student.account.verify-otp');
+Route::post('/student/account/logout', [\App\Http\Controllers\Student\StudentAccountController::class, 'logout'])->name('student.account.logout');
+
+// Student dashboard: /student/dashboard and /student/dashboard/{slug}
+Route::middleware('student.auth')->prefix('student/dashboard')->name('student.dashboard.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Student\StudentDashboardController::class, 'index'])->name('index');
+    Route::get('/quizzes', [\App\Http\Controllers\Student\StudentDashboardController::class, 'quizzes'])->name('quizzes');
+    Route::get('/profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'profile'])->name('profile');
+    Route::put('/profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'updateProfile'])->name('profile.update');
+});
+
 // Staff login
 Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
@@ -177,6 +192,7 @@ Route::middleware('admin.auth')->group(function () {
                 Route::get('/settings/cloudinary-test', [SettingsController::class, 'cloudinaryTest'])->name('settings.cloudinary-test');
             }
             Route::post('/settings/otp-test', [SettingsController::class, 'otpTest'])->name('settings.otp-test');
+            Route::get('/settings/otp-balance', [SettingsController::class, 'otpBalance'])->name('settings.otp-balance');
             Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('users.index');
             Route::get('/users/create', [\App\Http\Controllers\Admin\UserManagementController::class, 'create'])->name('users.create');
             Route::post('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('users.store');

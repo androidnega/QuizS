@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'rules.accepted' => \App\Http\Middleware\EnsureRulesAccepted::class,
+            'student.auth' => \App\Http\Middleware\EnsureStudentAuthenticated::class,
             'admin.auth' => \App\Http\Middleware\EnsureAdminAuthenticated::class,
             'admin.role' => \App\Http\Middleware\EnsureSuperAdminRole::class,
             'super_admin.role' => \App\Http\Middleware\EnsureSuperAdminRole::class,

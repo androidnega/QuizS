@@ -69,6 +69,7 @@
                 <button type="button" id="about-system-btn" class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400" title="About the system" aria-label="About the system">
                     <span class="text-lg font-bold leading-none">!</span>
                 </button>
+                <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-primary-600 px-4 py-2 rounded-lg border border-primary-200 hover:bg-primary-50 transition-all no-underline">Student Login</a>
                 <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all no-underline">Staff Login</a>
             </div>
         </div>

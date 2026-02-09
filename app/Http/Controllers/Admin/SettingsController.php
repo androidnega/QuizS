@@ -193,4 +193,13 @@ class SettingsController extends Controller
         $result = ArkeselService::sendTestOtp($phone);
         return response()->json($result, $result['success'] ? 200 : 422);
     }
+
+    /**
+     * Check Arkesel SMS/main balance. Helps debug "not receiving" (e.g. zero balance).
+     */
+    public function otpBalance(): JsonResponse
+    {
+        $result = ArkeselService::checkBalance();
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
 }

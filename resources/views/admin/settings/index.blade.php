@@ -261,8 +261,14 @@
                         <p class="text-xs text-gray-500 mt-1">Max 11 characters. Shown as SMS sender (e.g. QuizSnap).</p>
                     </div>
                     <div class="pt-4 border-t border-gray-200">
+                        <p class="text-sm font-medium text-gray-700 mb-2">Account balance</p>
+                        <p class="text-xs text-gray-500 mb-2">Verify your Arkesel account has SMS credits (required for delivery).</p>
+                        <button type="button" id="otp-balance-btn" class="btn btn-secondary mb-2">Check balance</button>
+                        <div id="otp-balance-result" class="mt-2 hidden rounded-lg border p-3 text-sm"></div>
+                    </div>
+                    <div class="pt-4 border-t border-gray-200">
                         <p class="text-sm font-medium text-gray-700 mb-2">Test OTP delivery</p>
-                        <p class="text-xs text-gray-500 mb-2">Save settings first if you changed the API key. Enter a phone number in international format (e.g. 233544919953 for Ghana).</p>
+                        <p class="text-xs text-gray-500 mb-2">Save settings first if you changed the API key. Use international format (e.g. 233544919953 for Ghana). If you don’t receive the SMS, check balance above and your Arkesel dashboard for delivery status.</p>
                         <div class="flex flex-wrap items-end gap-2">
                             <div>
                                 <label for="otp-test-phone" class="block text-xs text-gray-600 mb-1">Phone number</label>
@@ -405,9 +411,39 @@ if (aiTestBtn) {
     });
 });
 }
+@endunless
 
-// OTP Test (available in all environments)
+// OTP Balance check & Test (available in all environments)
 document.addEventListener('DOMContentLoaded', function() {
+    var otpBalanceBtn = document.getElementById('otp-balance-btn');
+    var otpBalanceResult = document.getElementById('otp-balance-result');
+    if (otpBalanceBtn && otpBalanceResult) {
+        otpBalanceBtn.addEventListener('click', function() {
+            otpBalanceResult.classList.remove('hidden', 'bg-success-50', 'border-success-200', 'text-success-800', 'bg-danger-50', 'border-danger-200', 'text-danger-800');
+            otpBalanceResult.textContent = 'Checking…';
+            otpBalanceBtn.disabled = true;
+            fetch('{{ route('dashboard.settings.otp-balance') }}', { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+                .then(function(res) {
+                    var d = res.data;
+                    otpBalanceResult.classList.remove('hidden');
+                    if (d.success) {
+                        otpBalanceResult.classList.add('bg-success-50', 'border', 'border-success-200', 'text-success-800');
+                        otpBalanceResult.textContent = 'SMS balance: ' + (d.sms_balance != null ? d.sms_balance : '—') + ' | Main balance: ' + (d.main_balance != null ? d.main_balance : '—');
+                    } else {
+                        otpBalanceResult.classList.add('bg-danger-50', 'border', 'border-danger-200', 'text-danger-800');
+                        otpBalanceResult.textContent = d.message || 'Could not check balance.';
+                    }
+                })
+                .catch(function(err) {
+                    otpBalanceResult.classList.remove('hidden');
+                    otpBalanceResult.classList.add('bg-danger-50', 'border', 'border-danger-200', 'text-danger-800');
+                    otpBalanceResult.textContent = 'Request failed: ' + (err.message || 'Network error');
+                })
+                .finally(function() { otpBalanceBtn.disabled = false; });
+        });
+    }
+
     var otpTestBtn = document.getElementById('otp-test-btn');
     if (otpTestBtn) {
         otpTestBtn.addEventListener('click', function() {
