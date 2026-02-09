@@ -28,38 +28,38 @@
     </div>
     @endif
 
-    {{-- Violation warnings --}}
-    <div id="blur-warning" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
-        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-lg">
+    {{-- Violation warnings: full-screen opaque background so quiz content is fully covered --}}
+    <div id="blur-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 px-4">
+        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-lg max-w-md w-full">
             <h4 class="font-semibold text-primary-600 mb-1">Tab switch detected</h4>
             <p class="text-sm text-gray-600 mb-3">Stay on this tab. If you stay in another tab for 20 seconds, your quiz will be auto-submitted.</p>
             <button type="button" onclick="this.closest('#blur-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>
-    <div id="right-click-warning" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
-        <div class="bg-warning-50 border border-warning-300 rounded-lg p-4 shadow-lg">
+    <div id="right-click-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 px-4">
+        <div class="bg-warning-50 border border-warning-300 rounded-lg p-4 shadow-lg max-w-md w-full">
             <h4 class="font-semibold text-warning-800 mb-1">Do not right-click</h4>
             <p class="text-sm text-gray-700 mb-3">Stay on this tab. Right-click is not allowed; your attempt has been noted.</p>
             <button type="button" onclick="this.closest('#right-click-warning').classList.add('hidden')" class="btn btn-secondary py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>
-    <div id="new-tab-zone-warning" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
-        <div class="bg-amber-50 border border-amber-300 rounded-lg p-4 shadow-lg">
+    <div id="new-tab-zone-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 px-4">
+        <div class="bg-amber-50 border border-amber-300 rounded-lg p-4 shadow-lg max-w-md w-full">
             <h4 class="font-semibold text-amber-800 mb-1">Stay in the quiz</h4>
             <p class="text-sm text-gray-700 mb-3">If you open a new tab or switch to another tab, that will be detected as leaving the page and may result in your quiz being auto-submitted. Stay on this tab and keep your cursor in the quiz area.</p>
             <button type="button" onclick="this.closest('#new-tab-zone-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>
-    <div id="tab-switch-once-warning" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
-        <div class="bg-amber-50 border border-amber-400 rounded-lg p-4 shadow-lg">
+    <div id="tab-switch-once-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 px-4">
+        <div class="bg-amber-50 border border-amber-400 rounded-lg p-4 shadow-lg max-w-md w-full">
             <h4 class="font-semibold text-amber-800 mb-1">You left this tab</h4>
             <p class="text-sm text-gray-700 mb-3">If you switch tabs again, your quiz will be auto-submitted immediately with no further warning. Stay on this tab to continue.</p>
             <button type="button" onclick="this.closest('#tab-switch-once-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>
 
-    {{-- Resize / exit fullscreen blur overlay: blocks interaction until full screen or maximized --}}
-    <div id="resize-blur-overlay" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/80 backdrop-blur-sm px-4 pointer-events-auto" aria-hidden="true">
+    {{-- Resize / exit fullscreen overlay: opaque, blocks interaction until full screen or maximized --}}
+    <div id="resize-blur-overlay" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-gray-900 px-4 pointer-events-auto" aria-hidden="true">
         <div class="bg-white border border-gray-200 rounded-xl p-6 max-w-md w-full shadow-lg text-center">
             <h4 id="resize-blur-title" class="font-semibold text-gray-800 mb-2">Window resized or left full screen</h4>
             <p id="resize-blur-message" class="text-sm text-gray-600 mb-2">Return to full screen or maximize this window to continue. The timer is still running.</p>

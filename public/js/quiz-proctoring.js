@@ -419,6 +419,7 @@
             hideResizeBlur();
         } else {
             if (!wasFullscreenOrMaximized) return;
+            showResizeBlur(false);
             if (invalidStateTimer) return;
             invalidStateTimer = setTimeout(function () {
                 invalidStateTimer = null;
