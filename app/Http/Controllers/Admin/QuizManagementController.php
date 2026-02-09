@@ -774,7 +774,10 @@ class QuizManagementController extends Controller
             'institutionLogoPath' => $institutionLogoPath,
         ])->setPaper('a4', 'portrait')->setWarnings(false);
 
-        $filename = 'score-report-' . \Illuminate\Support\Str::slug($quiz->title) . '-' . now()->format('Y-m-d') . '.pdf';
+        $groupSlug = \Illuminate\Support\Str::slug($classGroupName ?: 'group');
+        $courseSlug = \Illuminate\Support\Str::slug($courseName ?: 'course');
+        $dateStr = now()->format('Y-m-d');
+        $filename = $groupSlug . '-' . $courseSlug . '-' . $dateStr . '.pdf';
 
         if (request()->routeIs('*scores.export.pdf.preview')) {
             return $pdf->stream($filename);

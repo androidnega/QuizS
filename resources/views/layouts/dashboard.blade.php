@@ -155,6 +155,10 @@
         var collapseBtn = e.target && e.target.closest && e.target.closest('[data-examiner-collapse]');
         if (collapseBtn) { e.preventDefault(); e.stopPropagation(); if (isDesktop()) setCollapsed(!collapsed); else setCollapsed(true); }
     }, true);
+    document.addEventListener('click', function(e) {
+        var breadcrumbLink = e.target && e.target.closest && e.target.closest('nav[aria-label="Breadcrumb"] a[href]');
+        if (breadcrumbLink && isDesktop()) setCollapsed(true);
+    }, true);
     window.addEventListener('resize', function() {
         if (!isDesktop()) setCollapsed(true);
         if (expandBtn) expandBtn.style.setProperty('display', (isDesktop() && collapsed) ? 'flex' : 'none');
