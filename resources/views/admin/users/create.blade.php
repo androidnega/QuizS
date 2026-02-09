@@ -53,7 +53,8 @@
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" name="password" id="password" required class="input w-full @error('password') border-danger-500 @enderror">
+                    <input type="password" name="password" id="password" required class="input w-full @error('password') border-danger-500 @enderror" minlength="8" autocomplete="new-password">
+                    <p class="mt-1 text-xs text-gray-500">At least 8 characters, including one letter and one number.</p>
                     @error('password')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
                 <div>

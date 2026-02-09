@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class UserManagementController extends Controller
 {
@@ -36,7 +37,13 @@ class UserManagementController extends Controller
             'role' => 'required|in:super_admin,examiner',
             'course_ids' => 'nullable|array',
             'course_ids.*' => 'exists:courses,id',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+        ], [
+            'password.required' => 'A password is required.',
+            'password.confirmed' => 'The password confirmation does not match.',
+            'password.min' => 'The password must be at least 8 characters.',
+            'password.letters' => 'The password must contain at least one letter.',
+            'password.numbers' => 'The password must contain at least one number.',
         ]);
 
         $user = User::create([
@@ -80,9 +87,15 @@ class UserManagementController extends Controller
         ];
         // Super Admin can set/reset password for any staff (super_admin or examiner).
         if ($request->filled('password')) {
-            $rules['password'] = 'min:6|confirmed';
+            $rules['password'] = ['required', 'confirmed', Password::min(8)->letters()->numbers()];
         }
-        $request->validate($rules);
+        $request->validate($rules, [
+            'password.required' => 'A password is required.',
+            'password.confirmed' => 'The password confirmation does not match.',
+            'password.min' => 'The password must be at least 8 characters.',
+            'password.letters' => 'The password must contain at least one letter.',
+            'password.numbers' => 'The password must contain at least one number.',
+        ]);
 
         $user->username = $request->username;
         $user->name = $request->name ?: $user->username;
