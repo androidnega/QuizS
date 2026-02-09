@@ -21,6 +21,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\StreamedResponse;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
@@ -122,13 +123,12 @@ class QuizManagementController extends Controller
                 $topics = [];
             }
 
-            $quiz = Quiz::create([
+            $createData = [
                 'title' => $request->title,
                 'exam_type' => $request->input('exam_type') ?: null,
                 'class_group_id' => $requestClassGroupId,
                 'course_id' => $requestCourseId,
                 'number_of_questions' => (int) $request->number_of_questions,
-                'questions_per_student' => (int) $request->questions_per_student,
                 'duration_minutes' => (int) $request->duration_minutes,
                 'topics' => !empty($topics) ? json_encode(array_values($topics)) : null,
                 'is_active' => $request->boolean('is_active', true),
@@ -136,7 +136,11 @@ class QuizManagementController extends Controller
                 'starts_at' => $request->filled('starts_at') ? $request->starts_at : null,
                 'ends_at' => $request->filled('ends_at') ? $request->ends_at : null,
                 'result_visibility' => $request->input('result_visibility', Quiz::RESULT_VISIBILITY_FULL_REVIEW_AFTER_END),
-            ]);
+            ];
+            if (Schema::hasColumn('quizzes', 'questions_per_student')) {
+                $createData['questions_per_student'] = (int) $request->questions_per_student;
+            }
+            $quiz = Quiz::create($createData);
 
             if (!$quiz || !$quiz->id) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.create')
@@ -620,12 +624,11 @@ class QuizManagementController extends Controller
                     ->with('error', 'Failed to upload script to Cloudinary. Check settings or try again.');
             }
         }
-        $quiz->update([
+        $updateData = [
             'title' => $request->title,
             'exam_type' => $request->input('exam_type') ?: null,
             'course_id' => $request->course_id,
             'number_of_questions' => $request->number_of_questions,
-            'questions_per_student' => (int) $request->questions_per_student,
             'duration_minutes' => $request->duration_minutes,
             'topics' => is_array($topics) ? json_encode($topics) : null,
             'script_url' => $scriptUrl,
@@ -635,7 +638,11 @@ class QuizManagementController extends Controller
             'starts_at' => $request->filled('starts_at') ? $request->starts_at : null,
             'ends_at' => $request->filled('ends_at') ? $request->ends_at : null,
             'result_visibility' => $request->input('result_visibility', $quiz->result_visibility ?? Quiz::RESULT_VISIBILITY_FULL_REVIEW_AFTER_END),
-        ]);
+        ];
+        if (Schema::hasColumn('quizzes', 'questions_per_student')) {
+            $updateData['questions_per_student'] = (int) $request->questions_per_student;
+        }
+        $quiz->update($updateData);
         $sourceText = $scriptText;
         if ($sourceText === null) {
             $sourceText = '';
