@@ -123,8 +123,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Index</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correct / Total</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mark</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Violations</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
                             <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -142,20 +141,11 @@
                                             $score = $session->result->score;
                                             $colorClass = $score >= 70 ? 'text-success-600 bg-success-100' : ($score >= 50 ? 'text-warning-600 bg-warning-100' : 'text-danger-600 bg-danger-100');
                                         @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold {{ $colorClass }}">
-                                            {{ $score }}%
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold tabular-nums {{ $colorClass }}">
+                                            {{ $session->result->correct_count }}/{{ $session->result->total_questions }}
                                         </span>
                                     @else
                                         <span class="text-sm text-gray-400">No result</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($session->result)
-                                        <div class="text-sm text-gray-900 font-medium tabular-nums">
-                                            {{ $session->result->correct_count }} / {{ $session->result->total_questions }}
-                                        </div>
-                                    @else
-                                        <span class="text-sm text-gray-400">—</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">

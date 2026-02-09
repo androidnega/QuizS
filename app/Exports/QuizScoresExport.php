@@ -18,9 +18,7 @@ class QuizScoresExport implements FromCollection, WithHeadings
         return [
             'No.',
             'Student Index',
-            'Score %',
-            'Correct',
-            'Total',
+            'Mark',
             'Violations',
             'Submitted At',
         ];
@@ -37,12 +35,11 @@ class QuizScoresExport implements FromCollection, WithHeadings
         return $sessions->map(function ($session, $idx) {
             $result = $session->result;
             $violationsCount = $result ? $result->violations_count : $session->violations->count();
+            $mark = $result ? "{$result->correct_count}/{$result->total_questions}" : '';
             return [
                 $idx + 1,
                 $session->student_index,
-                $result ? $result->score : '',
-                $result ? $result->correct_count : '',
-                $result ? $result->total_questions : '',
+                $mark,
                 $violationsCount,
                 $result && $result->submitted_at ? $result->submitted_at->format('Y-m-d H:i:s') : '',
             ];

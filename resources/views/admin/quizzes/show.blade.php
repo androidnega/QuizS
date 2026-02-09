@@ -422,13 +422,11 @@
                                             @if($session->result)
                                                 @php
                                                     $score = $session->result->score;
-                                                    $mark = $score >= 70 ? 5 : ($score >= 50 ? 4 : 3);
+                                                    $colorClass = $score >= 70 ? 'bg-emerald-100 text-emerald-800' : ($score >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800');
                                                 @endphp
-                                                <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-bold
-                                                    @if($mark >= 5) bg-emerald-100 text-emerald-800
-                                                    @elseif($mark >= 4) bg-amber-100 text-amber-800
-                                                    @else bg-rose-100 text-rose-800
-                                                    @endif">{{ $mark }}</span>
+                                                <span class="inline-flex items-center justify-center min-w-[3.5rem] px-2 py-1 rounded-lg text-sm font-bold tabular-nums {{ $colorClass }}">
+                                                    {{ $session->result->correct_count }}/{{ $session->result->total_questions }}
+                                                </span>
                                             @else
                                                 <span class="text-xs text-gray-400">—</span>
                                             @endif

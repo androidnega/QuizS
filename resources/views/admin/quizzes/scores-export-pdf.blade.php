@@ -52,9 +52,7 @@
             <tr>
                 <th style="width:36px">No.</th>
                 <th>Student Index</th>
-                <th class="num" style="width:64px">Score %</th>
-                <th class="num" style="width:56px">Correct</th>
-                <th class="num" style="width:48px">Total</th>
+                <th class="num" style="width:72px">Mark</th>
                 <th style="width:100px">Submitted</th>
             </tr>
         </thead>
@@ -63,9 +61,7 @@
             <tr>
                 <td class="num">{{ $idx + 1 }}</td>
                 <td>{{ $session->student_index }}</td>
-                <td class="num">{{ $session->result ? $session->result->score . '%' : '—' }}</td>
-                <td class="num">{{ $session->result ? $session->result->correct_count : '—' }}</td>
-                <td class="num">{{ $session->result ? $session->result->total_questions : '—' }}</td>
+                <td class="num">{{ $session->result ? $session->result->correct_count . '/' . $session->result->total_questions : '—' }}</td>
                 <td>{{ $session->result && $session->result->submitted_at ? $session->result->submitted_at->format('M d, Y H:i') : '—' }}</td>
             </tr>
             @endforeach
