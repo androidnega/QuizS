@@ -124,7 +124,7 @@
 
     {{-- Modal: Student info --}}
     <div id="student-info-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="student-info-modal-title">
-        <div class="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-[280px] overflow-hidden">
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
                 <h2 id="student-info-modal-title" class="text-lg font-semibold text-gray-900">Student info</h2>
                 <button type="button" id="student-info-modal-close" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600" aria-label="Close">&times;</button>
