@@ -27,13 +27,13 @@
             <div><span class="text-gray-500 block">IP</span><span class="font-mono text-gray-900 truncate block" title="{{ $session->ip_address }}">{{ $session->ip_address }}</span></div>
             <div><span class="text-gray-500 block">Started</span><span class="text-gray-900">{{ $session->start_time?->format('M d, H:i') ?? '-' }}</span></div>
             <div><span class="text-gray-500 block">Ended</span><span class="text-gray-900">{{ $session->ended_at?->format('M d, H:i') ?? '-' }}</span></div>
-            <div><span class="text-gray-500 block">Score</span>
+            <div><span class="text-gray-500 block">Mark</span>
                 @if($session->result)
-                    <span class="inline-block px-1.5 py-0.5 text-xs font-semibold rounded
+                    <span class="inline-block px-1.5 py-0.5 text-xs font-semibold rounded tabular-nums
                         @if($session->result->score >= 70) bg-green-100 text-green-800
                         @elseif($session->result->score >= 50) bg-amber-100 text-amber-800
                         @else bg-red-100 text-red-800
-                        @endif">{{ $session->result->score }}%</span>
+                        @endif">{{ $session->result->correct_count }}/{{ $session->result->total_questions }}</span>
                 @else<span class="text-gray-400">-</span>@endif
             </div>
             <div><span class="text-gray-500 block">Violations</span>

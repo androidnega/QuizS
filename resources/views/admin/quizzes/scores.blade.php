@@ -119,69 +119,64 @@
             </div>
         @else
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Index</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mark</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Violations</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th scope="col" class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Index</th>
+                            <th scope="col" class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mark</th>
+                            <th scope="col" class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Violations</th>
+                            <th scope="col" class="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                            <th scope="col" class="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($sessions as $session)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $session->student_index }}</div>
+                                <td class="px-3 py-1.5 whitespace-nowrap">
+                                    <span class="text-xs font-medium text-gray-900">{{ $session->student_index }}</span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-1.5 whitespace-nowrap">
                                     @if($session->result)
                                         @php
                                             $score = $session->result->score;
                                             $colorClass = $score >= 70 ? 'text-success-600 bg-success-100' : ($score >= 50 ? 'text-warning-600 bg-warning-100' : 'text-danger-600 bg-danger-100');
                                         @endphp
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold tabular-nums {{ $colorClass }}">
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold tabular-nums {{ $colorClass }}">
                                             {{ $session->result->correct_count }}/{{ $session->result->total_questions }}
                                         </span>
                                     @else
-                                        <span class="text-sm text-gray-400">No result</span>
+                                        <span class="text-xs text-gray-400">—</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-1.5 whitespace-nowrap">
                                     @php $violationCount = $session->violations->count(); @endphp
                                     @if($violationCount > 0)
-                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-danger-100 text-danger-700">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-danger-100 text-danger-700">
+                                            <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                                             </svg>
-                                            {{ $violationCount }} {{ $violationCount === 1 ? 'violation' : 'violations' }}
+                                            {{ $violationCount }}
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-700">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-success-100 text-success-700">
+                                            <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
                                             Clean
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-1.5 whitespace-nowrap">
                                     @if($session->result)
-                                        <div class="text-sm text-gray-600">
-                                            {{ $session->result->submitted_at->format('M d, Y') }}
-                                        </div>
-                                        <div class="text-xs text-gray-400">
-                                            {{ $session->result->submitted_at->format('h:i A') }}
-                                        </div>
+                                        <span class="text-xs text-gray-600">{{ $session->result->submitted_at->format('M d, Y H:i') }}</span>
                                     @else
-                                        <span class="text-sm text-gray-400">—</span>
+                                        <span class="text-xs text-gray-400">—</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <a href="{{ route('dashboard.quizzes.sessions.show', [$quiz, $session]) }}" class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium">
-                                        View details
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <td class="px-3 py-1.5 whitespace-nowrap text-right">
+                                    <a href="{{ route('dashboard.quizzes.sessions.show', [$quiz, $session]) }}" class="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700">
+                                        View
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                         </svg>
                                     </a>

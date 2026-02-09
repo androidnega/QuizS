@@ -404,37 +404,37 @@
                     </div>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Student</th>
-                                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Mark</th>
-                                    <th scope="col" class="px-4 py-2.5 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">Action</th>
+                                    <th scope="col" class="px-3 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Student</th>
+                                    <th scope="col" class="px-3 py-1.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Mark</th>
+                                    <th scope="col" class="px-3 py-1.5 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-100" id="sessions-table-body">
                                 @foreach($sessionsPaginator as $session)
                                     <tr class="hover:bg-gray-50 transition-colors sessions-row" data-student-index="{{ strtoupper($session->student_index ?? '') }}">
-                                        <td class="px-4 py-3 whitespace-nowrap">
-                                            <span class="text-sm font-medium text-gray-900">{{ $session->student_index }}</span>
+                                        <td class="px-3 py-1.5 whitespace-nowrap">
+                                            <span class="text-xs font-medium text-gray-900">{{ $session->student_index }}</span>
                                         </td>
-                                        <td class="px-4 py-3 whitespace-nowrap">
+                                        <td class="px-3 py-1.5 whitespace-nowrap">
                                             @if($session->result)
                                                 @php
                                                     $score = $session->result->score;
                                                     $colorClass = $score >= 70 ? 'bg-emerald-100 text-emerald-800' : ($score >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800');
                                                 @endphp
-                                                <span class="inline-flex items-center justify-center min-w-[3.5rem] px-2 py-1 rounded-lg text-sm font-bold tabular-nums {{ $colorClass }}">
+                                                <span class="inline-flex items-center justify-center min-w-[3rem] px-1.5 py-0.5 rounded text-xs font-bold tabular-nums {{ $colorClass }}">
                                                     {{ $session->result->correct_count }}/{{ $session->result->total_questions }}
                                                 </span>
                                             @else
                                                 <span class="text-xs text-gray-400">—</span>
                                             @endif
                                         </td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-right">
-                                            <a href="{{ route('dashboard.quizzes.sessions.show', [$quiz, $session]) }}" class="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-800">
-                                                View details
-                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <td class="px-3 py-1.5 whitespace-nowrap text-right">
+                                            <a href="{{ route('dashboard.quizzes.sessions.show', [$quiz, $session]) }}" class="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-800">
+                                                View
+                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                                                 </svg>
                                             </a>
