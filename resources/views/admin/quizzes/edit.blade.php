@@ -126,18 +126,35 @@
                         <textarea id="source_script" name="source_script" rows="6" class="input font-mono text-sm min-h-[8rem] max-h-80 overflow-y-auto resize-y w-full break-words whitespace-pre-wrap" placeholder="Paste your script or notes here...">{{ old('source_script') }}</textarea>
                     </div>
                     <div id="source-file-wrap" class="hidden">
+                        @if(!empty($quiz->script_url))
+                        <p class="text-sm text-gray-600 mb-2">Current script hosted on Cloudinary (kept until quiz is deleted).</p>
+                        <a href="{{ $quiz->script_url }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium mb-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            View / Download script
+                        </a>
+                        @endif
                         <label for="source_file" class="block text-sm font-medium text-gray-700 mb-1">Upload file (optional)</label>
-                        <p class="text-xs text-gray-500 mb-2">.txt, .pdf, or .docx. Leave empty to use topics only.</p>
+                        <p class="text-xs text-gray-500 mb-2">.txt, .pdf, or .docx. File is stored on Cloudinary and used for AI. Leave empty to use topics only.</p>
                         <input type="file" id="source_file" name="source_file" accept=".txt,.pdf,.docx" 
                             class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border file:border-primary-300 file:bg-primary-50 file:text-primary-700 file:font-medium hover:file:bg-primary-100">
-                        <div id="source-file-progress-wrap" class="hidden mt-3">
-                            <div class="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                                <svg class="animate-spin h-4 w-4 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                <span id="source-file-progress-text">Uploading document...</span>
+                        <div id="source-file-progress-wrap" class="hidden mt-4 flex flex-col items-center">
+                            <div class="relative w-32 h-32" aria-hidden="true">
+                                <svg class="w-32 h-32 rotate-90" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="60" cy="60" r="54" stroke="#e5e7eb" stroke-width="8" fill="none"/>
+                                    <circle id="source-file-progress-circle-fill" cx="60" cy="60" r="54" stroke="url(#source-file-progress-gradient)" stroke-width="8" fill="none" stroke-dasharray="339.292" stroke-dashoffset="339.292" stroke-linecap="round" class="transition-all duration-300"/>
+                                    <defs>
+                                        <linearGradient id="source-file-progress-gradient" x1="0" y1="1" x2="0" y2="0">
+                                            <stop offset="0%" stop-color="#93c5fd"/>
+                                            <stop offset="100%" stop-color="#3b82f6"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span id="source-file-progress-pct" class="text-xl font-bold text-gray-700">0</span>
+                                    <span class="text-xl font-bold text-gray-700">%</span>
+                                </div>
                             </div>
-                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div id="source-file-progress-bar" class="h-full bg-primary-600 transition-all duration-300" style="width: 0%"></div>
-                            </div>
+                            <p id="source-file-progress-text" class="text-sm text-gray-600 mt-2">Uploading document...</p>
                         </div>
                     </div>
                 </div>
@@ -294,7 +311,19 @@ document.addEventListener('DOMContentLoaded', function() {
     var fileInput = document.getElementById('source_file');
     var scriptEl = document.getElementById('source_script');
     var progressWrap = document.getElementById('source-file-progress-wrap');
-    var progressBar = document.getElementById('source-file-progress-bar');
+    var progressPct = document.getElementById('source-file-progress-pct');
+    var progressText = document.getElementById('source-file-progress-text');
+    var progressCircleFill = document.getElementById('source-file-progress-circle-fill');
+    var circleFullLength = 2 * Math.PI * 54;
+
+    function setCircularProgress(pct, label) {
+        if (progressPct) progressPct.textContent = Math.round(pct);
+        if (progressText) progressText.textContent = label || (pct >= 100 ? 'Processing…' : 'Uploading…');
+        if (progressCircleFill) {
+            var offset = circleFullLength * (1 - pct / 100);
+            progressCircleFill.style.strokeDashoffset = String(offset);
+        }
+    }
 
     function syncSourceMode() {
         var mode = form.querySelector('input[name="source_mode"]:checked');
@@ -321,14 +350,51 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     syncSourceMode();
 
-    form.addEventListener('submit', function() {
+    form.addEventListener('submit', function(e) {
         var mode = form.querySelector('input[name="source_mode"]:checked');
-        if (mode && mode.value === 'file' && fileInput && fileInput.files && fileInput.files.length) {
-            if (progressWrap) progressWrap.classList.remove('hidden');
-            if (progressBar) progressBar.style.width = '30%';
-            var btn = form.querySelector('button[type="submit"]');
-            if (btn) btn.disabled = true;
-        }
+        if (!mode || mode.value !== 'file' || !fileInput || !fileInput.files || !fileInput.files.length) return;
+        e.preventDefault();
+        if (progressWrap) progressWrap.classList.remove('hidden');
+        setCircularProgress(0, 'Uploading document…');
+        var btn = form.querySelector('button[type="submit"]');
+        if (btn) btn.disabled = true;
+        var formData = new FormData(form);
+        var xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener('progress', function(ev) {
+            if (ev.lengthComputable) {
+                var pct = Math.min(100, Math.round((ev.loaded / ev.total) * 100));
+                setCircularProgress(pct, pct >= 100 ? 'Processing…' : 'Uploading document…');
+            }
+        });
+        xhr.addEventListener('load', function() {
+            setCircularProgress(100, 'Processing…');
+            if (xhr.status >= 200 && xhr.status < 300) {
+                if (xhr.responseURL && xhr.responseURL !== form.action) {
+                    window.location.href = xhr.responseURL;
+                } else {
+                    window.location.reload();
+                }
+                return;
+            }
+            if (btn) btn.disabled = false;
+            setCircularProgress(0, 'Upload failed');
+            try {
+                var doc = new DOMParser().parseFromString(xhr.responseText, 'text/html');
+                var errEl = doc.querySelector('.alert-error, [role="alert"]');
+                alert(errEl ? errEl.textContent.trim() : 'Update failed. Please try again.');
+            } catch (err) {
+                alert('Update failed. Please try again.');
+            }
+        });
+        xhr.addEventListener('error', function() {
+            if (btn) btn.disabled = false;
+            setCircularProgress(0, 'Upload failed');
+            alert('Network error. Please try again.');
+        });
+        xhr.open('POST', form.action);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('Accept', 'text/html');
+        xhr.send(formData);
     });
 });
 </script>

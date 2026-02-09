@@ -20,8 +20,8 @@ class Quiz extends Model
     public const EXAM_TYPE_END_OF_SEMESTER = 'end_of_semester';
 
     protected $fillable = [
-        'link_token', 'class_group_id', 'title', 'exam_type', 'topics', 'number_of_questions', 'duration_minutes',
-        'course_id', 'is_active', 'is_published', 'starts_at', 'ends_at', 'result_visibility',
+        'link_token', 'class_group_id', 'title', 'exam_type', 'topics', 'script_url', 'script_public_id', 'script_text',
+        'number_of_questions', 'duration_minutes', 'course_id', 'is_active', 'is_published', 'starts_at', 'ends_at', 'result_visibility',
     ];
 
     protected static function booted(): void

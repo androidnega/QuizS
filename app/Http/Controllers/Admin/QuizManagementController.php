@@ -14,6 +14,7 @@ use App\Models\QuestionPool;
 use App\Models\Setting;
 use App\Exports\QuizScoresExport;
 use App\Services\AiQuestionService;
+use App\Services\CloudinaryService;
 use App\Services\DocumentTextExtractor;
 use App\Events\DataUpdated;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -515,6 +516,9 @@ class QuizManagementController extends Controller
             return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Cannot delete: this quiz has already been started by students.');
         }
         $title = $quiz->title;
+        if ($quiz->script_public_id) {
+            CloudinaryService::deleteRawByPublicId($quiz->script_public_id);
+        }
         $quiz->delete();
         try {
             broadcast(new DataUpdated('quizzes'))->toOthers();
@@ -593,6 +597,26 @@ class QuizManagementController extends Controller
         } else {
             $topics = null;
         }
+        $scriptUrl = $quiz->script_url;
+        $scriptPublicId = $quiz->script_public_id;
+        $scriptText = $quiz->script_text;
+        if ($request->filled('source_script') && trim($request->source_script) !== '') {
+            $scriptText = trim($request->source_script);
+            $scriptUrl = null;
+            $scriptPublicId = null;
+        } elseif ($request->hasFile('source_file')) {
+            $file = $request->file('source_file');
+            $uploaded = CloudinaryService::uploadRawFromFile($file);
+            if ($uploaded) {
+                $scriptUrl = $uploaded['url'];
+                $scriptPublicId = $uploaded['public_id'];
+                $scriptText = app(DocumentTextExtractor::class)->extract($file);
+            } else {
+                return redirect()->route($this->staffRoutePrefix() . '.quizzes.edit', $quiz)
+                    ->withInput()
+                    ->with('error', 'Failed to upload script to Cloudinary. Check settings or try again.');
+            }
+        }
         $quiz->update([
             'title' => $request->title,
             'exam_type' => $request->input('exam_type') ?: null,
@@ -600,16 +624,17 @@ class QuizManagementController extends Controller
             'number_of_questions' => $request->number_of_questions,
             'duration_minutes' => $request->duration_minutes,
             'topics' => is_array($topics) ? json_encode($topics) : null,
+            'script_url' => $scriptUrl,
+            'script_public_id' => $scriptPublicId,
+            'script_text' => $scriptText,
             'is_active' => $request->boolean('is_active', true),
             'starts_at' => $request->filled('starts_at') ? $request->starts_at : null,
             'ends_at' => $request->filled('ends_at') ? $request->ends_at : null,
             'result_visibility' => $request->input('result_visibility', $quiz->result_visibility ?? Quiz::RESULT_VISIBILITY_FULL_REVIEW_AFTER_END),
         ]);
-        $sourceText = null;
-        if ($request->filled('source_script') && trim($request->source_script) !== '') {
-            $sourceText = trim($request->source_script);
-        } elseif ($request->hasFile('source_file')) {
-            $sourceText = app(DocumentTextExtractor::class)->extract($request->file('source_file'));
+        $sourceText = $scriptText;
+        if ($sourceText === null) {
+            $sourceText = '';
         }
         if ($sourceText !== null && $sourceText !== '') {
             $aiService = app(AiQuestionService::class);

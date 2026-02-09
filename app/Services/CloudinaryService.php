@@ -146,6 +146,85 @@ class CloudinaryService
     }
 
     /**
+     * Upload raw file (PDF, DOCX, TXT) to Cloudinary. Stored in folder/scripts.
+     * Returns ['url' => secure_url, 'public_id' => public_id] or null on failure.
+     */
+    public static function uploadRawFromFile(UploadedFile $file, string $subfolder = 'scripts'): ?array
+    {
+        if (!static::isConfigured()) {
+            return null;
+        }
+        $cloudName = trim(Setting::getValue(Setting::KEY_CLOUDINARY_CLOUD_NAME) ?? '');
+        $apiKey = trim(Setting::getValue(Setting::KEY_CLOUDINARY_API_KEY) ?? '');
+        $apiSecret = trim(Setting::getValue(Setting::KEY_CLOUDINARY_API_SECRET) ?? '');
+        $baseFolder = trim(Setting::getValue(Setting::KEY_CLOUDINARY_FOLDER, 'quizsnap') ?? 'quizsnap');
+        $folder = $baseFolder === '' ? $subfolder : $baseFolder . '/' . $subfolder;
+        $timestamp = (string) time();
+        $paramsToSign = [
+            'folder' => $folder,
+            'timestamp' => $timestamp,
+        ];
+        ksort($paramsToSign);
+        $strToSign = implode('&', array_map(fn ($k, $v) => $k . '=' . $v, array_keys($paramsToSign), $paramsToSign));
+        $signature = sha1($strToSign . $apiSecret);
+        $url = 'https://api.cloudinary.com/v1_1/' . $cloudName . '/raw/upload';
+        $multipart = [
+            ['name' => 'file', 'contents' => fopen($file->getRealPath(), 'r'), 'filename' => $file->getClientOriginalName()],
+            ['name' => 'api_key', 'contents' => $apiKey],
+            ['name' => 'timestamp', 'contents' => $timestamp],
+            ['name' => 'signature', 'contents' => $signature],
+            ['name' => 'folder', 'contents' => $folder],
+        ];
+        try {
+            $response = Http::timeout(60)->asMultipart()->post($url, $multipart);
+            if ($response->successful()) {
+                $data = $response->json();
+                $secureUrl = $data['secure_url'] ?? null;
+                $publicId = $data['public_id'] ?? null;
+                if ($secureUrl && $publicId !== null) {
+                    return ['url' => $secureUrl, 'public_id' => $publicId];
+                }
+            }
+            \Log::error('Cloudinary raw upload failed', ['status' => $response->status(), 'body' => $response->body()]);
+        } catch (\Throwable $e) {
+            \Log::error('Cloudinary raw upload exception', ['message' => $e->getMessage()]);
+            report($e);
+        }
+        return null;
+    }
+
+    /**
+     * Delete raw asset by public_id (e.g. script when quiz is deleted). Returns true if deleted or not found.
+     */
+    public static function deleteRawByPublicId(string $publicId): bool
+    {
+        if (!static::isConfigured() || $publicId === '') {
+            return true;
+        }
+        $cloudName = trim(Setting::getValue(Setting::KEY_CLOUDINARY_CLOUD_NAME) ?? '');
+        $apiKey = trim(Setting::getValue(Setting::KEY_CLOUDINARY_API_KEY) ?? '');
+        $apiSecret = trim(Setting::getValue(Setting::KEY_CLOUDINARY_API_SECRET) ?? '');
+        $timestamp = (string) time();
+        $paramsToSign = ['public_id' => $publicId, 'timestamp' => $timestamp];
+        ksort($paramsToSign);
+        $strToSign = implode('&', array_map(fn ($k, $v) => $k . '=' . $v, array_keys($paramsToSign), $paramsToSign));
+        $signature = sha1($strToSign . $apiSecret);
+        $url = 'https://api.cloudinary.com/v1_1/' . $cloudName . '/raw/destroy';
+        try {
+            $response = Http::asForm()->post($url, [
+                'public_id' => $publicId,
+                'api_key' => $apiKey,
+                'timestamp' => $timestamp,
+                'signature' => $signature,
+            ]);
+            return $response->successful() || $response->status() === 404;
+        } catch (\Throwable $e) {
+            \Log::warning('Cloudinary raw delete failed', ['public_id' => $publicId, 'message' => $e->getMessage()]);
+            return false;
+        }
+    }
+
+    /**
      * Test connection: try a tiny upload (1x1 pixel PNG) and return success/message with detailed error.
      */
     public static function testConnection(): array
