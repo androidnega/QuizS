@@ -140,7 +140,7 @@
                 <!-- Tab: AI -->
                 <div class="settings-tab-content p-6 hidden" data-tab-content="ai" id="tab-content-ai">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">AI Question Generation</h2>
-                <p class="text-sm text-gray-600 mb-4">Gemini (primary) and DeepSeek (fallback) API keys.</p>
+                <p class="text-sm text-gray-600 mb-4">All API keys below are stored in the database and used for question generation: Gemini (primary), then DeepSeek (fallback) if Gemini is missing or fails. Cloudinary (Cloudinary tab) is also stored in the database and used for proctoring and institution logo.</p>
                 <div class="space-y-6">
                     <div>
                         <label for="gemini_api_key" class="block text-sm font-medium text-gray-700 mb-2">Gemini API Key (primary)</label>

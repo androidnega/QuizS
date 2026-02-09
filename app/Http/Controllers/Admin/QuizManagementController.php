@@ -155,15 +155,21 @@ class QuizManagementController extends Controller
                             (int) $request->number_of_questions,
                             null
                         ));
-                        $message = $poolCount > 0
-                            ? "Quiz created successfully! {$poolCount} questions are in the pool — open this quiz and click \"Approve All\" to add them to the quiz."
-                            : 'Quiz created. AI did not return valid questions; add questions manually or try again with different topics.';
+                        if ($poolCount > 0) {
+                            $message = "Quiz created successfully! {$poolCount} questions are in the pool — open this quiz and click \"Approve All\" to add them to the quiz.";
+                            $flashKey = 'success';
+                        } else {
+                            $message = 'AI did not generate any questions. Check API keys in Dashboard → Settings (AI tab), try different topics, or add questions manually.';
+                            $flashKey = 'error';
+                        }
                     } catch (\Throwable $e) {
                         $message = 'Quiz created. AI generation failed: ' . $e->getMessage() . ' Add questions manually or try again.';
+                        $flashKey = 'error';
                     }
                 }
             } else {
                 $message = 'Quiz created successfully! You can now add questions manually or use AI generation (set topics and ensure a Gemini or DeepSeek key in Settings).';
+                $flashKey = 'success';
             }
 
             try {
@@ -172,7 +178,7 @@ class QuizManagementController extends Controller
                 // Ignore broadcast errors
             }
 
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', ['quiz' => $quiz->id])->with('success', $message);
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', ['quiz' => $quiz->id])->with($flashKey ?? 'success', $message);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
@@ -620,10 +626,13 @@ class QuizManagementController extends Controller
                     $sourceText
                 ));
                 broadcast(new DataUpdated('quizzes'))->toOthers();
-                $msg = $poolCount > 0
-                    ? "Quiz updated. {$poolCount} question(s) generated from uploaded file and awaiting approval."
-                    : 'Quiz updated. AI did not return valid questions; try again or add questions manually.';
-                return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', $msg);
+                if ($poolCount > 0) {
+                    return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
+                        ->with('success', "Quiz updated. {$poolCount} question(s) generated from uploaded file and awaiting approval.");
+                }
+                return redirect()->route($this->staffRoutePrefix() . '.quizzes.edit', $quiz)
+                    ->withInput()
+                    ->with('error', 'AI did not generate any questions. Check API keys in Dashboard → Settings (AI tab), try different source/topics, or add questions manually.');
             } catch (\Throwable $e) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.edit', $quiz)
                     ->withInput()
