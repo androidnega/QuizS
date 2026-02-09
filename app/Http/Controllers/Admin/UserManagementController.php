@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rules\Password;
 
 class UserManagementController extends Controller
@@ -47,13 +48,16 @@ class UserManagementController extends Controller
             'password.numbers' => 'The password must contain at least one number.',
         ]);
 
-        $user = User::create([
+        $attrs = [
             'username' => $request->username,
-            'email' => $request->filled('email') ? trim($request->email) : null,
             'name' => $request->name ?: $request->username,
             'role' => $request->role,
             'password' => Hash::make($request->password),
-        ]);
+        ];
+        if (Schema::hasColumn('users', 'email')) {
+            $attrs['email'] = $request->filled('email') ? trim($request->email) : null;
+        }
+        $user = User::create($attrs);
         if ($user->isExaminer()) {
             $user->courses()->sync($request->input('course_ids', []));
         }
@@ -101,7 +105,9 @@ class UserManagementController extends Controller
         ]);
 
         $user->username = $request->username;
-        $user->email = $request->filled('email') ? trim($request->email) : null;
+        if (Schema::hasColumn('users', 'email')) {
+            $user->email = $request->filled('email') ? trim($request->email) : null;
+        }
         $user->name = $request->name ?: $user->username;
         $user->role = $request->role;
         if ($request->filled('password')) {
