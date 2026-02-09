@@ -176,6 +176,7 @@ Route::middleware('admin.auth')->group(function () {
                 Route::get('/settings/ai-test', [SettingsController::class, 'aiTest'])->name('settings.ai-test');
                 Route::get('/settings/cloudinary-test', [SettingsController::class, 'cloudinaryTest'])->name('settings.cloudinary-test');
             }
+            Route::post('/settings/otp-test', [SettingsController::class, 'otpTest'])->name('settings.otp-test');
             Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('users.index');
             Route::get('/users/create', [\App\Http\Controllers\Admin\UserManagementController::class, 'create'])->name('users.create');
             Route::post('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('users.store');

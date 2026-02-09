@@ -39,6 +39,10 @@
                             <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             Cloudinary
                         </button>
+                        <button type="button" class="settings-tab-btn px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm" data-tab="otp" id="tab-btn-otp">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                            OTP (SMS)
+                        </button>
                     </nav>
                 </div>
 
@@ -231,6 +235,45 @@
                     @endunless
                 </div>
                 </div>
+
+                <!-- Tab: OTP (Arkesel) -->
+                <div class="settings-tab-content p-6 hidden" data-tab-content="otp" id="tab-content-otp">
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">OTP Providers (SMS)</h2>
+                <p class="text-sm text-gray-600 mb-4">Configure SMS OTP delivery via <a href="https://arkesel.com" target="_blank" rel="noopener" class="text-primary-600 hover:underline">Arkesel</a>. API keys are stored encrypted. Use the test below to verify delivery.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="otp_arkesel_api_key" class="block text-sm font-medium text-gray-700 mb-2">Arkesel API Key</label>
+                        @if($otp_arkesel_key_set ?? false)
+                            <p class="text-sm text-gray-600 mb-2">Current key: <code class="px-2 py-0.5 bg-gray-100 rounded">{{ $otp_arkesel_key_masked ?? '' }}</code></p>
+                            <input type="password" name="otp_arkesel_api_key" id="otp_arkesel_api_key" autocomplete="off" class="input w-full" placeholder="Enter new key to replace, or leave blank to keep">
+                            <label class="flex items-center gap-2 cursor-pointer mt-2">
+                                <input type="checkbox" name="clear_otp_arkesel_key" value="1" class="w-4 h-4 text-danger-600 border-gray-300 rounded focus:ring-danger-500">
+                                <span class="text-sm text-gray-700">Remove Arkesel API key</span>
+                            </label>
+                        @else
+                            <input type="password" name="otp_arkesel_api_key" id="otp_arkesel_api_key" autocomplete="off" class="input w-full" placeholder="Your Arkesel API key">
+                            <p class="text-xs text-gray-500 mt-1">Get your key from <a href="https://sms.arkesel.com/dashboard" target="_blank" rel="noopener" class="text-primary-600 hover:underline">Arkesel Dashboard</a> → SMS API. Stored encrypted.</p>
+                        @endif
+                    </div>
+                    <div>
+                        <label for="otp_arkesel_sender_id" class="block text-sm font-medium text-gray-700 mb-1">Sender ID (optional)</label>
+                        <input type="text" name="otp_arkesel_sender_id" id="otp_arkesel_sender_id" value="{{ old('otp_arkesel_sender_id', $otp_arkesel_sender_id ?? 'QuizSnap') }}" class="input w-full max-w-xs" placeholder="QuizSnap" maxlength="11">
+                        <p class="text-xs text-gray-500 mt-1">Max 11 characters. Shown as SMS sender (e.g. QuizSnap).</p>
+                    </div>
+                    <div class="pt-4 border-t border-gray-200">
+                        <p class="text-sm font-medium text-gray-700 mb-2">Test OTP delivery</p>
+                        <p class="text-xs text-gray-500 mb-2">Save settings first if you changed the API key. Enter a phone number in international format (e.g. 233544919953 for Ghana).</p>
+                        <div class="flex flex-wrap items-end gap-2">
+                            <div>
+                                <label for="otp-test-phone" class="block text-xs text-gray-600 mb-1">Phone number</label>
+                                <input type="text" id="otp-test-phone" class="input w-48" placeholder="233544919953" autocomplete="off">
+                            </div>
+                            <button type="button" id="otp-test-btn" class="btn btn-secondary">Send test OTP</button>
+                        </div>
+                        <div id="otp-test-result" class="mt-3 hidden rounded-lg border p-3 text-sm"></div>
+                    </div>
+                </div>
+                </div>
             </div>
 
             <div class="flex justify-end">
@@ -251,7 +294,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const tabBtns = document.querySelectorAll('.settings-tab-btn');
     const tabContents = document.querySelectorAll('.settings-tab-content');
-    const validTabs = ['general', 'email', 'ai', 'cloudinary'];
+    const validTabs = ['general', 'email', 'ai', 'cloudinary', 'otp'];
 
     function switchToTab(targetTab) {
         if (!validTabs.includes(targetTab)) targetTab = 'general';
@@ -362,7 +405,53 @@ if (aiTestBtn) {
     });
 });
 }
-@endunless
+
+// OTP Test (available in all environments)
+document.addEventListener('DOMContentLoaded', function() {
+    var otpTestBtn = document.getElementById('otp-test-btn');
+    if (otpTestBtn) {
+        otpTestBtn.addEventListener('click', function() {
+            var phoneInput = document.getElementById('otp-test-phone');
+            var resultEl = document.getElementById('otp-test-result');
+            var phone = phoneInput && phoneInput.value ? phoneInput.value.trim() : '';
+            if (!phone) {
+                resultEl.classList.remove('hidden');
+                resultEl.classList.add('bg-danger-50', 'border', 'border-danger-200', 'text-danger-800');
+                resultEl.textContent = 'Enter a phone number first.';
+                return;
+            }
+            resultEl.classList.remove('hidden', 'bg-success-50', 'border-success-200', 'text-success-800', 'bg-danger-50', 'border-danger-200', 'text-danger-800');
+            resultEl.textContent = 'Sending test OTP…';
+            otpTestBtn.disabled = true;
+            var formData = new FormData();
+            formData.append('phone', phone);
+            formData.append('_token', document.querySelector('input[name="_token"]') && document.querySelector('input[name="_token"]').value);
+            fetch('{{ route('dashboard.settings.otp-test') }}', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(res) {
+                var d = res.data;
+                resultEl.classList.remove('hidden');
+                if (d.success) {
+                    resultEl.classList.add('bg-success-50', 'border', 'border-success-200', 'text-success-800');
+                    resultEl.textContent = d.message || 'Test OTP sent.';
+                } else {
+                    resultEl.classList.add('bg-danger-50', 'border', 'border-danger-200', 'text-danger-800');
+                    resultEl.textContent = d.message || 'Failed to send test OTP.';
+                }
+            })
+            .catch(function(err) {
+                resultEl.classList.remove('hidden');
+                resultEl.classList.add('bg-danger-50', 'border', 'border-danger-200', 'text-danger-800');
+                resultEl.textContent = 'Request failed: ' + (err.message || 'Network error');
+            })
+            .finally(function() { otpTestBtn.disabled = false; });
+        });
+    }
+});
 </script>
 @endpush
 @endsection

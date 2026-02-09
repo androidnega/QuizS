@@ -306,10 +306,12 @@
         });
     })();
 
+    // Right-click: block only (no context menu). Log violation silently; no popup, no auto-submit.
     document.addEventListener('contextmenu', function (e) {
         e.preventDefault();
+        e.stopPropagation();
         recordViolation('right_click');
-    });
+    }, true);
     document.addEventListener('copy', function (e) {
         e.preventDefault();
         recordViolation('copy_paste');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\AiQuestionService;
+use App\Services\ArkeselService;
 use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -46,6 +47,9 @@ class SettingsController extends Controller
             'cloudinary_secret_set' => (bool) Setting::getValue(Setting::KEY_CLOUDINARY_API_SECRET),
             'cloudinary_folder' => Setting::getValue(Setting::KEY_CLOUDINARY_FOLDER, 'quizsnap'),
             'lock_examiner_create_group' => Setting::getValue(Setting::KEY_LOCK_EXAMINER_CREATE_GROUP, '0') === '1',
+            'otp_arkesel_key_set' => (bool) Setting::getValue(Setting::KEY_OTP_ARKESEL_API_KEY),
+            'otp_arkesel_key_masked' => ($k = Setting::getValue(Setting::KEY_OTP_ARKESEL_API_KEY)) ? (strlen($k) > 8 ? substr($k, 0, 4) . '…' . substr($k, -4) : '••••') : null,
+            'otp_arkesel_sender_id' => Setting::getValue(Setting::KEY_OTP_ARKESEL_SENDER_ID, 'QuizSnap'),
         ]);
     }
 
@@ -76,6 +80,9 @@ class SettingsController extends Controller
             'cloudinary_api_secret' => 'nullable|string|max:512',
             'cloudinary_folder' => 'nullable|string|max:128',
             'lock_examiner_create_group' => 'nullable|boolean',
+            'otp_arkesel_api_key' => 'nullable|string|max:512',
+            'clear_otp_arkesel_key' => 'nullable|boolean',
+            'otp_arkesel_sender_id' => 'nullable|string|max:11',
         ]);
 
         Setting::setValue(Setting::KEY_APP_NAME, $request->filled('app_name') ? trim($request->app_name) : null);
@@ -123,6 +130,17 @@ class SettingsController extends Controller
         Setting::setValue(Setting::KEY_CLOUDINARY_FOLDER, $request->filled('cloudinary_folder') ? trim($request->cloudinary_folder) : 'quizsnap');
         Setting::setValue(Setting::KEY_LOCK_EXAMINER_CREATE_GROUP, $request->boolean('lock_examiner_create_group') ? '1' : '0');
 
+        if ($request->boolean('clear_otp_arkesel_key')) {
+            Setting::setValue(Setting::KEY_OTP_ARKESEL_API_KEY, null);
+        } elseif ($request->filled('otp_arkesel_api_key')) {
+            Setting::setValue(Setting::KEY_OTP_ARKESEL_API_KEY, trim($request->otp_arkesel_api_key));
+        }
+        Setting::setValue(Setting::KEY_OTP_ARKESEL_SENDER_ID, $request->filled('otp_arkesel_sender_id') ? substr(trim($request->otp_arkesel_sender_id), 0, 11) : 'QuizSnap');
+        if ($request->hasAny(['otp_arkesel_api_key', 'clear_otp_arkesel_key', 'otp_arkesel_sender_id'])) {
+            Cache::forget('setting:' . Setting::KEY_OTP_ARKESEL_API_KEY);
+            Cache::forget('setting:' . Setting::KEY_OTP_ARKESEL_SENDER_ID);
+        }
+
         // Ensure cache is cleared so Test Cloudinary / uploads use fresh DB values
         if ($request->hasAny(['cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret', 'cloudinary_folder'])) {
             Cache::forget('setting:' . Setting::KEY_CLOUDINARY_CLOUD_NAME);
@@ -132,7 +150,7 @@ class SettingsController extends Controller
         }
 
         $tab = $request->input('settings_tab', 'general');
-        $validTabs = ['general', 'email', 'ai', 'cloudinary'];
+        $validTabs = ['general', 'email', 'ai', 'cloudinary', 'otp'];
         if (!in_array($tab, $validTabs, true)) {
             $tab = 'general';
         }
@@ -154,6 +172,25 @@ class SettingsController extends Controller
     public function cloudinaryTest(): JsonResponse
     {
         $result = CloudinaryService::testConnection();
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * Test OTP delivery (Arkesel). Sends a test SMS with a 6-digit code to the given phone number.
+     */
+    public function otpTest(Request $request): JsonResponse
+    {
+        $request->validate(['phone' => 'required|string|max:20']);
+        $phone = preg_replace('/\D/', '', $request->input('phone'));
+        if (strlen($phone) < 10) {
+            return response()->json(['success' => false, 'message' => 'Enter a valid phone number (e.g. 233544919953 or 0544919953).'], 422);
+        }
+        if (strlen($phone) === 10 && substr($phone, 0, 1) === '0') {
+            $phone = '233' . substr($phone, 1);
+        } elseif (strlen($phone) === 9 && in_array(substr($phone, 0, 1), ['4', '5', '6'], true)) {
+            $phone = '233' . $phone;
+        }
+        $result = ArkeselService::sendTestOtp($phone);
         return response()->json($result, $result['success'] ? 200 : 422);
     }
 }

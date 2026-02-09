@@ -89,6 +89,10 @@ class Setting extends Model
     /** Admin: lock examiners from creating new class groups (1 = locked). */
     public const KEY_LOCK_EXAMINER_CREATE_GROUP = 'lock_examiner_create_group';
 
+    /** OTP (Arkesel): API key and optional sender ID for SMS OTP. */
+    public const KEY_OTP_ARKESEL_API_KEY = 'otp_arkesel_api_key';
+    public const KEY_OTP_ARKESEL_SENDER_ID = 'otp_arkesel_sender_id';
+
     /** Keys whose values are stored encrypted (API keys, secrets, mail password). */
     private const ENCRYPTED_KEYS = [
         self::KEY_GEMINI_API,
@@ -97,5 +101,6 @@ class Setting extends Model
         self::KEY_CLOUDINARY_API_KEY,
         self::KEY_CLOUDINARY_API_SECRET,
         self::KEY_MAIL_PASSWORD,
+        self::KEY_OTP_ARKESEL_API_KEY,
     ];
 }
