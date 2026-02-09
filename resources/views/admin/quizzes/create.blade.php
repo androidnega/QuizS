@@ -114,7 +114,8 @@
                     </div>
                 </div>
 
-                <!-- Questions count -->
+                <!-- Question pool and how many each student gets -->
+                <p class="text-sm font-semibold text-gray-800 mb-3">Question pool &amp; per student</p>
                 <div class="grid md:grid-cols-2 gap-6">
                     <div>
                         <label for="number_of_questions" class="block text-sm font-medium text-gray-700 mb-2">Number of Questions (pool / AI target) *</label>
@@ -124,10 +125,10 @@
                         @error('number_of_questions')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label for="questions_per_student" class="block text-sm font-medium text-gray-700 mb-2">Questions per student *</label>
+                        <label for="questions_per_student" class="block text-sm font-medium text-gray-700 mb-2">Questions per student (from approved pool) *</label>
                         <input type="number" id="questions_per_student" name="questions_per_student" min="1" max="250" required
                             value="{{ old('questions_per_student', 10) }}" class="input @error('questions_per_student') border-danger-500 @enderror">
-                        <p class="text-xs text-gray-500 mt-1">How many questions each student receives (randomly drawn from approved pool). Approved count must be ≥ this.</p>
+                        <p class="text-xs text-gray-500 mt-1">How many questions each student receives, randomly drawn from the approved pool. Approved count must be ≥ this.</p>
                         @error('questions_per_student')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                     </div>
                 </div>

@@ -68,6 +68,7 @@
                         <p class="text-xs text-gray-500 mt-1">Only courses attached to this quiz’s class group are listed.</p>
                     </div>
 
+                    <p class="text-sm font-semibold text-gray-800 mb-3 md:col-span-2">Question pool &amp; per student</p>
                     <div>
                         <label for="number_of_questions" class="block text-sm font-medium text-gray-700 mb-2">Number of Questions (pool / AI target) *</label>
                         <input type="number" id="number_of_questions" name="number_of_questions" min="1" max="250" 
@@ -75,10 +76,10 @@
                         <p class="text-xs text-gray-500 mt-1">Used for AI generation. Approved pool can be larger.</p>
                     </div>
                     <div>
-                        <label for="questions_per_student" class="block text-sm font-medium text-gray-700 mb-2">Questions per student *</label>
+                        <label for="questions_per_student" class="block text-sm font-medium text-gray-700 mb-2">Questions per student (from approved pool) *</label>
                         <input type="number" id="questions_per_student" name="questions_per_student" min="1" max="250" 
                             value="{{ old('questions_per_student', $quiz->questions_per_student ?? $quiz->number_of_questions) }}" class="input">
-                        <p class="text-xs text-gray-500 mt-1">How many questions each student receives. Approved count must be ≥ this.</p>
+                        <p class="text-xs text-gray-500 mt-1">How many questions each student receives, randomly drawn from the approved pool. Approved count must be ≥ this.</p>
                     </div>
                 </div>
 
