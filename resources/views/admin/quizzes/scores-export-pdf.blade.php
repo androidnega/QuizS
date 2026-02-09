@@ -15,8 +15,8 @@
         .meta { margin: 16px 0 18px 0; padding: 12px 14px; background: #f8fafc; border-radius: 6px; font-size: 9pt; color: #475569; }
         .meta-row { margin: 4px 0; }
         .meta-label { font-weight: bold; color: #334155; }
-        table.scores { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 9pt; }
-        table.scores th, table.scores td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+        table.scores { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 9pt; line-height: 1.2; }
+        table.scores th, table.scores td { border: 1px solid #cbd5e1; padding: 4px 8px; text-align: left; }
         table.scores th { background: #1e40af; color: #fff; font-weight: 600; }
         table.scores tr:nth-child(even) { background: #f1f5f9; }
         table.scores tr:hover { background: #e2e8f0; }

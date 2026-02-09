@@ -734,7 +734,12 @@ class QuizManagementController extends Controller
 
         $lecturer = $this->adminUser();
         $lecturerName = $lecturer ? ($lecturer->name ?: $lecturer->username) : '—';
-        $courseName = $quiz->course ? $quiz->course->name : '—';
+        $courseName = '—';
+        if ($quiz->course) {
+            $code = trim($quiz->course->code ?? '');
+            $name = trim($quiz->course->name ?? '');
+            $courseName = $code && $name ? $code . ' – ' . $name : ($name ?: $code ?: '—');
+        }
         $examTypeLabel = $quiz->getExamTypeLabel();
         $reportDate = $quiz->ended_at ? $quiz->ended_at->format('F j, Y') : now()->format('F j, Y');
         $institutionName = Setting::getValue(Setting::KEY_INSTITUTION_NAME, '');
