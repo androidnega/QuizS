@@ -31,8 +31,6 @@ class SettingsController extends Controller
             'deepseek_key_masked' => $deepseekKeyMasked,
             'app_name' => Setting::getValue(Setting::KEY_APP_NAME, config('app.name')),
             'app_timezone' => Setting::getValue(Setting::KEY_APP_TIMEZONE, config('app.timezone', 'UTC')),
-            'institution_name' => Setting::getValue(Setting::KEY_INSTITUTION_NAME, ''),
-            'institution_logo' => Setting::getValue(Setting::KEY_INSTITUTION_LOGO, ''),
             'mail_mailer' => Setting::getValue(Setting::KEY_MAIL_MAILER, config('mail.default') ?? 'smtp'),
             'mail_host' => Setting::getValue(Setting::KEY_MAIL_HOST, config('mail.mailers.smtp.host') ?? ''),
             'mail_port' => Setting::getValue(Setting::KEY_MAIL_PORT, (string) (config('mail.mailers.smtp.port') ?? 587)),
@@ -59,8 +57,6 @@ class SettingsController extends Controller
         $request->validate([
             'app_name' => 'nullable|string|max:255',
             'app_timezone' => 'nullable|string|max:100',
-            'institution_name' => 'nullable|string|max:255',
-            'institution_logo' => 'nullable|image|max:2048',
             'mail_mailer' => 'nullable|string|max:50',
             'mail_host' => 'nullable|string|max:255',
             'mail_port' => 'nullable|string|max:10',
@@ -84,11 +80,6 @@ class SettingsController extends Controller
 
         Setting::setValue(Setting::KEY_APP_NAME, $request->filled('app_name') ? trim($request->app_name) : null);
         Setting::setValue(Setting::KEY_APP_TIMEZONE, $request->filled('app_timezone') ? trim($request->app_timezone) : null);
-        Setting::setValue(Setting::KEY_INSTITUTION_NAME, $request->filled('institution_name') ? trim($request->institution_name) : null);
-        if ($request->hasFile('institution_logo')) {
-            $path = $request->file('institution_logo')->store('institution', 'public');
-            Setting::setValue(Setting::KEY_INSTITUTION_LOGO, $path);
-        }
 
         Setting::setValue(Setting::KEY_MAIL_MAILER, $request->filled('mail_mailer') ? trim($request->mail_mailer) : null);
         Setting::setValue(Setting::KEY_MAIL_HOST, $request->filled('mail_host') ? trim($request->mail_host) : null);

@@ -695,10 +695,23 @@ class QuizManagementController extends Controller
         $logoPath = Setting::getValue(Setting::KEY_INSTITUTION_LOGO, '');
         $institutionLogoPath = null;
         if ($logoPath) {
-            $fullPath = storage_path('app/public/' . $logoPath);
-            if (file_exists($fullPath)) {
-                $mime = @mime_content_type($fullPath) ?: 'image/png';
-                $institutionLogoPath = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fullPath));
+            if (str_starts_with($logoPath, 'http')) {
+                try {
+                    $response = \Illuminate\Support\Facades\Http::timeout(10)->get($logoPath);
+                    if ($response->successful()) {
+                        $body = $response->body();
+                        $mime = $response->header('Content-Type') ?: 'image/png';
+                        $institutionLogoPath = 'data:' . (explode(';', $mime)[0] ?: 'image/png') . ';base64,' . base64_encode($body);
+                    }
+                } catch (\Throwable $e) {
+                    // omit logo on fetch failure
+                }
+            } else {
+                $fullPath = storage_path('app/public/' . $logoPath);
+                if (file_exists($fullPath)) {
+                    $mime = @mime_content_type($fullPath) ?: 'image/png';
+                    $institutionLogoPath = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fullPath));
+                }
             }
         }
 

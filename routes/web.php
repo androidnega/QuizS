@@ -106,6 +106,10 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/profile/password', [\App\Http\Controllers\Admin\StaffProfileController::class, 'password'])->name('profile.password');
         Route::put('/profile/password', [\App\Http\Controllers\Admin\StaffProfileController::class, 'updatePassword'])->name('profile.password.update');
 
+        // Institution / School — both roles (examiner-accessible; logo uploads to Cloudinary)
+        Route::get('/institution', [\App\Http\Controllers\Admin\InstitutionController::class, 'index'])->name('institution.index');
+        Route::put('/institution', [\App\Http\Controllers\Admin\InstitutionController::class, 'update'])->name('institution.update');
+
         // Class groups — both (policy controls create/edit/delete)
         Route::get('/class-groups', [ClassGroupController::class, 'index'])->name('class-groups.index');
         Route::get('/class-groups/create', [ClassGroupController::class, 'create'])->name('class-groups.create');

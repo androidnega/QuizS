@@ -55,19 +55,6 @@
                         <input type="text" name="app_timezone" id="app_timezone" value="{{ old('app_timezone', $app_timezone ?? 'UTC') }}" class="input w-full" placeholder="UTC">
                         <p class="text-xs text-gray-500 mt-1">e.g. UTC, Africa/Nairobi, America/New_York</p>
                     </div>
-                    <div>
-                        <label for="institution_name" class="block text-sm font-medium text-gray-700 mb-1">Institution / School name</label>
-                        <input type="text" name="institution_name" id="institution_name" value="{{ old('institution_name', $institution_name ?? '') }}" class="input w-full" placeholder="e.g. Takoradi Technical University">
-                        <p class="text-xs text-gray-500 mt-1">Shown on PDF score reports. Leave blank to omit.</p>
-                    </div>
-                    <div>
-                        <label for="institution_logo" class="block text-sm font-medium text-gray-700 mb-1">Institution logo</label>
-                        @if(!empty($institution_logo))
-                            <p class="text-xs text-gray-500 mb-1">Current: <img src="{{ asset('storage/' . $institution_logo) }}" alt="Logo" class="inline-block h-8 max-w-[120px] object-contain"> — upload new to replace</p>
-                        @endif
-                        <input type="file" name="institution_logo" id="institution_logo" accept="image/*" class="input w-full text-sm">
-                        <p class="text-xs text-gray-500 mt-1">Image for PDF header. Max 2MB.</p>
-                    </div>
                     @if(session('admin_role') === 'super_admin')
                     <div class="pt-4 border-t border-gray-200">
                         <p class="text-sm font-medium text-gray-700 mb-2">Examiner permissions</p>

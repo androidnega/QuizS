@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -93,6 +94,55 @@ class CloudinaryService
             return null;
         }
         return static::upload($dataUrl, $publicIdPrefix);
+    }
+
+    /**
+     * Upload from uploaded file (e.g. form file input). Uploads directly to Cloudinary. Returns secure URL or null.
+     */
+    public static function uploadFromFile(UploadedFile $file): ?string
+    {
+        if (!static::isConfigured()) {
+            return null;
+        }
+        $cloudName = trim(Setting::getValue(Setting::KEY_CLOUDINARY_CLOUD_NAME) ?? '');
+        $apiKey = trim(Setting::getValue(Setting::KEY_CLOUDINARY_API_KEY) ?? '');
+        $apiSecret = trim(Setting::getValue(Setting::KEY_CLOUDINARY_API_SECRET) ?? '');
+        $folder = trim(Setting::getValue(Setting::KEY_CLOUDINARY_FOLDER, 'quizsnap') ?? 'quizsnap');
+        if ($folder === '') {
+            $folder = 'quizsnap';
+        }
+        $timestamp = (string) time();
+        $paramsToSign = [
+            'folder' => $folder,
+            'timestamp' => $timestamp,
+        ];
+        ksort($paramsToSign);
+        $strToSign = implode('&', array_map(fn ($k, $v) => $k . '=' . $v, array_keys($paramsToSign), $paramsToSign));
+        $signature = sha1($strToSign . $apiSecret);
+        $url = 'https://api.cloudinary.com/v1_1/' . $cloudName . '/image/upload';
+        $multipart = [
+            ['name' => 'file', 'contents' => fopen($file->getRealPath(), 'r'), 'filename' => $file->getClientOriginalName()],
+            ['name' => 'api_key', 'contents' => $apiKey],
+            ['name' => 'timestamp', 'contents' => $timestamp],
+            ['name' => 'signature', 'contents' => $signature],
+            ['name' => 'quality', 'contents' => 'auto'],
+            ['name' => 'fetch_format', 'contents' => 'auto'],
+        ];
+        if ($folder !== '') {
+            $multipart[] = ['name' => 'folder', 'contents' => $folder];
+        }
+        try {
+            $response = Http::timeout(30)->asMultipart()->post($url, $multipart);
+            if ($response->successful()) {
+                $data = $response->json();
+                return $data['secure_url'] ?? null;
+            }
+            \Log::error('Cloudinary upload failed', ['status' => $response->status(), 'body' => $response->body()]);
+        } catch (\Throwable $e) {
+            \Log::error('Cloudinary upload exception', ['message' => $e->getMessage()]);
+            report($e);
+        }
+        return null;
     }
 
     /**
