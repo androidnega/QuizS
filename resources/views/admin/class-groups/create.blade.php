@@ -5,16 +5,6 @@
 
 @section('examiner_content')
 <div class="w-full">
-    {{-- Breadcrumb navigation --}}
-    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
-        <a href="{{ route('dashboard.class-groups.index') }}" class="hover:text-gray-900 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Back to Class Groups
-        </a>
-    </nav>
-
     @if(session('error'))
         <div class="alert alert-error mb-6">{{ session('error') }}</div>
     @endif

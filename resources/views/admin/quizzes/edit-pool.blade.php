@@ -12,15 +12,6 @@
     $optionD = old('option_d', $opts->get('D')['text'] ?? '');
 @endphp
 <div class="w-full space-y-6">
-    {{-- Breadcrumb navigation --}}
-    <nav class="flex items-center gap-2 text-sm text-gray-500" aria-label="Breadcrumb">
-        <a href="{{ route('dashboard.quizzes.index') }}" class="hover:text-gray-900">Quizzes</a>
-        <span>/</span>
-        <a href="{{ route('dashboard.quizzes.show', $quiz) }}" class="hover:text-gray-900">{{ \Illuminate\Support\Str::limit($quiz->title, 30) }}</a>
-        <span>/</span>
-        <span class="text-gray-900">Edit Pool Question</span>
-    </nav>
-
     <div class="bg-white rounded-lg border border-gray-200 p-6 md:p-8">
             <form action="{{ route('dashboard.quizzes.pool.update', [$quiz, $pool]) }}" method="post" class="space-y-6">
                 @csrf

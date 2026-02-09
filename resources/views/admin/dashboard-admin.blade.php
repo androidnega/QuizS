@@ -6,8 +6,7 @@
 @section('dashboard_content')
 <div class="w-full space-y-6">
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p class="text-gray-600 mt-1">Courses, users, class groups (view only), and system settings</p>
+        <p class="text-gray-600">Courses, users, class groups (view only), and system settings</p>
     </div>
 
     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">

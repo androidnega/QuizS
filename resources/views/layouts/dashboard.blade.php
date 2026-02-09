@@ -81,11 +81,8 @@
     <div class="examiner-main">
         <header class="flex h-14 flex-shrink-0 items-center border-b border-gray-200 bg-white z-10 min-w-0">
             <div class="examiner-page flex h-14 w-full items-center gap-3 px-4 md:px-6">
-                <button type="button" id="examiner-sidebar-toggle" class="examiner-mobile-menu flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 md:hidden" aria-label="Open menu">
-                    <svg class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
-                <button type="button" id="examiner-sidebar-expand" class="hidden h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-300" aria-label="Expand sidebar" title="Expand sidebar">
-                    <svg class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <button type="button" id="examiner-sidebar-menu-btn" class="h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-300" aria-label="Open menu" title="Open menu" style="display: none;">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
                 <h1 class="min-w-0 flex-1 truncate text-lg font-semibold text-gray-900">@yield('dashboard_heading', 'Dashboard')</h1>
                 <div class="relative flex flex-shrink-0 items-center ml-2" id="profile-menu-wrap">
@@ -122,12 +119,18 @@
     var KEY = 'dashboardSidebar';
     var sidebar = document.getElementById('examiner-sidebar');
     var overlay = document.getElementById('examiner-overlay');
-    var toggle = document.getElementById('examiner-sidebar-toggle');
+    var menuBtn = document.getElementById('examiner-sidebar-menu-btn');
     var toggleInner = document.getElementById('examiner-sidebar-toggle-inner');
-    var expandBtn = document.getElementById('examiner-sidebar-expand');
     if (!sidebar) return;
     var isDesktop = function() { return window.innerWidth >= 768; };
     var collapsed = localStorage.getItem(KEY) === 'collapsed';
+    function updateMenuButton() {
+        if (!menuBtn) return;
+        var show = !isDesktop() || collapsed;
+        menuBtn.style.setProperty('display', show ? 'flex' : 'none');
+        menuBtn.setAttribute('aria-label', collapsed && isDesktop() ? 'Expand sidebar' : 'Open menu');
+        menuBtn.setAttribute('title', collapsed && isDesktop() ? 'Expand sidebar' : 'Open menu');
+    }
     function setCollapsed(c) {
         collapsed = c;
         localStorage.setItem(KEY, c ? 'collapsed' : 'expanded');
@@ -136,14 +139,14 @@
         if (isDesktop()) { sidebar.style.width = c ? '4.5rem' : ''; sidebar.style.minWidth = c ? '4.5rem' : ''; } else { sidebar.style.width = ''; sidebar.style.minWidth = ''; }
         if (overlay) overlay.classList.toggle('hidden', c);
         if (toggleInner) { toggleInner.setAttribute('aria-label', c ? 'Expand sidebar' : 'Collapse sidebar'); toggleInner.setAttribute('title', c ? 'Expand sidebar' : 'Collapse sidebar'); }
-        if (expandBtn) expandBtn.style.setProperty('display', (isDesktop() && c) ? 'flex' : 'none');
+        updateMenuButton();
     }
     function init() {
-        if (isDesktop()) { setCollapsed(collapsed); if (expandBtn) expandBtn.style.setProperty('display', collapsed ? 'flex' : 'none'); } else { setCollapsed(true); if (expandBtn) expandBtn.style.setProperty('display', 'none'); }
+        if (isDesktop()) setCollapsed(collapsed); else setCollapsed(true);
+        updateMenuButton();
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-    if (toggle) toggle.addEventListener('click', function(e) { e.preventDefault(); setCollapsed(false); });
-    if (expandBtn) expandBtn.addEventListener('click', function(e) { e.preventDefault(); setCollapsed(false); });
+    if (menuBtn) menuBtn.addEventListener('click', function(e) { e.preventDefault(); setCollapsed(false); });
     if (overlay) overlay.addEventListener('click', function() { setCollapsed(true); });
     document.addEventListener('click', function(e) {
         var collapseBtn = e.target && e.target.closest && e.target.closest('[data-examiner-collapse]');
@@ -151,7 +154,7 @@
     }, true);
     window.addEventListener('resize', function() {
         if (!isDesktop()) setCollapsed(true);
-        if (expandBtn) expandBtn.style.setProperty('display', (isDesktop() && collapsed) ? 'flex' : 'none');
+        updateMenuButton();
     });
     var profileBtn = document.getElementById('profile-menu-btn');
     var profileDropdown = document.getElementById('profile-menu-dropdown');

@@ -5,15 +5,6 @@
 
 @section('dashboard_content')
 <div class="w-full max-w-2xl">
-    {{-- Breadcrumb navigation --}}
-    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
-        <a href="{{ route('dashboard.class-groups.index') }}" class="hover:text-gray-900">Class Groups</a>
-        <span>/</span>
-        <a href="{{ route('dashboard.class-groups.show', $classGroup) }}" class="hover:text-gray-900">{{ \Illuminate\Support\Str::limit($classGroup->name, 30) }}</a>
-        <span>/</span>
-        <span class="text-gray-900">Edit</span>
-    </nav>
-
     @if(session('error'))
         <div class="alert alert-error mb-6">{{ session('error') }}</div>
     @endif
