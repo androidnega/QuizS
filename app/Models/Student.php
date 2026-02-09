@@ -6,7 +6,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Student implements Authenticatable
+class Student extends Model implements Authenticatable
 {
     protected $table = 'students';
 
