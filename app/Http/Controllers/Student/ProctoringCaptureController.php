@@ -82,7 +82,7 @@ class ProctoringCaptureController extends Controller
 
         $assignment = $this->assignmentService->assignQuestions($quiz);
         $assignedIds = $assignment['question_ids'] ?? [];
-        if (count($assignedIds) < (int) $quiz->number_of_questions) {
+        if (count($assignedIds) < $quiz->getQuestionsPerStudent()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Not enough approved questions for this quiz. Please approve more questions in the admin panel.',

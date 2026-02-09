@@ -84,6 +84,7 @@ class QuizManagementController extends Controller
                 'class_group_id' => 'required|exists:class_groups,id',
                 'course_id' => 'required|exists:courses,id',
                 'number_of_questions' => 'required|integer|min:1|max:250',
+                'questions_per_student' => 'required|integer|min:1|max:250',
                 'duration_minutes' => 'required|integer|min:1|max:300',
                 'topics' => 'nullable|string|max:1000',
                 'is_active' => 'boolean',
@@ -127,6 +128,7 @@ class QuizManagementController extends Controller
                 'class_group_id' => $requestClassGroupId,
                 'course_id' => $requestCourseId,
                 'number_of_questions' => (int) $request->number_of_questions,
+                'questions_per_student' => (int) $request->questions_per_student,
                 'duration_minutes' => (int) $request->duration_minutes,
                 'topics' => !empty($topics) ? json_encode(array_values($topics)) : null,
                 'is_active' => $request->boolean('is_active', true),
@@ -351,7 +353,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('update', $quiz);
         if (!$quiz->hasEnoughApprovedQuestions()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Cannot publish: quiz needs at least ' . $quiz->number_of_questions . ' approved questions.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Cannot publish: quiz needs at least ' . $quiz->getQuestionsPerStudent() . ' approved questions.');
         }
         $quiz->update(['is_published' => true]);
         broadcast(new DataUpdated('quizzes'))->toOthers();
@@ -574,6 +576,7 @@ class QuizManagementController extends Controller
             'exam_type' => 'nullable|in:quiz,midsem,end_of_semester',
             'course_id' => 'required|exists:courses,id',
             'number_of_questions' => 'required|integer|min:1|max:250',
+            'questions_per_student' => 'required|integer|min:1|max:250',
             'duration_minutes' => 'required|integer|min:1|max:300',
             'topics' => 'nullable|string',
             'source_script' => 'nullable|string|max:100000',
@@ -622,6 +625,7 @@ class QuizManagementController extends Controller
             'exam_type' => $request->input('exam_type') ?: null,
             'course_id' => $request->course_id,
             'number_of_questions' => $request->number_of_questions,
+            'questions_per_student' => (int) $request->questions_per_student,
             'duration_minutes' => $request->duration_minutes,
             'topics' => is_array($topics) ? json_encode($topics) : null,
             'script_url' => $scriptUrl,
@@ -713,6 +717,7 @@ class QuizManagementController extends Controller
     public function exportScoresPdf(Quiz $quiz, Request $request): Response
     {
         $this->authorize('view', $quiz);
+        $quiz->load(['classGroup', 'course']);
 
         $sessions = $quiz->sessions()
             ->with(['result', 'violations'])
@@ -749,11 +754,13 @@ class QuizManagementController extends Controller
             }
         }
 
+        $classGroupName = $quiz->classGroup ? $quiz->classGroup->name : '—';
         $pdf = Pdf::loadView('admin.quizzes.scores-export-pdf', [
             'quiz' => $quiz,
             'sessions' => $sessions,
             'lecturerName' => $lecturerName,
             'courseName' => $courseName,
+            'classGroupName' => $classGroupName,
             'examTypeLabel' => $examTypeLabel,
             'reportDate' => $reportDate,
             'institutionName' => $institutionName,

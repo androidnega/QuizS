@@ -117,11 +117,18 @@
                 <!-- Questions count -->
                 <div class="grid md:grid-cols-2 gap-6">
                     <div>
-                        <label for="number_of_questions" class="block text-sm font-medium text-gray-700 mb-2">Number of Questions *</label>
+                        <label for="number_of_questions" class="block text-sm font-medium text-gray-700 mb-2">Number of Questions (pool / AI target) *</label>
                         <input type="number" id="number_of_questions" name="number_of_questions" min="1" max="250" required
                             value="{{ old('number_of_questions', 10) }}" class="input @error('number_of_questions') border-danger-500 @enderror">
-                        <p class="text-xs text-gray-500 mt-1">Max 250. AI generation time: ~2–5 min for 50, ~5–10 min for 100, ~10–20 min for 250.</p>
+                        <p class="text-xs text-gray-500 mt-1">Max 250. Used for AI generation. Approve at least this many (or more) for the pool.</p>
                         @error('number_of_questions')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="questions_per_student" class="block text-sm font-medium text-gray-700 mb-2">Questions per student *</label>
+                        <input type="number" id="questions_per_student" name="questions_per_student" min="1" max="250" required
+                            value="{{ old('questions_per_student', 10) }}" class="input @error('questions_per_student') border-danger-500 @enderror">
+                        <p class="text-xs text-gray-500 mt-1">How many questions each student receives (randomly drawn from approved pool). Approved count must be ≥ this.</p>
+                        @error('questions_per_student')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
 

@@ -53,9 +53,9 @@
                 <div class="flex flex-col items-center">
                     <span class="text-xs text-gray-500 mb-1">1. At start</span>
                     @if($session->pre_face_image)
-                        @php $preUrl = Str::startsWith($session->pre_face_image, 'http') ? $session->pre_face_image : asset('storage/' . $session->pre_face_image); @endphp
+                        @php $preUrl = \Illuminate\Support\Str::startsWith($session->pre_face_image, 'http') ? $session->pre_face_image : asset('storage/' . ltrim($session->pre_face_image, '/')); @endphp
                         <button type="button" class="session-img-thumb rounded-lg border border-gray-200 overflow-hidden bg-gray-50 hover:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-session-full-img="{{ $preUrl }}" data-session-img-alt="Face at start" aria-label="View full size">
-                            <img src="{{ $preUrl }}" alt="Face at start" class="w-20 h-20 object-cover object-top" loading="lazy">
+                            <img src="{{ $preUrl }}" alt="Face at start" class="w-20 h-20 object-cover object-top" loading="lazy" onerror="this.style.display='none'; var s=document.createElement('span'); s.className='text-gray-400 text-xs'; s.textContent='Unavailable'; this.parentElement.appendChild(s);">
                         </button>
                         <span class="text-xs text-gray-500 mt-1">Click to enlarge</span>
                     @else
@@ -65,9 +65,9 @@
                 <div class="flex flex-col items-center">
                     <span class="text-xs text-gray-500 mb-1">2. At end</span>
                     @if($session->post_face_image)
-                        @php $postUrl = Str::startsWith($session->post_face_image, 'http') ? $session->post_face_image : asset('storage/' . $session->post_face_image); @endphp
+                        @php $postUrl = \Illuminate\Support\Str::startsWith($session->post_face_image, 'http') ? $session->post_face_image : asset('storage/' . ltrim($session->post_face_image, '/')); @endphp
                         <button type="button" class="session-img-thumb rounded-lg border border-gray-200 overflow-hidden bg-gray-50 hover:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-session-full-img="{{ $postUrl }}" data-session-img-alt="Face at end" aria-label="View full size">
-                            <img src="{{ $postUrl }}" alt="Face at end" class="w-20 h-20 object-cover object-top" loading="lazy">
+                            <img src="{{ $postUrl }}" alt="Face at end" class="w-20 h-20 object-cover object-top" loading="lazy" onerror="this.style.display='none'; var s=document.createElement('span'); s.className='text-gray-400 text-xs'; s.textContent='Unavailable'; this.parentElement.appendChild(s);">
                         </button>
                         @if($session->post_face_captured_at)
                             <span class="text-xs text-gray-500 mt-1">{{ $session->post_face_captured_at->format('M d, H:i') }}</span>

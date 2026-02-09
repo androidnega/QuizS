@@ -4,7 +4,7 @@
 .bg-homeBlue { background-color: #0055FF; }
 .bg-homeYellow { background-color: #FFD500; }
 
-/* Homepage CTA button */
+/* Homepage CTA button - solid blue, no gradient, no shadow */
 .btn-home-cta {
   display: inline-flex;
   align-items: center;
@@ -14,15 +14,15 @@
   font-weight: 700;
   min-height: 52px;
   touch-action: manipulation;
-  background-color: #FFD500;
-  color: #0055FF;
+  background-color: #2563eb;
+  color: #fff;
   border: 0;
   transition: all 150ms ease-in-out;
-  box-shadow: 0 4px 6px -1px rgba(255, 213, 0, 0.3), 0 2px 4px -1px rgba(255, 213, 0, 0.2);
+  box-shadow: none;
 }
 .btn-home-cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(255, 213, 0, 0.4), 0 4px 6px -2px rgba(255, 213, 0, 0.3);
+  transform: translateY(-1px);
+  box-shadow: none;
 }
 .btn-home-cta:active {
   transform: translateY(0);
@@ -30,7 +30,7 @@
 .btn-home-cta:focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
-  box-shadow: 0 0 0 3px rgba(0, 85, 255, 0.3);
+  box-shadow: none;
 }
 
 /* Missing Tailwind utilities for homepage */

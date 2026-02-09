@@ -53,8 +53,12 @@
             </div>
         </div>
 
-        <button type="button" class="btn btn-action w-full py-2.5 text-sm font-semibold" id="capture-btn">
-            <span id="capture-btn-text">Capture photo</span>
+        <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 mb-4 cursor-pointer">
+            <input type="checkbox" id="face-confirm-checkbox" class="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500">
+            <span class="text-sm font-medium text-gray-800">I confirm my face is clearly visible in the frame above</span>
+        </label>
+        <button type="button" class="btn btn-action w-full py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed" id="capture-btn" disabled>
+            <span id="capture-btn-text">Start camera</span>
         </button>
 
         <p class="mt-4 text-center text-xs text-gray-500">

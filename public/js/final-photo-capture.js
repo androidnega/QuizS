@@ -13,10 +13,26 @@
     const errorTextEl = document.getElementById('capture-error-text');
     const cameraLoading = document.getElementById('camera-loading');
     const cameraOffPlaceholder = document.getElementById('camera-off-placeholder');
+    const faceConfirmCheckbox = document.getElementById('face-confirm-checkbox');
     const config = window.QuizSnapFinalPhoto || {};
     const csrf = config.csrfToken || (document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').content) || '';
     let stream = null;
     let cameraStarted = false;
+
+    function canCapture() {
+        return cameraStarted && stream && faceConfirmCheckbox && faceConfirmCheckbox.checked;
+    }
+
+    function updateCaptureButtonState() {
+        if (!captureBtn) return;
+        if (!cameraStarted) {
+            captureBtn.disabled = false;
+            setButtonLabel('Start camera');
+            return;
+        }
+        captureBtn.disabled = !canCapture();
+        setButtonLabel(canCapture() ? 'Capture photo' : 'Confirm face visible above, then capture');
+    }
 
     function showError(msg) {
         if (errorTextEl) errorTextEl.textContent = msg || '';
@@ -53,8 +69,7 @@
                 cameraStarted = true;
                 if (cameraLoading) cameraLoading.style.display = 'none';
                 if (cameraOffPlaceholder) cameraOffPlaceholder.style.display = 'none';
-                if (captureBtn) captureBtn.disabled = false;
-                setButtonLabel('Capture photo');
+                if (captureBtn) updateCaptureButtonState();
             })
             .catch(function (err) {
                 showError('Camera access denied or error: ' + (err.message || 'Unknown'));
@@ -76,12 +91,17 @@
 
     function setBusy(busy) {
         if (captureBtn) captureBtn.disabled = busy;
-        if (captureBtnText) captureBtnText.textContent = busy ? 'Please wait...' : 'Capture photo';
+        if (busy && captureBtnText) captureBtnText.textContent = 'Please wait...';
+        else updateCaptureButtonState();
     }
 
     function captureAndSubmit() {
         if (!cameraStarted || !stream) {
             startCamera();
+            return;
+        }
+        if (!canCapture()) {
+            showError('Please confirm your face is visible in the frame, then capture.');
             return;
         }
         if (!video || !canvas || !stream) {
@@ -149,7 +169,11 @@
     if (captureBtn) {
         captureBtn.addEventListener('click', captureAndSubmit);
     }
+    if (faceConfirmCheckbox) {
+        faceConfirmCheckbox.addEventListener('change', updateCaptureButtonState);
+    }
     setButtonLabel('Start camera');
+    updateCaptureButtonState();
     if (cameraLoading) cameraLoading.style.display = 'none';
     window.addEventListener('beforeunload', stopCamera);
 })();

@@ -69,9 +69,16 @@
                     </div>
 
                     <div>
-                        <label for="number_of_questions" class="block text-sm font-medium text-gray-700 mb-2">Number of Questions *</label>
+                        <label for="number_of_questions" class="block text-sm font-medium text-gray-700 mb-2">Number of Questions (pool / AI target) *</label>
                         <input type="number" id="number_of_questions" name="number_of_questions" min="1" max="250" 
                             value="{{ old('number_of_questions', $quiz->number_of_questions) }}" class="input">
+                        <p class="text-xs text-gray-500 mt-1">Used for AI generation. Approved pool can be larger.</p>
+                    </div>
+                    <div>
+                        <label for="questions_per_student" class="block text-sm font-medium text-gray-700 mb-2">Questions per student *</label>
+                        <input type="number" id="questions_per_student" name="questions_per_student" min="1" max="250" 
+                            value="{{ old('questions_per_student', $quiz->questions_per_student ?? $quiz->number_of_questions) }}" class="input">
+                        <p class="text-xs text-gray-500 mt-1">How many questions each student receives. Approved count must be ≥ this.</p>
                     </div>
                 </div>
 

@@ -5,104 +5,117 @@
 
 @push('styles')
 <style>
-    body { background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%); }
-    .home-input { outline: none; border: 1px solid #e5e7eb; background: #fff; transition: border-color 0.15s, background 0.15s; }
-    .home-input:focus { border-color: #9ca3af; box-shadow: 0 0 0 2px rgba(0, 85, 255, 0.12); }
-    .home-input.token-valid { background-color: #ecfdf5 !important; border-color: #10b981 !important; color: #059669; }
-    .home-input.token-invalid { background-color: #fef2f2 !important; border-color: #fecaca; }
-    .home-input.token-loading { background-color: #fffbeb !important; border-color: #fde68a; }
-    .btn-home-cta.btn-cta-disabled, .btn-home-cta:disabled { background-color: #9ca3af !important; color: #4b5563 !important; box-shadow: none !important; cursor: not-allowed; pointer-events: none; }
-    .btn-home-cta:not(.btn-cta-disabled):not(:disabled) { background-color: #FFD500 !important; color: #0055FF !important; }
-    .logo-text { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
-    @media (max-width: 639px) {
-        .home-form-container { gap: 0.75rem; }
+    body,
+    .home-page-wrap { background: #fafaf9 !important; }
+    .home-input { 
+        outline: none; 
+        border: 2px solid #e5e7eb;
+        background: #fff; 
+        transition: all 0.2s ease;
     }
-    .home-input {
-        -webkit-user-select: text !important;
-        -moz-user-select: text !important;
-        user-select: text !important;
+    .home-input:focus { 
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
+    .home-input.token-valid { background-color: #f0fdf4 !important; border-color: #22c55e !important; color: #15803d; }
+    .home-input.token-invalid { background-color: #fef2f2 !important; border-color: #ef4444 !important; color: #dc2626; }
+    .home-input.token-loading { background-color: #fffbeb !important; border-color: #f59e0b !important; color: #d97706; }
+    .btn-home-cta.btn-cta-disabled, .btn-home-cta:disabled { 
+        background: #d1d5db !important; 
+        color: #fff !important; 
+        cursor: not-allowed; 
+        pointer-events: none; 
+        box-shadow: none !important;
+    }
+    .btn-home-cta:not(.btn-cta-disabled):not(:disabled) { 
+        background: #2563eb; 
+        color: #fff !important; 
+        transition: all 0.2s ease;
+        font-weight: 700;
+        box-shadow: none;
+        border: none;
+    }
+    .btn-home-cta:not(.btn-cta-disabled):not(:disabled):hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: none;
+    }
+    .btn-home-cta:not(.btn-cta-disabled):not(:disabled):focus {
+        box-shadow: none;
+    }
+    .logo-text { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .logo-mark { width: 2.25rem; height: 2.25rem; flex-shrink: 0; }
+    .home-input { -webkit-user-select: text !important; -moz-user-select: text !important; user-select: text !important; }
+    @media (max-width: 639px) { .home-form-container { gap: 0.5rem; } }
 </style>
 @endpush
 
 @section('content')
-<div class="min-h-screen flex flex-col font-sans antialiased">
-    {{-- Header --}}
-    <header class="shrink-0 bg-white border-b border-gray-200" style="backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95);">
-        <div class="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-            <a href="{{ route('student.landing') }}" class="logo-text text-gray-900" style="text-decoration: none;">
-                <span class="text-homeBlue">Quiz</span><span class="text-homeYellow">Snap</span>
+<div class="home-page-wrap min-h-screen flex flex-col font-sans antialiased">
+    <header class="shrink-0 bg-white border-b border-gray-200">
+        <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+            <a href="{{ route('student.landing') }}" class="logo-text no-underline">
+                <span class="logo-mark" aria-hidden="true">
+                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                        <rect width="40" height="40" rx="10" fill="#2563eb"/>
+                        <circle cx="20" cy="18" r="7" fill="#fbbf24"/>
+                        <circle cx="20" cy="18" r="3" fill="#2563eb"/>
+                        <rect x="18" y="26" width="4" height="6" rx="1" fill="#fbbf24"/>
+                    </svg>
+                </span>
+                <span style="color: #2563eb;">Quiz</span><span style="color: #eab308;">Snap</span>
             </a>
-            <a href="{{ route('login') }}" class="text-sm font-semibold text-homeBlue px-4 py-2 rounded-lg hover:bg-blue-50" style="text-decoration: none; transition: all 150ms;">Staff Login</a>
+            <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all no-underline">Staff Login</a>
         </div>
     </header>
 
-    <main class="flex flex-1 flex-col items-center justify-center px-6 py-16">
+    <main class="flex flex-1 flex-col items-center justify-center px-6 py-16 sm:py-20">
         <div class="w-full max-w-2xl text-center">
-            {{-- Hero Section --}}
-            <div class="mb-10">
-                <h1 class="text-4xl font-bold text-gray-900 mb-4 sm:text-5xl" style="line-height: 1.1;">
-                    Start Your Quiz<br>
-                    <span class="text-homeBlue">Instantly</span>
-                </h1>
-                <p class="text-lg text-gray-600 max-w-md mx-auto">
-                    {{-- Do not change this text: "Enter your quiz token below (from your teacher — not a link)" --}}
-                    Enter your <strong>quiz token</strong> below (from your teacher — not a link)
-                </p>
-            </div>
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
+                Start Your Quiz
+            </h1>
+            <p class="text-gray-600 text-lg mb-10">
+                Enter your quiz token from your lecturer or examiner
+            </p>
 
-            {{-- Form (No Card) --}}
-            <div class="mb-12 max-w-lg mx-auto">
-                <form action="{{ route('student.start-quiz') }}" method="post" class="space-y-5" id="start-quiz-form">
-                    @csrf
-                    <div class="home-form-container flex flex-col gap-3 sm:flex-row sm:gap-0">
-                        <label for="quiz-token" class="sr-only">Quiz token</label>
-                        <input type="text"
-                            id="quiz-token"
-                            name="link"
-                            placeholder="e.g. KTdie54-3Sx9"
-                            required
-                            autocomplete="off"
-                            class="home-input flex-1 rounded-xl px-4 py-3 transition-all sm:rounded-r-none"
-                            style="font-size: 16px; min-height: 52px;">
-                        <button type="submit" id="start-quiz-btn" disabled class="btn-home-cta btn-cta-disabled rounded-xl px-6 py-3 font-bold shadow-lg sm:rounded-l-none" style="min-height: 52px; transition: all 150ms;">
-                            Start Quiz →
-                        </button>
-                    </div>
-                    <div id="token-message" class="text-sm min-h-[1.5rem] text-left"></div>
-                    @error('link')
-                        <div class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                            {{ $message }}
-                        </div>
-                    @enderror
-                </form>
-            </div>
+            <form action="{{ route('student.start-quiz') }}" method="post" class="mb-12" id="start-quiz-form">
+                @csrf
+                <div class="home-form-container flex flex-col sm:flex-row gap-3 mb-3">
+                    <label for="quiz-token" class="sr-only">Quiz token</label>
+                    <input type="text" id="quiz-token" name="link" placeholder="Enter quiz token (e.g. KTdie54-3Sx9)" required autocomplete="off"
+                        class="home-input flex-1 rounded-lg px-5 py-4 text-base min-h-[56px] sm:rounded-r-none">
+                    <button type="submit" id="start-quiz-btn" disabled class="btn-home-cta btn-cta-disabled rounded-lg px-8 py-4 font-bold text-base min-h-[56px] sm:rounded-l-none transition-all">
+                        Start Quiz →
+                    </button>
+                </div>
+                <div id="token-message" class="text-sm min-h-[1.5rem] text-center font-medium"></div>
+                @error('link')
+                    <div class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 font-medium">{{ $message }}</div>
+                @enderror
+            </form>
 
-            {{-- Info Cards --}}
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                <div class="bg-white rounded-xl p-4 border border-gray-100">
-                    <div class="text-2xl mb-2">🔒</div>
-                    <p class="text-sm font-semibold text-gray-900 mb-1">Secure</p>
-                    <p class="text-xs text-gray-500">Proctored environment</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                <div class="bg-white rounded-lg px-4 py-3 border border-gray-200 text-center">
+                    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg font-bold mx-auto mb-2">🔒</div>
+                    <p class="text-sm font-bold text-gray-900 mb-0.5">Secure</p>
+                    <p class="text-xs text-gray-600">Proctored environment</p>
                 </div>
-                <div class="bg-white rounded-xl p-4 border border-gray-100">
-                    <div class="text-2xl mb-2">⚡</div>
-                    <p class="text-sm font-semibold text-gray-900 mb-1">Fast</p>
-                    <p class="text-xs text-gray-500">Instant quiz access</p>
+                <div class="bg-white rounded-lg px-4 py-3 border border-gray-200 text-center">
+                    <div class="w-9 h-9 bg-yellow-400 rounded-lg flex items-center justify-center text-gray-900 text-lg font-bold mx-auto mb-2">⚡</div>
+                    <p class="text-sm font-bold text-gray-900 mb-0.5">Fast</p>
+                    <p class="text-xs text-gray-600">Instant access</p>
                 </div>
-                <div class="bg-white rounded-xl p-4 border border-gray-100">
-                    <div class="text-2xl mb-2">📱</div>
-                    <p class="text-sm font-semibold text-gray-900 mb-1">Reliable</p>
-                    <p class="text-xs text-gray-500">Desktop optimized</p>
+                <div class="bg-white rounded-lg px-4 py-3 border border-gray-200 text-center">
+                    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg font-bold mx-auto mb-2">✓</div>
+                    <p class="text-sm font-bold text-gray-900 mb-0.5">Reliable</p>
+                    <p class="text-xs text-gray-600">Desktop optimized</p>
                 </div>
             </div>
         </div>
     </main>
 
     <footer class="shrink-0 border-t border-gray-200 bg-white py-6">
-        <div class="mx-auto max-w-5xl px-6 text-center text-sm text-gray-500">
-            &copy; {{ date('Y') }} QuizSnap. All rights reserved.
-        </div>
+        <div class="mx-auto max-w-6xl px-6 text-center text-sm text-gray-500">&copy; {{ date('Y') }} QuizSnap</div>
     </footer>
 </div>
 @endsection

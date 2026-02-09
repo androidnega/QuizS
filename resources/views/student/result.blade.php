@@ -4,10 +4,10 @@
 @section('body_class', 'bg-offwhite')
 
 @section('content')
-<div class="min-h-[100dvh] px-4 py-6 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
-    <div class="max-w-4xl mx-auto w-full">
+<div class="min-h-[100dvh] px-4 py-8 sm:py-10 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div class="max-w-4xl mx-auto w-full space-y-8">
         {{-- Header --}}
-        <div class="text-center mb-6">
+        <div class="text-center mb-8">
             <h1 class="text-xl font-semibold text-gray-900">{{ $session->quiz->title }}</h1>
             <p class="text-sm text-gray-500 mt-0.5">Index: {{ $session->student_index }}</p>
         </div>
@@ -15,7 +15,7 @@
         {{-- Student feedback: clear summary after exam --}}
         @if($session->result)
             @if($session->quiz->canShowScore())
-            <div class="mb-6 rounded-xl border-2 border-primary-200 bg-primary-50 p-5">
+            <div class="mb-8 rounded-xl border-2 border-primary-200 bg-primary-50 p-6 sm:p-8">
                 <h2 class="text-lg font-bold text-gray-900 mb-2">Your exam result</h2>
                 @if($session->result->score >= 70)
                     <p class="text-success-700 font-medium">Well done. You passed this assessment.</p>
@@ -64,7 +64,7 @@
             </div>
             @else
             {{-- Normal completion: score & stats card --}}
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 mb-4">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8 mb-6">
                 <div class="flex items-center justify-between gap-4 flex-wrap">
                     <div class="flex items-center gap-3">
                         <div class="w-14 h-14 rounded-full flex items-center justify-center
@@ -92,7 +92,7 @@
             @endif
 
             {{-- Performance reflection --}}
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 mb-4
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8 mb-6
                 @if($session->result->score >= 70) border-l-4 border-l-success-500
                 @elseif($session->result->score >= 50) border-l-4 border-l-warning-500
                 @else border-l-4 border-l-danger-500 @endif">
@@ -137,7 +137,7 @@
 
             {{-- Review: only when quiz allows full review after end (and quiz window has ended) --}}
             @if($session->quiz->canShowFullReview() && $session->answers->isNotEmpty())
-                <div id="answer-review" class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 mb-4 scroll-mt-4">
+                <div id="answer-review" class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8 mb-8 scroll-mt-4">
                     <h2 class="text-sm font-semibold text-gray-900 mb-3">Review your answers</h2>
                     <p class="text-xs text-gray-500 mb-4">Full review is available now that the quiz window has ended. See your answers, the correct answers, and why any were wrong.</p>
                     <div class="space-y-4">
@@ -196,7 +196,7 @@
             </div>
         @endif
 
-        <div class="text-center mt-6 flex flex-wrap justify-center gap-3">
+        <div class="text-center mt-10 flex flex-wrap justify-center gap-4">
             @if($session->result && $session->quiz->canShowFullReview() && $session->answers->isNotEmpty())
                 <a href="{{ ($resultUrl ?? route('student.result')) }}#answer-review" class="btn btn-action text-sm py-2.5 px-5">View results</a>
             @endif

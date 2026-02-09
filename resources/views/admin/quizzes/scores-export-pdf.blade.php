@@ -1,25 +1,27 @@
-{{-- Compact PDF for score report. Inline styles only (DomPDF). --}}
+{{-- PDF score report: clean design, no violations column, title with group name --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <title>Score Report – {{ $quiz->title }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 9pt; color: #1f2937; margin: 12px 16px; line-height: 1.3; }
-        .header { display: table; width: 100%; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
-        .header-logo { display: table-cell; width: 60px; vertical-align: middle; }
-        .header-logo img { max-height: 48px; max-width: 56px; }
-        .header-text { display: table-cell; vertical-align: middle; padding-left: 10px; }
-        .institution { font-size: 11pt; font-weight: bold; color: #111827; margin: 0 0 2px 0; }
-        .meta { margin: 8px 0 10px 0; font-size: 8pt; color: #4b5563; }
-        .meta-row { margin: 2px 0; }
-        .meta-label { font-weight: bold; color: #374151; }
-        table.scores { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 8pt; }
-        table.scores th, table.scores td { border: 1px solid #d1d5db; padding: 4px 6px; text-align: left; }
-        table.scores th { background: #f3f4f6; font-weight: 600; color: #374151; }
-        table.scores tr:nth-child(even) { background: #f9fafb; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10pt; color: #1f2937; margin: 20px 24px; line-height: 1.4; }
+        .header { display: table; width: 100%; margin-bottom: 16px; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; }
+        .header-logo { display: table-cell; width: 64px; vertical-align: middle; }
+        .header-logo img { max-height: 52px; max-width: 60px; }
+        .header-text { display: table-cell; vertical-align: middle; padding-left: 14px; }
+        .institution { font-size: 12pt; font-weight: bold; color: #111827; margin: 0 0 4px 0; }
+        .report-title { font-size: 11pt; font-weight: bold; color: #1d4ed8; margin: 0; }
+        .meta { margin: 16px 0 18px 0; padding: 12px 14px; background: #f8fafc; border-radius: 6px; font-size: 9pt; color: #475569; }
+        .meta-row { margin: 4px 0; }
+        .meta-label { font-weight: bold; color: #334155; }
+        table.scores { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 9pt; }
+        table.scores th, table.scores td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+        table.scores th { background: #1e40af; color: #fff; font-weight: 600; }
+        table.scores tr:nth-child(even) { background: #f1f5f9; }
+        table.scores tr:hover { background: #e2e8f0; }
         .num { text-align: right; }
-        .footer { margin-top: 12px; font-size: 7pt; color: #6b7280; }
+        .footer { margin-top: 20px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #64748b; }
     </style>
 </head>
 <body>
@@ -33,7 +35,7 @@
             @if(!empty($institutionName))
                 <p class="institution">{{ $institutionName }}</p>
             @endif
-            <p class="meta"><span class="meta-label">Score report</span> — {{ $quiz->title }}</p>
+            <p class="report-title">Score report — ERT - {{ $classGroupName ?? ($quiz->classGroup->name ?? '—') }}</p>
         </div>
     </div>
 
@@ -48,13 +50,12 @@
     <table class="scores">
         <thead>
             <tr>
-                <th style="width:28px">No.</th>
+                <th style="width:36px">No.</th>
                 <th>Student Index</th>
-                <th class="num" style="width:56px">Score %</th>
-                <th class="num" style="width:50px">Correct</th>
-                <th class="num" style="width:44px">Total</th>
-                <th class="num" style="width:52px">Violations</th>
-                <th style="width:90px">Submitted</th>
+                <th class="num" style="width:64px">Score %</th>
+                <th class="num" style="width:56px">Correct</th>
+                <th class="num" style="width:48px">Total</th>
+                <th style="width:100px">Submitted</th>
             </tr>
         </thead>
         <tbody>
@@ -65,7 +66,6 @@
                 <td class="num">{{ $session->result ? $session->result->score . '%' : '—' }}</td>
                 <td class="num">{{ $session->result ? $session->result->correct_count : '—' }}</td>
                 <td class="num">{{ $session->result ? $session->result->total_questions : '—' }}</td>
-                <td class="num">{{ $session->result ? $session->result->violations_count : $session->violations->count() }}</td>
                 <td>{{ $session->result && $session->result->submitted_at ? $session->result->submitted_at->format('M d, Y H:i') : '—' }}</td>
             </tr>
             @endforeach

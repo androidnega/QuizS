@@ -165,6 +165,7 @@
 
     /** Redirect to final photo page (separate screen). Photo required before submission. */
     function goToFinalPhoto() {
+        if (window.QuizSnapQuiz) window.QuizSnapQuiz.navigatingToFinalPhoto = true;
         flushSavePending();
         if (finalPhotoUrl) {
             window.location.href = finalPhotoUrl;
@@ -200,6 +201,9 @@
 
     if (quizForm) {
         window.addEventListener('beforeunload', function (e) {
+            if (window.QuizSnapQuiz && window.QuizSnapQuiz.navigatingToFinalPhoto) {
+                return;
+            }
             flushSavePending();
             e.preventDefault();
             e.returnValue = '';

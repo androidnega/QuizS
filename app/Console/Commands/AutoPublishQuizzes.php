@@ -48,7 +48,7 @@ class AutoPublishQuizzes extends Command
                 
                 $this->info("Auto-published quiz: {$quiz->title} (ID: {$quiz->id})");
             } else {
-                $this->warn("Quiz '{$quiz->title}' (ID: {$quiz->id}) start time has passed but doesn't have enough approved questions ({$quiz->questions->count()}/{$quiz->number_of_questions})");
+                $this->warn("Quiz '{$quiz->title}' (ID: {$quiz->id}) start time has passed but doesn't have enough approved questions ({$quiz->questions->count()}/{$quiz->getQuestionsPerStudent()})");
             }
         }
         

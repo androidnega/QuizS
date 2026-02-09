@@ -24,7 +24,7 @@
                     <div class="flex items-center gap-2 text-xs text-gray-500 mb-1">
                         <span>{{ $quiz->course->name ?? '-' }}</span>
                         <span>•</span>
-                        <span>{{ $quiz->number_of_questions }} Qs</span>
+                        <span>{{ $quiz->getQuestionsPerStudent() }} per student</span>
                         <span>•</span>
                         <span>{{ $quiz->duration_minutes }} min</span>
                     </div>
@@ -82,7 +82,7 @@
     @if($activeTab === 'overview')
     @php
         $approvedCount = $quiz->questions()->count();
-        $neededCount = (int) $quiz->number_of_questions;
+        $neededCount = $quiz->getQuestionsPerStudent();
         $shortBy = max(0, $neededCount - $approvedCount);
     @endphp
     {{-- Action Required: unapproved questions in pool --}}
@@ -116,7 +116,7 @@
                 <p class="text-sm text-warning-800 mb-2">You can:</p>
                 <ul class="text-sm text-warning-800 list-disc list-inside space-y-1 mb-3">
                     <li><strong>Add {{ $shortBy }} more:</strong> Edit the quiz and use AI to generate {{ $shortBy }} more questions (or add manually), then approve them.</li>
-                    <li><strong>Use {{ $approvedCount }} questions:</strong> Edit the quiz and set "Number of questions" to {{ $approvedCount }} so you can publish with what you have.</li>
+                    <li><strong>Use {{ $approvedCount }} questions:</strong> Edit the quiz and set "Questions per student" to {{ $approvedCount }} (or less) so you can publish with what you have.</li>
                 </ul>
                 <div class="flex flex-wrap gap-2">
                     <a href="{{ route('dashboard.quizzes.edit', $quiz) }}" class="btn btn-primary text-sm">Edit quiz (add more or change required number)</a>
@@ -170,7 +170,7 @@
                         <p class="text-sm text-gray-600">Students cannot see this quiz on the landing page until you publish it.</p>
                         @if(!$quiz->hasEnoughApprovedQuestions())
                             <p class="text-sm text-warning-600 font-medium mt-1">
-                                ⚠️ Need {{ $quiz->number_of_questions }} approved questions (currently: {{ $quiz->questions->count() }})
+                                ⚠️ Need {{ $quiz->getQuestionsPerStudent() }} approved questions (currently: {{ $quiz->questions->count() }})
                             </p>
                         @endif
                     </div>
@@ -182,7 +182,7 @@
                                 class="btn text-sm {{ $quiz->hasEnoughApprovedQuestions() ? 'btn-primary' : 'bg-gray-300 text-gray-500 cursor-not-allowed' }}"
                                 @if(!$quiz->hasEnoughApprovedQuestions()) 
                                     disabled 
-                                    onclick="event.preventDefault(); alert('Please approve at least {{ $quiz->number_of_questions }} questions first. Scroll down to see the \'Approve All\' button.');"
+                                    onclick="event.preventDefault(); alert('Please approve at least {{ $quiz->getQuestionsPerStudent() }} questions first. Scroll down to see the \'Approve All\' button.');"
                                 @endif>
                             Publish Quiz
                         </button>
@@ -204,7 +204,7 @@
             </svg>
             <div class="text-sm text-warning-800">
                 <p class="font-medium">Quiz locked until approval complete</p>
-                <p>Students cannot see or take this quiz until at least {{ $quiz->number_of_questions }} question(s) are approved. Currently: {{ $quiz->questions->count() }} approved.</p>
+                <p>Students cannot see or take this quiz until at least {{ $quiz->getQuestionsPerStudent() }} question(s) are approved. Currently: {{ $quiz->questions->count() }} approved.</p>
             </div>
         </div>
         @endif
@@ -409,7 +409,7 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th scope="col" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Student</th>
-                                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Score</th>
+                                    <th scope="col" class="px-4 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wide">Mark</th>
                                     <th scope="col" class="px-4 py-2.5 text-right text-xs font-semibold text-gray-700 uppercase tracking-wide">Action</th>
                                 </tr>
                             </thead>
@@ -421,12 +421,15 @@
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             @if($session->result)
-                                                @php $score = $session->result->score; @endphp
-                                                <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded
-                                                    @if($score >= 70) bg-success-100 text-success-700
-                                                    @elseif($score >= 50) bg-warning-100 text-warning-700
-                                                    @else bg-danger-100 text-danger-700
-                                                    @endif">{{ $score }}%</span>
+                                                @php
+                                                    $score = $session->result->score;
+                                                    $mark = $score >= 70 ? 5 : ($score >= 50 ? 4 : 3);
+                                                @endphp
+                                                <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-bold
+                                                    @if($mark >= 5) bg-emerald-100 text-emerald-800
+                                                    @elseif($mark >= 4) bg-amber-100 text-amber-800
+                                                    @else bg-rose-100 text-rose-800
+                                                    @endif">{{ $mark }}</span>
                                             @else
                                                 <span class="text-xs text-gray-400">—</span>
                                             @endif

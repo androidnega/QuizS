@@ -21,7 +21,7 @@ class QuestionAssignmentService
      */
     public function assignQuestions(Quiz $quiz): array
     {
-        $count = (int) $quiz->number_of_questions;
+        $count = $quiz->getQuestionsPerStudent();
         $pool = $quiz->questions()->get()->shuffle();
         if ($pool->count() < $count) {
             return ['question_ids' => [], 'correct_answers' => [], 'shuffled_options' => []];

@@ -21,7 +21,7 @@ class Quiz extends Model
 
     protected $fillable = [
         'link_token', 'class_group_id', 'title', 'exam_type', 'topics', 'script_url', 'script_public_id', 'script_text',
-        'number_of_questions', 'duration_minutes', 'course_id', 'is_active', 'is_published', 'starts_at', 'ends_at', 'result_visibility',
+        'number_of_questions', 'questions_per_student', 'duration_minutes', 'course_id', 'is_active', 'is_published', 'starts_at', 'ends_at', 'result_visibility',
     ];
 
     protected static function booted(): void
@@ -87,11 +87,21 @@ class Quiz extends Model
     }
 
     /**
+     * Number of questions each student receives (from pool). Uses questions_per_student when set, else number_of_questions.
+     */
+    public function getQuestionsPerStudent(): int
+    {
+        $v = $this->questions_per_student ?? $this->number_of_questions;
+        return (int) max(1, $v);
+    }
+
+    /**
      * Whether the quiz has enough approved questions for students to take it.
+     * Approved count must be >= questions_per_student.
      */
     public function hasEnoughApprovedQuestions(): bool
     {
-        return $this->questions()->count() >= (int) $this->number_of_questions;
+        return $this->questions()->count() >= $this->getQuestionsPerStudent();
     }
 
     /**
