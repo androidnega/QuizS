@@ -17,7 +17,7 @@ class User extends Authenticatable
     public const ROLE_SUPER_ADMIN = 'super_admin';
     public const ROLE_EXAMINER = 'examiner';
 
-    protected $fillable = ['username', 'index_number', 'name', 'course_id', 'role', 'password', 'avatar'];
+    protected $fillable = ['username', 'email', 'index_number', 'name', 'course_id', 'role', 'password', 'avatar'];
 
     protected $hidden = ['password', 'remember_token'];
 

@@ -71,7 +71,11 @@
                 <!-- Tab: Email -->
                 <div class="settings-tab-content p-6 hidden" data-tab-content="email" id="tab-content-email">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Email</h2>
-                <p class="text-sm text-gray-600 mb-4">Outgoing mail configuration. Stored in database and used when the app sends email.</p>
+                <p class="text-sm text-gray-600 mb-4">Outgoing mail configuration. Stored in database (password encrypted). Used for password reset and notifications.</p>
+                <div class="rounded-lg border border-primary-200 bg-primary-50 p-3 mb-4 text-sm text-primary-800">
+                    <p class="font-medium">Secure SSL/TLS (recommended):</p>
+                    <p class="mt-1">Host: mail.ausweblabs.com — SMTP Port: 465 (SSL). Username: reset@ausweblabs.com. Use the email account’s password. IMAP/POP3/SMTP require authentication.</p>
+                </div>
                 <div class="space-y-4">
                     <div>
                         <label for="mail_mailer" class="block text-sm font-medium text-gray-700 mb-1">Mailer</label>
@@ -84,37 +88,37 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="mail_host" class="block text-sm font-medium text-gray-700 mb-1">Host</label>
-                            <input type="text" name="mail_host" id="mail_host" value="{{ old('mail_host', $mail_host ?? '') }}" class="input w-full" placeholder="smtp.mailtrap.io">
+                            <input type="text" name="mail_host" id="mail_host" value="{{ old('mail_host', $mail_host ?? 'mail.ausweblabs.com') }}" class="input w-full" placeholder="mail.ausweblabs.com">
                         </div>
                         <div>
                             <label for="mail_port" class="block text-sm font-medium text-gray-700 mb-1">Port</label>
-                            <input type="text" name="mail_port" id="mail_port" value="{{ old('mail_port', $mail_port ?? '587') }}" class="input w-full" placeholder="587">
+                            <input type="text" name="mail_port" id="mail_port" value="{{ old('mail_port', $mail_port ?? '465') }}" class="input w-full" placeholder="465">
                         </div>
                     </div>
                     <div>
                         <label for="mail_username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                        <input type="text" name="mail_username" id="mail_username" value="{{ old('mail_username', $mail_username ?? '') }}" class="input w-full" autocomplete="off">
+                        <input type="text" name="mail_username" id="mail_username" value="{{ old('mail_username', $mail_username ?? 'reset@ausweblabs.com') }}" class="input w-full" placeholder="reset@ausweblabs.com" autocomplete="off">
                     </div>
                     <div>
                         <label for="mail_password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input type="password" name="mail_password" id="mail_password" class="input w-full" autocomplete="new-password" placeholder="Leave blank to keep current">
+                        <input type="password" name="mail_password" id="mail_password" class="input w-full" autocomplete="new-password" placeholder="Use the email account’s password (stored encrypted)">
                     </div>
                     <div>
                         <label for="mail_encryption" class="block text-sm font-medium text-gray-700 mb-1">Encryption</label>
                         <select name="mail_encryption" id="mail_encryption" class="input w-full">
                             <option value="tls" {{ ($mail_encryption ?? '') === 'tls' ? 'selected' : '' }}>TLS</option>
-                            <option value="ssl" {{ ($mail_encryption ?? '') === 'ssl' ? 'selected' : '' }}>SSL</option>
+                            <option value="ssl" {{ ($mail_encryption ?? 'ssl') === 'ssl' ? 'selected' : '' }}>SSL</option>
                             <option value="" {{ ($mail_encryption ?? '') === '' ? 'selected' : '' }}>None</option>
                         </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="mail_from_address" class="block text-sm font-medium text-gray-700 mb-1">From address</label>
-                            <input type="email" name="mail_from_address" id="mail_from_address" value="{{ old('mail_from_address', $mail_from_address ?? '') }}" class="input w-full" placeholder="noreply@example.com">
+                            <input type="email" name="mail_from_address" id="mail_from_address" value="{{ old('mail_from_address', $mail_from_address ?? 'reset@ausweblabs.com') }}" class="input w-full" placeholder="reset@ausweblabs.com">
                         </div>
                         <div>
                             <label for="mail_from_name" class="block text-sm font-medium text-gray-700 mb-1">From name</label>
-                            <input type="text" name="mail_from_name" id="mail_from_name" value="{{ old('mail_from_name', $mail_from_name ?? '') }}" class="input w-full" placeholder="QuizSnap">
+                            <input type="text" name="mail_from_name" id="mail_from_name" value="{{ old('mail_from_name', $mail_from_name ?? 'QuizSnap') }}" class="input w-full" placeholder="QuizSnap">
                         </div>
                     </div>
                     <div class="pt-4 border-t border-gray-200 space-y-2">

@@ -87,6 +87,11 @@
                 @error('username')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
             </div>
             <div>
+                <label for="modal_email" class="block text-sm font-medium text-gray-700 mb-1">Email (optional, for password reset)</label>
+                <input type="email" name="email" id="modal_email" value="{{ old('email') }}" class="input w-full @error('email') border-danger-500 @enderror" placeholder="user@example.com">
+                @error('email')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+            </div>
+            <div>
                 <label for="modal_name" class="block text-sm font-medium text-gray-700 mb-1">Name (optional)</label>
                 <input type="text" name="name" id="modal_name" value="{{ old('name') }}" class="input w-full @error('name') border-danger-500 @enderror">
                 @error('name')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror

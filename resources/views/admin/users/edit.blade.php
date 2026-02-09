@@ -25,6 +25,11 @@
                     @error('username')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email (optional, for password reset)</label>
+                    <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" class="input w-full @error('email') border-danger-500 @enderror" placeholder="user@example.com">
+                    @error('email')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name (optional)</label>
                     <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" class="input w-full @error('name') border-danger-500 @enderror">
                     @error('name')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror

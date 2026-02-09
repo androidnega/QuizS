@@ -35,8 +35,7 @@
         #quizsnap-block-overlay .quizsnap-block-icon { font-size: 5rem; line-height: 1; font-weight: 700; color: #dc2626; margin-bottom: 1rem; }
         #quizsnap-block-overlay #quizsnap-block-message { font-size: 1.125rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; }
         #quizsnap-block-overlay .quizsnap-block-sub { font-size: 0.9375rem; color: #6b7280; margin-bottom: 1.5rem; }
-        #quizsnap-block-overlay .quizsnap-mobile-continue { display: none; }
-        #quizsnap-block-overlay.quizsnap-mobile-caution .quizsnap-mobile-continue { display: inline-block; }
+        #quizsnap-block-overlay .quizsnap-block-footer { margin-top: 1.5rem; font-size: 0.875rem; color: #6b7280; }
         .quizsnap-select-none { -webkit-user-select: none; user-select: none; }
         .quizsnap-select-none input, .quizsnap-select-none textarea { -webkit-user-select: text; user-select: text; }
     </style>
@@ -65,12 +64,12 @@
         <div class="quizsnap-block-inner">
             <span class="quizsnap-block-icon" aria-hidden="true">!</span>
             <p id="quizsnap-block-message" class="text-gray-700">This system is only available on desktop.</p>
-            <p class="quizsnap-block-sub">You cannot take any quiz on mobile.</p>
-            <button type="button" id="quizsnap-block-continue-btn" class="quizsnap-mobile-continue btn btn-primary py-2.5 px-5 text-sm font-semibold">Continue to view site</button>
+            <p class="quizsnap-block-sub">You cannot take quizzes or use this site on mobile devices.</p>
+            <footer class="quizsnap-block-footer mt-6 text-sm text-gray-500">QuizSnap 2026</footer>
         </div>
     </div>
     <script>
-    (function(){var w=window.innerWidth||document.documentElement.clientWidth||0;var ua=typeof navigator!=='undefined'?navigator.userAgent:'';var mobile=/Android|webOS|iPhone|iPod|iPad|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|Fennec|Kindle|Silk|Huawei|MiuiBrowser|UCBrowser/i.test(ua);if(w>0&&w<1024||mobile){try{if(sessionStorage.getItem('quizsnap-mobile-continued')==='1')return;}catch(e){}document.body.classList.add('quizsnap-blocked');var o=document.getElementById('quizsnap-block-overlay');if(o){o.classList.remove('hidden');o.classList.add('quizsnap-mobile-caution');o.setAttribute('aria-hidden','false');}var m=document.getElementById('quizsnap-block-message');if(m)m.textContent='This system is only available on desktop.';}})();
+    (function(){var w=window.innerWidth||document.documentElement.clientWidth||0;var ua=typeof navigator!=='undefined'?navigator.userAgent:'';var mobile=/Android|webOS|iPhone|iPod|iPad|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|Fennec|Kindle|Silk|Huawei|MiuiBrowser|UCBrowser/i.test(ua);if(w>0&&w<1024||mobile){document.body.classList.add('quizsnap-blocked');var o=document.getElementById('quizsnap-block-overlay');if(o){o.classList.remove('hidden');o.setAttribute('aria-hidden','false');}var m=document.getElementById('quizsnap-block-message');if(m)m.textContent='This system is only available on desktop.';}})();
     </script>
     @yield('copy_restriction_modal')
     <!-- Main content (shown only when JS allowed and device/screen allowed) -->

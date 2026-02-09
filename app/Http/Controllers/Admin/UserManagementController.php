@@ -33,6 +33,7 @@ class UserManagementController extends Controller
     {
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
+            'email' => 'nullable|email|max:255',
             'name' => 'nullable|string|max:255',
             'role' => 'required|in:super_admin,examiner',
             'course_ids' => 'nullable|array',
@@ -48,6 +49,7 @@ class UserManagementController extends Controller
 
         $user = User::create([
             'username' => $request->username,
+            'email' => $request->filled('email') ? trim($request->email) : null,
             'name' => $request->name ?: $request->username,
             'role' => $request->role,
             'password' => Hash::make($request->password),
@@ -80,6 +82,7 @@ class UserManagementController extends Controller
 
         $rules = [
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'email' => 'nullable|email|max:255',
             'name' => 'nullable|string|max:255',
             'role' => 'required|in:super_admin,examiner',
             'course_ids' => 'nullable|array',
@@ -98,6 +101,7 @@ class UserManagementController extends Controller
         ]);
 
         $user->username = $request->username;
+        $user->email = $request->filled('email') ? trim($request->email) : null;
         $user->name = $request->name ?: $user->username;
         $user->role = $request->role;
         if ($request->filled('password')) {

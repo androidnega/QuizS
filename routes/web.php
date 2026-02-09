@@ -92,6 +92,10 @@ Route::post('/quiz/post-face', [PostQuizCaptureController::class, 'store'])->nam
 // Staff login
 Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
+Route::get('/password/forgot', [\App\Http\Controllers\Admin\StaffPasswordResetController::class, 'showForgotForm'])->name('password.forgot');
+Route::post('/password/forgot', [\App\Http\Controllers\Admin\StaffPasswordResetController::class, 'sendResetLink'])->name('password.forgot.send');
+Route::get('/password/reset/{token}', [\App\Http\Controllers\Admin\StaffPasswordResetController::class, 'showResetForm'])->name('password.reset.form');
+Route::post('/password/reset', [\App\Http\Controllers\Admin\StaffPasswordResetController::class, 'reset'])->name('password.reset');
 
 // Unified dashboard: all staff pages under /dashboard (admin + examiner)
 Route::middleware('admin.auth')->group(function () {
