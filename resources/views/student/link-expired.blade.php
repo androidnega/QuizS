@@ -13,7 +13,7 @@
                 </svg>
             </div>
             <h1 class="text-xl font-bold text-gray-900 mb-2">Invalid or expired link</h1>
-            <p class="text-gray-600 text-sm mb-6">The quiz link is invalid or no longer valid. It may have been closed, removed, or the time window has ended. Use the link from your examiner to start a quiz.</p>
+            <p class="text-gray-600 text-sm mb-6">The quiz link is invalid or has expired. The quiz may have been closed, removed, ended by your examiner, or the time window has passed. You can no longer start or continue this quiz. Contact your examiner if you have questions.</p>
             <a href="{{ route('student.landing') }}" class="btn btn-action w-full py-2.5 text-sm font-semibold">
                 Back to Home
             </a>

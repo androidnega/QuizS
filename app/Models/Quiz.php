@@ -127,6 +127,15 @@ class Quiz extends Model
     }
 
     /**
+     * Whether the quiz has ended (ends_at is set and in the past).
+     * When true, the student link is expired; examiner can still view questions and scores.
+     */
+    public function hasEnded(): bool
+    {
+        return $this->ends_at !== null && $this->ends_at->isPast();
+    }
+
+    /**
      * Whether at least one student has started this quiz (session has start_time set).
      * Once true, examiner cannot edit the quiz.
      */

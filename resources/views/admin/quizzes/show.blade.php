@@ -29,6 +29,9 @@
                         @if($quiz->is_published)
                             <span class="inline-flex px-1.5 py-0.5 text-xs font-medium rounded bg-primary-100 text-primary-700">Published</span>
                         @endif
+                        @if($quiz->hasEnded())
+                            <span class="inline-flex px-1.5 py-0.5 text-xs font-medium rounded bg-gray-200 text-gray-700">Ended</span>
+                        @endif
                     </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
@@ -140,6 +143,8 @@
                     @csrf
                     <button type="submit" class="btn bg-danger-100 text-danger-700 hover:bg-danger-200 text-xs py-0.5 px-2">End quiz</button>
                 </form>
+                @elseif($quiz->hasEnded())
+                <span class="text-xs font-medium text-gray-600 py-0.5 px-2">Ended — link expired for students; you can still view questions and scores below.</span>
                 @else
                 <form action="{{ route('dashboard.quizzes.unpublish', $quiz) }}" method="post" class="inline">
                     @csrf
