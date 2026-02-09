@@ -20,44 +20,44 @@
         <i class="fas fa-arrow-left"></i> Back to {{ $classGroup->name }}
     </a>
 
-    <p class="text-sm text-gray-600">Manage student indices for this class group. This list is used for all quizzes in the group.</p>
+    <p class="text-sm text-gray-600 mb-4">Manage student indices for this class group. This list is used for all quizzes in the group.</p>
 
     @if(!$isSuperAdmin)
-    {{-- Add index --}}
-    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Add index</h2>
-        <form action="{{ route('dashboard.class-groups.students.add', $classGroup) }}" method="post" class="flex flex-wrap items-end gap-4">
-            @csrf
-            <div>
-                <label for="index_number" class="block text-sm font-medium text-gray-700 mb-1">Index number</label>
-                <input type="text" name="index_number" id="index_number" required maxlength="64" placeholder="e.g. BC/ITS/24/047" class="input" value="{{ old('index_number') }}">
-            </div>
-            <div>
-                <label for="student_name" class="block text-sm font-medium text-gray-700 mb-1">Name (optional)</label>
-                <input type="text" name="student_name" id="student_name" maxlength="255" class="input" value="{{ old('student_name') }}">
-            </div>
-            <button type="submit" class="btn btn-primary">Add index</button>
-        </form>
-    </div>
-
-    {{-- Upload Excel --}}
-    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Upload from file</h2>
-        <form action="{{ route('dashboard.class-groups.students.upload', $classGroup) }}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-end gap-4">
-            @csrf
-            <div>
-                <label for="file" class="block text-sm font-medium text-gray-700 mb-1">Excel / CSV file</label>
-                <input type="file" name="file" id="file" accept=".xlsx,.xls,.csv" required class="input file:mr-2 file:py-2 file:px-3 file:rounded file:border file:border-primary-300 file:bg-primary-50 file:text-primary-700">
-            </div>
-            <div>
-                <label for="upload_mode" class="block text-sm font-medium text-gray-700 mb-1">Mode</label>
-                <select name="upload_mode" id="upload_mode" required class="input">
-                    <option value="replace">Replace — clear list, then add from file</option>
-                    <option value="merge">Merge — add/update from file</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-secondary">Upload</button>
-        </form>
+    {{-- Add index + Upload: compact single card --}}
+    <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-end gap-3">
+            <span class="text-sm font-semibold text-gray-700 mr-1">Add index</span>
+            <form action="{{ route('dashboard.class-groups.students.add', $classGroup) }}" method="post" class="flex flex-wrap items-end gap-2">
+                @csrf
+                <div>
+                    <label for="index_number" class="sr-only">Index number</label>
+                    <input type="text" name="index_number" id="index_number" required maxlength="64" placeholder="Index (e.g. BC/ITS/24/047)" class="input min-h-0 py-1.5 px-2.5 text-sm min-w-[140px]" value="{{ old('index_number') }}">
+                </div>
+                <div>
+                    <label for="student_name" class="sr-only">Name</label>
+                    <input type="text" name="student_name" id="student_name" maxlength="255" placeholder="Name (optional)" class="input min-h-0 py-1.5 px-2.5 text-sm min-w-[120px]" value="{{ old('student_name') }}">
+                </div>
+                <button type="submit" class="rounded-md bg-primary-600 px-2.5 py-1.5 text-sm font-medium text-white hover:bg-primary-700">Add</button>
+            </form>
+        </div>
+        <div class="border-t border-gray-100 pt-3 flex flex-wrap items-end gap-2">
+            <span class="text-sm font-semibold text-gray-700 mr-1">Upload from file</span>
+            <form action="{{ route('dashboard.class-groups.students.upload', $classGroup) }}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-end gap-2">
+                @csrf
+                <div>
+                    <label for="file" class="sr-only">File</label>
+                    <input type="file" name="file" id="file" accept=".xlsx,.xls,.csv" required class="text-sm file:mr-2 file:py-1 file:px-2 file:rounded file:border file:border-gray-300 file:text-sm">
+                </div>
+                <div>
+                    <label for="upload_mode" class="sr-only">Mode</label>
+                    <select name="upload_mode" id="upload_mode" required class="input min-h-0 py-1.5 px-2 text-sm">
+                        <option value="replace">Replace list</option>
+                        <option value="merge">Merge</option>
+                    </select>
+                </div>
+                <button type="submit" class="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Upload</button>
+            </form>
+        </div>
     </div>
     @else
     <p class="text-sm text-gray-500">Only examiners can add or remove indices for this class group.</p>
