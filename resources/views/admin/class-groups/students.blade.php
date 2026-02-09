@@ -65,8 +65,13 @@
 
     {{-- Table: all indices with View, Edit, Remove; Phone column --}}
     <div class="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-lg font-semibold text-gray-900">All indices ({{ $students->total() }})</h2>
+            <form method="get" action="{{ route('dashboard.class-groups.students.index', $classGroup) }}" id="student-search-form" class="flex items-center gap-2">
+                <label for="student-search" class="sr-only">Search</label>
+                <input type="search" name="search" id="student-search" value="{{ old('search', $search ?? '') }}" placeholder="Search index, name, phone…" class="input min-h-0 py-1.5 px-2.5 text-sm w-48 max-w-full" autocomplete="off">
+                <button type="submit" class="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Search</button>
+            </form>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full divide-y divide-gray-200 min-w-[500px]">
@@ -148,6 +153,19 @@
 
     @push('scripts')
     <script>
+    (function() {
+        var searchInput = document.getElementById('student-search');
+        var searchForm = document.getElementById('student-search-form');
+        if (searchInput && searchForm) {
+            var debounceTimer;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function() {
+                    searchForm.submit();
+                }, 350);
+            });
+        }
+    })();
     (function() {
         var modal = document.getElementById('student-info-modal');
         var closeBtn = document.getElementById('student-info-modal-close');

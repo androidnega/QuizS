@@ -201,13 +201,25 @@ class ClassGroupController extends Controller
     }
 
     /** Show the student indices management page for this class group. */
-    public function studentsIndex(ClassGroup $classGroup): View
+    public function studentsIndex(Request $request, ClassGroup $classGroup): View
     {
         $this->authorize('view', $classGroup);
         $classGroup->load('examiner:id,username,name');
-        $students = $classGroup->students()->with('studentAccount')->orderBy('index_number')->paginate(30);
+        $search = $request->input('search', '');
+        $query = $classGroup->students()->with('studentAccount')->orderBy('index_number');
+        if ($search !== '') {
+            $term = '%' . preg_replace('/%/', '\\%', trim($search)) . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('index_number', 'like', $term)
+                    ->orWhere('student_name', 'like', $term)
+                    ->orWhereHas('studentAccount', function ($q2) use ($term) {
+                        $q2->where('phone_contact', 'like', $term);
+                    });
+            });
+        }
+        $students = $query->paginate(30)->withQueryString();
         $isSuperAdmin = $this->adminUser()?->isSuperAdmin() ?? false;
-        return view('admin.class-groups.students', compact('classGroup', 'students', 'isSuperAdmin'));
+        return view('admin.class-groups.students', compact('classGroup', 'students', 'isSuperAdmin', 'search'));
     }
 
     /** Add a single student to the class group. */
