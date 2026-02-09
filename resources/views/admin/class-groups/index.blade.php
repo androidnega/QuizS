@@ -23,52 +23,51 @@
         <div class="alert alert-error">{{ session('error') }}</div>
     @endif
 
-    <div class="bg-white rounded-lg border border-gray-200 overflow-x-auto">
-        <table class="w-full divide-y divide-gray-200 min-w-[600px]">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Name</th>
-                    @if($isSuperAdmin)
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Examiner</th>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+        @forelse($classGroups as $g)
+            <div class="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-primary-200 transition-all duration-200 text-left flex flex-col">
+                <div class="flex items-start justify-between gap-2 mb-3">
+                    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200 transition-colors">
+                        <i class="fas fa-users text-lg"></i>
+                    </span>
+                    <div class="flex items-center gap-1" onclick="event.stopPropagation();">
+                        <a href="{{ route('dashboard.class-groups.show', $g) }}" class="p-1.5 rounded-md text-gray-400 hover:text-primary-600 hover:bg-primary-50" title="View"><i class="fas fa-eye text-sm"></i></a>
+                        <a href="{{ route('dashboard.class-groups.edit', $g) }}" class="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100" title="Edit"><i class="fas fa-pen text-sm"></i></a>
+                        <form action="{{ route('dashboard.class-groups.destroy', $g) }}" method="post" class="inline" onsubmit="return confirm('Delete class group \'{{ addslashes($g->name) }}\'? This cannot be undone.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="p-1.5 rounded-md text-gray-400 hover:text-danger-600 hover:bg-danger-50" title="Delete"><i class="fas fa-trash-alt text-sm"></i></button>
+                        </form>
+                    </div>
+                </div>
+                <a href="{{ route('dashboard.class-groups.show', $g) }}" class="flex-1 flex flex-col focus:outline-none focus:ring-0">
+                    <h3 class="text-base font-semibold text-gray-900 truncate pr-2 group-hover:text-primary-600 transition-colors" title="{{ $g->name }}">{{ $g->name }}</h3>
+                    @if($isSuperAdmin && $g->examiner)
+                        <p class="mt-1 text-sm text-gray-500 truncate" title="{{ $g->examiner->name ?? $g->examiner->username }}">{{ $g->examiner->name ?? $g->examiner->username }}</p>
                     @endif
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Students</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Courses</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Quizzes</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($classGroups as $g)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-4">
-                            <a href="{{ route('dashboard.class-groups.show', $g) }}" class="inline-flex items-center gap-2 font-medium text-primary-600 hover:text-primary-800"><i class="fas fa-users text-gray-400" title="Class group"></i>{{ $g->name }}</a>
-                        </td>
-                        @if($isSuperAdmin)
-                            <td class="px-4 py-4 text-sm text-gray-600">{{ $g->examiner?->name ?? $g->examiner?->username ?? '—' }}</td>
-                        @endif
-                        <td class="px-4 py-4 text-sm text-gray-600">{{ $g->students_count ?? 0 }}</td>
-                        <td class="px-4 py-4 text-sm text-gray-600">{{ $g->courses_count ?? 0 }}</td>
-                        <td class="px-4 py-4 text-sm text-gray-600">{{ $g->quizzes_count ?? 0 }}</td>
-                        <td class="px-4 py-4 text-right text-sm">
-                            <a href="{{ route('dashboard.class-groups.show', $g) }}" class="inline-flex items-center gap-1.5 text-primary-600 hover:text-primary-800 mr-3" title="View"><i class="fas fa-eye"></i> View</a>
-                            <a href="{{ route('dashboard.class-groups.edit', $g) }}" class="inline-flex items-center gap-1.5 text-gray-600 hover:text-gray-800 mr-3" title="Edit {{ $g->name }}"><i class="fas fa-pen"></i> Edit</a>
-                            <form action="{{ route('dashboard.class-groups.destroy', $g) }}" method="post" class="inline" onsubmit="return confirm('Delete class group \'{{ addslashes($g->name) }}\'? This cannot be undone.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="inline-flex items-center gap-1.5 text-danger-600 hover:text-danger-800 bg-transparent border-0 p-0 cursor-pointer text-sm font-medium" title="Delete {{ $g->name }}"><i class="fas fa-trash-alt"></i> Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="{{ $isSuperAdmin ? 6 : 5 }}" class="px-4 py-8 text-center text-gray-500">No class groups yet. Create one to get started.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-        @if($classGroups->hasPages())
-            <div class="px-4 py-3 border-t border-gray-200">{{ $classGroups->links() }}</div>
-        @endif
+                    <div class="mt-4 flex flex-wrap gap-3 text-sm text-gray-500">
+                        <span class="inline-flex items-center gap-1"><i class="fas fa-user-graduate text-gray-400 w-4"></i>{{ $g->students_count ?? 0 }} students</span>
+                        <span class="inline-flex items-center gap-1"><i class="fas fa-book text-gray-400 w-4"></i>{{ $g->courses_count ?? 0 }} courses</span>
+                        <span class="inline-flex items-center gap-1"><i class="fas fa-clipboard-list text-gray-400 w-4"></i>{{ $g->quizzes_count ?? 0 }} quizzes</span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-2">
+                        <span class="text-xs text-primary-600 font-medium group-hover:underline">View details</span>
+                        <i class="fas fa-arrow-right text-xs text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                </a>
+            </div>
+        @empty
+            <div class="sm:col-span-2 lg:col-span-3 xl:col-span-4 rounded-xl border border-gray-200 bg-gray-50 p-10 text-center">
+                <p class="text-gray-500">No class groups yet. Create one to get started.</p>
+                @can('create', \App\Models\ClassGroup::class)
+                <a href="{{ route('dashboard.class-groups.create') }}" class="mt-4 inline-flex items-center gap-2 text-primary-600 font-medium hover:underline">Create Class Group</a>
+                @endcan
+            </div>
+        @endforelse
     </div>
+
+    @if($classGroups->hasPages())
+        <div class="mt-6">{{ $classGroups->links() }}</div>
+    @endif
 </div>
 @endsection
