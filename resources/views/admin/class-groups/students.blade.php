@@ -122,25 +122,25 @@
         @endif
     </div>
 
-    {{-- Modal: Student info --}}
+    {{-- Modal: Student info (narrow, compact) --}}
     <div id="student-info-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="student-info-modal-title">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-[280px] overflow-hidden">
-            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                <h2 id="student-info-modal-title" class="text-lg font-semibold text-gray-900">Student info</h2>
-                <button type="button" id="student-info-modal-close" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600" aria-label="Close">&times;</button>
+        <div class="bg-white rounded-lg shadow-xl w-[220px] overflow-hidden shrink-0">
+            <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200">
+                <h2 id="student-info-modal-title" class="text-sm font-semibold text-gray-900 truncate pr-1">Student info</h2>
+                <button type="button" id="student-info-modal-close" class="flex h-7 w-7 shrink-0 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 text-lg leading-none" aria-label="Close">&times;</button>
             </div>
-            <div class="px-4 py-4 space-y-3 text-sm">
-                <div>
-                    <span class="font-medium text-gray-500 block">Index number</span>
-                    <span id="modal-index" class="text-gray-900 font-mono"></span>
+            <div class="px-3 py-2.5 space-y-2 text-xs">
+                <div class="min-w-0">
+                    <span class="font-medium text-gray-500 block">Index</span>
+                    <span id="modal-index" class="text-gray-900 font-mono break-all"></span>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <span class="font-medium text-gray-500 block">Name</span>
-                    <span id="modal-name" class="text-gray-900"></span>
+                    <span id="modal-name" class="text-gray-900 break-all"></span>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <span class="font-medium text-gray-500 block">Phone</span>
-                    <span id="modal-phone" class="text-gray-900"></span>
+                    <span id="modal-phone" class="text-gray-900 break-all"></span>
                 </div>
             </div>
         </div>
