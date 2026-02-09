@@ -28,11 +28,10 @@
     </div>
     @endif
 
-    {{-- Violation warnings: full-screen opaque background so quiz content is fully covered --}}
+    {{-- Single major violation warning (max once per session): calm, non-accusatory --}}
     <div id="blur-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 px-4">
-        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-lg max-w-md w-full">
-            <h4 class="font-semibold text-primary-600 mb-1">Tab switch detected</h4>
-            <p class="text-sm text-gray-600 mb-3">Stay on this tab. If you stay in another tab for 20 seconds, your quiz will be auto-submitted.</p>
+        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-lg max-w-md w-full text-center">
+            <p class="text-sm text-gray-700 mb-4">Please stay on the quiz page. Further violations will submit your quiz automatically.</p>
             <button type="button" onclick="this.closest('#blur-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>

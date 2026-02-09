@@ -226,21 +226,8 @@ class StudentQuizController extends Controller
             'occurred_at' => now(),
         ]);
         $autoSubmitted = false;
-        // Critical (copy_paste, multiple_ip): auto-submit on first
+        // Zero-tolerance (copy_paste, screenshot_attempt, multiple_ip): auto-submit on first, no warning
         if ($severity === QuizViolation::SEVERITY_CRITICAL) {
-            $criticalCount = $session->violations()->where('severity', QuizViolation::SEVERITY_CRITICAL)->count();
-            if ($criticalCount >= 1) {
-                $session->update([
-                    'post_face_skipped_at' => now(),
-                    'post_face_skipped_reason' => 'auto_submit',
-                    'auto_submit_after' => null,
-                ]);
-                $this->finalizeQuiz($session);
-                $autoSubmitted = true;
-            }
-        }
-        // Tab switch / blur: zero tolerance — any loss of focus = immediate auto-submit
-        if (!$autoSubmitted && in_array($type, ['blur', 'tab_switch'], true)) {
             $session->update([
                 'post_face_skipped_at' => now(),
                 'post_face_skipped_reason' => 'auto_submit',
@@ -249,11 +236,11 @@ class StudentQuizController extends Controller
             $this->finalizeQuiz($session);
             $autoSubmitted = true;
         }
-        // Window resize / exit fullscreen: no auto-submit on first; auto-submit after limit (e.g. 3)
-        $windowResizeLimit = 3;
-        if (!$autoSubmitted && $type === 'window_resize') {
-            $resizeCount = $session->violations()->where('type', 'window_resize')->count();
-            if ($resizeCount >= $windowResizeLimit) {
+        // Major violations (blur, tab_switch, window_resize): max 1 warning per session, then auto-submit
+        $majorTypes = ['blur', 'tab_switch', 'window_resize'];
+        if (!$autoSubmitted && in_array($type, $majorTypes, true)) {
+            $majorCount = $session->violations()->whereIn('type', $majorTypes)->count();
+            if ($majorCount >= 2) {
                 $session->update([
                     'post_face_skipped_at' => now(),
                     'post_face_skipped_reason' => 'auto_submit',
@@ -264,11 +251,9 @@ class StudentQuizController extends Controller
             }
         }
         $response = ['success' => true, 'auto_submitted' => $autoSubmitted];
-        if ($type === 'window_resize' && !$autoSubmitted) {
-            $resizeCount = $session->violations()->where('type', 'window_resize')->count();
-            $response['window_resize_count'] = $resizeCount;
-            $response['window_resize_limit'] = $windowResizeLimit;
-            $response['next_violation_auto_submits'] = ($resizeCount + 1) >= $windowResizeLimit;
+        if (!$autoSubmitted && in_array($type, $majorTypes, true)) {
+            $majorCount = $session->violations()->whereIn('type', $majorTypes)->count();
+            $response['show_major_warning'] = $majorCount === 1;
         }
         if ($autoSubmitted) {
             $response['redirect'] = $this->resultUrlWithToken($session->session_token);

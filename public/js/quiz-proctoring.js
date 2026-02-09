@@ -151,9 +151,13 @@
             wrap.style.cssText = 'min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111;color:#e5e5e5;font-family:system-ui,sans-serif;padding:1.5rem;text-align:center;';
             wrap.setAttribute('role', 'alert');
             var msg = document.createElement('p');
-            msg.style.cssText = 'font-size:1.125rem;max-width:28rem;';
-            msg.textContent = 'Your quiz has been submitted due to a security violation.';
+            msg.style.cssText = 'font-size:1.125rem;max-width:28rem;line-height:1.6;';
+            msg.textContent = 'Your quiz has been submitted due to a policy violation. Thanks for participating.';
             wrap.appendChild(msg);
+            var emoji = document.createElement('p');
+            emoji.style.cssText = 'font-size:1.5rem;margin-top:0.75rem;';
+            emoji.textContent = '\uD83E\uDD20\uD83D\uDCF8';
+            wrap.appendChild(emoji);
             document.body.appendChild(wrap);
             if (typeof history.replaceState === 'function') {
                 history.replaceState(null, '', window.location.href);
@@ -182,10 +186,9 @@
                     showNeutralPageThenRedirect(data.redirect);
                 } else if (data && data.auto_submitted) {
                     showNeutralPageThenRedirect(null);
-                } else if (type === 'window_resize' && data && data.next_violation_auto_submits) {
-                    if (window.QuizSnapQuiz && window.QuizSnapQuiz.showResizeFinalWarning) {
-                        window.QuizSnapQuiz.showResizeFinalWarning();
-                    }
+                } else if (data && data.show_major_warning) {
+                    var el = document.getElementById('blur-warning');
+                    if (el) el.classList.remove('hidden');
                 }
             })
             .catch(function () {});
@@ -276,14 +279,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' },
             body: JSON.stringify({}),
-        })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data && data.show_tab_switch_warning && window.QuizSnapQuiz && window.QuizSnapQuiz.showTabSwitchWarning) {
-                    window.QuizSnapQuiz.showTabSwitchWarning();
-                }
-            })
-            .catch(function () {});
+        }).catch(function () {});
     }
 
     (function () {
