@@ -87,6 +87,11 @@
                 <button type="button" id="examiner-sidebar-expand" class="hidden h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-300" aria-label="Expand sidebar" title="Expand sidebar">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
+                @hasSection('dashboard_breadcrumb')
+                <nav id="examiner-header-breadcrumb" class="flex items-center gap-2 text-sm text-gray-500 flex-shrink-0" aria-label="Breadcrumb">
+                    @yield('dashboard_breadcrumb')
+                </nav>
+                @endif
                 <h1 class="min-w-0 flex-1 truncate text-lg font-semibold text-gray-900">@yield('dashboard_heading', 'Dashboard')</h1>
                 <div class="relative flex flex-shrink-0 items-center ml-2" id="profile-menu-wrap">
                     <button type="button" class="flex items-center gap-2 rounded-full p-0.5 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" aria-expanded="false" aria-haspopup="true" id="profile-menu-btn" title="Profile">
@@ -150,7 +155,7 @@
         if (collapseBtn) { e.preventDefault(); e.stopPropagation(); if (isDesktop()) setCollapsed(!collapsed); else setCollapsed(true); }
     }, true);
     document.addEventListener('click', function(e) {
-        var breadcrumbLink = e.target && e.target.closest && e.target.closest('nav[aria-label="Breadcrumb"] a[href]');
+        var breadcrumbLink = e.target && e.target.closest && e.target.closest('#examiner-header-breadcrumb a[href]');
         if (breadcrumbLink && isDesktop()) setCollapsed(true);
     }, true);
     window.addEventListener('resize', function() {

@@ -24,21 +24,12 @@ quizsnap-select-none
 @section('copy_restriction_script')
 <script>
 (function() {
-    function showCopyWarning() {
-        var w = document.getElementById('quizsnap-copy-warning');
-        if (w && !document.body.classList.contains('quizsnap-blocked')) w.classList.add('quizsnap-show');
-    }
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-    document.addEventListener('copy', function(e) { e.preventDefault(); showCopyWarning(); });
-    document.addEventListener('cut', function(e) { e.preventDefault(); showCopyWarning(); });
-    document.addEventListener('paste', function(e) { e.preventDefault(); showCopyWarning(); });
-    document.addEventListener('selectstart', function(e) { e.preventDefault(); showCopyWarning(); });
-    document.addEventListener('select', function(e) { e.preventDefault(); showCopyWarning(); });
-    var copyOk = document.getElementById('quizsnap-copy-warning-ok');
-    if (copyOk) copyOk.addEventListener('click', function() {
-        var w = document.getElementById('quizsnap-copy-warning');
-        if (w) w.classList.remove('quizsnap-show');
-    });
+    document.addEventListener('copy', function(e) { e.preventDefault(); });
+    document.addEventListener('cut', function(e) { e.preventDefault(); });
+    document.addEventListener('paste', function(e) { e.preventDefault(); });
+    document.addEventListener('selectstart', function(e) { e.preventDefault(); });
+    document.addEventListener('select', function(e) { e.preventDefault(); });
 })();
 </script>
 @endsection

@@ -144,6 +144,26 @@
         saveDebounceTimer = setTimeout(flushSavePending, SAVE_DEBOUNCE_MS);
     }
 
+    function showNeutralPageThenRedirect(redirectUrl) {
+        try {
+            document.body.innerHTML = '';
+            var wrap = document.createElement('div');
+            wrap.style.cssText = 'min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111;color:#e5e5e5;font-family:system-ui,sans-serif;padding:1.5rem;text-align:center;';
+            wrap.setAttribute('role', 'alert');
+            var msg = document.createElement('p');
+            msg.style.cssText = 'font-size:1.125rem;max-width:28rem;';
+            msg.textContent = 'Your quiz has been submitted due to a security violation.';
+            wrap.appendChild(msg);
+            document.body.appendChild(wrap);
+            if (typeof history.replaceState === 'function') {
+                history.replaceState(null, '', window.location.href);
+            }
+        } catch (e) {}
+        if (redirectUrl) {
+            setTimeout(function () { window.location.href = redirectUrl; }, 1200);
+        }
+    }
+
     function recordViolation(type, metadata) {
         var body = { type: type };
         if (metadata) body.metadata = typeof metadata === 'string' ? metadata : JSON.stringify(metadata);
@@ -159,9 +179,10 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data && data.auto_submitted && data.redirect) {
-                    window.location.href = data.redirect;
-                }
-                if (type === 'window_resize' && data && data.next_violation_auto_submits) {
+                    showNeutralPageThenRedirect(data.redirect);
+                } else if (data && data.auto_submitted) {
+                    showNeutralPageThenRedirect(null);
+                } else if (type === 'window_resize' && data && data.next_violation_auto_submits) {
                     if (window.QuizSnapQuiz && window.QuizSnapQuiz.showResizeFinalWarning) {
                         window.QuizSnapQuiz.showResizeFinalWarning();
                     }
@@ -235,17 +256,11 @@
 
     function onBlurOrTabSwitch() {
         blurCount++;
-        if (blurWarning) {
-            blurWarning.classList.remove('hidden');
-        }
         recordViolation('blur');
     }
 
     window.addEventListener('blur', onBlurOrTabSwitch);
-    window.addEventListener('focus', function () {
-        if (blurWarning) blurWarning.classList.add('hidden');
-        sendHeartbeat();
-    });
+    window.addEventListener('focus', sendHeartbeat);
 
     document.addEventListener('visibilitychange', function () {
         if (document.hidden) {
@@ -297,11 +312,7 @@
 
     document.addEventListener('contextmenu', function (e) {
         e.preventDefault();
-        if (window.QuizSnapQuiz && window.QuizSnapQuiz.showRightClickWarning) {
-            window.QuizSnapQuiz.showRightClickWarning();
-        } else {
-            alert('Do not right-click. Stay on this tab.');
-        }
+        recordViolation('right_click');
     });
     document.addEventListener('copy', function (e) {
         e.preventDefault();
@@ -315,6 +326,31 @@
         e.preventDefault();
         recordViolation('copy_paste');
     });
+
+    document.addEventListener('keydown', function (e) {
+        var key = e.keyCode || e.which;
+        var meta = e.metaKey || e.ctrlKey;
+        var shift = e.shiftKey;
+        if (key === 44) {
+            e.preventDefault();
+            recordViolation('screenshot_attempt');
+            return;
+        }
+        if (meta && shift && (key === 51 || key === 52)) {
+            e.preventDefault();
+            recordViolation('screenshot_attempt');
+            return;
+        }
+        if (e.ctrlKey && shift && (key === 73 || key === 74 || key === 67)) {
+            e.preventDefault();
+            recordViolation('screenshot_attempt');
+            return;
+        }
+        if ((e.ctrlKey || e.metaKey) && key === 85) {
+            e.preventDefault();
+            recordViolation('screenshot_attempt');
+        }
+    }, true);
 
     if (postFaceBtn) {
         postFaceBtn.addEventListener('click', function () {

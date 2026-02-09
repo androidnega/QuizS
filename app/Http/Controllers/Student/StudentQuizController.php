@@ -210,7 +210,7 @@ class StudentQuizController extends Controller
             return response()->json(['success' => false], 401);
         }
         $request->validate([
-            'type' => 'required|string|in:blur,tab_switch,copy_paste,right_click,window_resize,other',
+            'type' => 'required|string|in:blur,tab_switch,copy_paste,right_click,window_resize,screenshot_attempt,other',
         ]);
         $session = QuizSession::where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
@@ -239,20 +239,15 @@ class StudentQuizController extends Controller
                 $autoSubmitted = true;
             }
         }
-        // Tab switch / blur: first time = schedule 20s; second time = immediate auto-submit
+        // Tab switch / blur: zero tolerance — any loss of focus = immediate auto-submit
         if (!$autoSubmitted && in_array($type, ['blur', 'tab_switch'], true)) {
-            $tabBlurCount = $session->violations()->whereIn('type', ['blur', 'tab_switch'])->count();
-            if ($tabBlurCount >= 2) {
-                $session->update([
-                    'post_face_skipped_at' => now(),
-                    'post_face_skipped_reason' => 'auto_submit',
-                    'auto_submit_after' => null,
-                ]);
-                $this->finalizeQuiz($session);
-                $autoSubmitted = true;
-            } else {
-                $session->update(['auto_submit_after' => now()->addSeconds(20)]);
-            }
+            $session->update([
+                'post_face_skipped_at' => now(),
+                'post_face_skipped_reason' => 'auto_submit',
+                'auto_submit_after' => null,
+            ]);
+            $this->finalizeQuiz($session);
+            $autoSubmitted = true;
         }
         // Window resize / exit fullscreen: no auto-submit on first; auto-submit after limit (e.g. 3)
         $windowResizeLimit = 3;

@@ -24,7 +24,7 @@ class QuizViolation extends Model
 
     public static function types(): array
     {
-        return ['blur', 'multiple_ip', 'copy_paste', 'right_click', 'face_mismatch', 'tab_switch', 'window_resize', 'other'];
+        return ['blur', 'multiple_ip', 'copy_paste', 'right_click', 'face_mismatch', 'tab_switch', 'window_resize', 'screenshot_attempt', 'other'];
     }
 
     /**
@@ -35,7 +35,7 @@ class QuizViolation extends Model
      */
     public static function severityForType(string $type): string
     {
-        return in_array($type, ['copy_paste', 'multiple_ip'], true)
+        return in_array($type, ['copy_paste', 'multiple_ip', 'screenshot_attempt'], true)
             ? self::SEVERITY_CRITICAL
             : self::SEVERITY_WARNING;
     }

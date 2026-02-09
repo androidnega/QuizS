@@ -2,18 +2,14 @@
 
 @section('title', 'Edit Quiz')
 @section('dashboard_heading', 'Edit Quiz')
+@section('dashboard_breadcrumb')
+    <a href="{{ route('dashboard.quizzes.index') }}" class="hover:text-gray-900">Quizzes</a>
+    <span class="text-gray-400" aria-hidden="true">/</span>
+    <a href="{{ route('dashboard.quizzes.show', $quiz) }}" class="hover:text-gray-900">{{ \Illuminate\Support\Str::limit($quiz->title, 30) }}</a>
+@endsection
 
 @section('dashboard_content')
 <div class="w-full space-y-6">
-    {{-- Breadcrumb navigation --}}
-    <nav class="flex items-center gap-2 text-sm text-gray-500" aria-label="Breadcrumb">
-        <a href="{{ route('dashboard.quizzes.index') }}" class="hover:text-gray-900">Quizzes</a>
-        <span>/</span>
-        <a href="{{ route('dashboard.quizzes.show', $quiz) }}" class="hover:text-gray-900">{{ \Illuminate\Support\Str::limit($quiz->title, 30) }}</a>
-        <span>/</span>
-        <span class="text-gray-900">Edit</span>
-    </nav>
-
     <div class="bg-white rounded-lg border border-gray-200 p-6 md:p-8">
             @if(session('error'))
                 <div class="alert alert-error mb-6" role="alert">
