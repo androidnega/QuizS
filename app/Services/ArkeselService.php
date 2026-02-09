@@ -122,20 +122,23 @@ class ArkeselService
         if (is_array($errorMessage)) {
             $errorMessage = json_encode($errorMessage);
         }
+        // Log technical detail for admins; return user-friendly message for students
+        Log::warning('Arkesel SMS send failed', ['status' => $status, 'body' => $body]);
         if ($status === 401) {
-            $errorMessage = 'Authentication failed. Check your API key at Arkesel Dashboard → SMS API.';
+            $errorMessage = 'SMS service is not configured correctly. Please try again later or contact your institution.';
         }
         if ($status === 402) {
-            $errorMessage = 'Insufficient balance. Top up at https://sms.arkesel.com (Recharge / Purchase SMS Plan).';
+            $errorMessage = 'SMS service is temporarily unavailable. Please try again later.';
         }
         if ($status === 403) {
-            $errorMessage = 'Arkesel gateway inactive. Activate your account or contact support@arkesel.com.';
+            $errorMessage = 'SMS service is temporarily unavailable. Please try again later.';
         }
         if ($status === 422) {
-            $errorMessage = 'Validation error: ' . (is_string($errorMessage) ? $errorMessage : json_encode($errorMessage));
+            $errorMessage = 'That phone number may not be valid for SMS. Use international format (e.g. 233XXXXXXXXX) and try again.';
         }
-
-        Log::warning('Arkesel SMS send failed', ['status' => $status, 'body' => $body]);
+        if (!in_array($status, [401, 402, 403, 422], true)) {
+            $errorMessage = 'We couldn\'t send the code. Please try again in a moment.';
+        }
 
         return ['success' => false, 'message' => $errorMessage];
     }

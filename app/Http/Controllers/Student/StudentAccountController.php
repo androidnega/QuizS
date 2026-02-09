@@ -69,10 +69,11 @@ class StudentAccountController extends Controller
         $message = 'Your QuizSnap login code is: ' . $code . '. Do not share. Valid for 24 hours.';
         $result = ArkeselService::sendSms($student->phone_contact, $message);
         if (!$result['success']) {
-            return response()->json([
-                'success' => false,
-                'message' => $result['message'] ?? 'Failed to send OTP. Please try again.',
-            ], 422);
+            $msg = $result['message'] ?? 'We couldn\'t send the code.';
+            if (strpos($msg, 'try again') === false && strpos($msg, 'Try again') === false) {
+                $msg .= ' Please try again.';
+            }
+            return response()->json(['success' => false, 'message' => $msg], 422);
         }
 
         return response()->json([
@@ -115,10 +116,11 @@ class StudentAccountController extends Controller
         $message = 'Your QuizSnap login code is: ' . $code . '. Do not share. Valid for 24 hours.';
         $result = ArkeselService::sendSms($phone, $message);
         if (!$result['success']) {
-            return response()->json([
-                'success' => false,
-                'message' => $result['message'] ?? 'Failed to send code. Please try again.',
-            ], 422);
+            $msg = $result['message'] ?? 'We couldn\'t send the code.';
+            if (strpos($msg, 'try again') === false && strpos($msg, 'Try again') === false) {
+                $msg .= ' Please try again.';
+            }
+            return response()->json(['success' => false, 'message' => $msg], 422);
         }
 
         return response()->json([

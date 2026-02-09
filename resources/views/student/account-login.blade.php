@@ -51,6 +51,7 @@
                     <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800" id="otp-error-text"></div>
                 </div>
                 <button type="button" id="btn-verify-otp" class="btn btn-action w-full py-2.5 text-sm font-semibold">Verify and sign in</button>
+                <p class="text-center text-sm text-gray-500">Didn't get the code? <button type="button" id="btn-resend-otp" class="text-primary-600 hover:underline font-medium">Resend code</button></p>
                 <button type="button" id="btn-back-to-phone" class="w-full py-2 text-sm text-gray-600 hover:text-gray-800">← Back</button>
             </div>
         </div>
@@ -74,6 +75,7 @@
     var otpInput = document.getElementById('otp_code');
     var nameInput = document.getElementById('otp_name');
     var currentIndexNumber = '';
+    var lastPhoneUsed = ''; // for Resend code on OTP step
 
     function showStep(step) {
         stepIndex.classList.add('hidden');
@@ -116,9 +118,13 @@
         .then(function(data) {
             setLoading(document.getElementById('btn-index'), false);
             if (!data.success) {
-                showError('index-error', data.message || 'Verification failed.');
+                showError('index-error', data.message || 'Verification failed. Please try again.');
+                var btnIndex = document.getElementById('btn-index');
+                if (btnIndex) { btnIndex.dataset.originalText = 'Try again'; btnIndex.textContent = 'Try again'; }
                 return;
             }
+            var btnIndex = document.getElementById('btn-index');
+            if (btnIndex) btnIndex.dataset.originalText = 'Continue';
             currentIndexNumber = data.index_number || index;
             if (data.step === 'phone') {
                 document.getElementById('phone-step-message').textContent = data.message || 'Enter your active phone number to receive a one-time code.';
@@ -133,12 +139,16 @@
         .catch(function() {
             setLoading(document.getElementById('btn-index'), false);
             showError('index-error', 'Network error. Please try again.');
+            var btnIndex = document.getElementById('btn-index');
+            if (btnIndex) { btnIndex.dataset.originalText = 'Try again'; btnIndex.textContent = 'Try again'; }
         });
     });
 
     document.getElementById('btn-back-to-index').addEventListener('click', function() {
         showStep('index');
         showError('phone-error', '');
+        var sendBtn = document.getElementById('btn-send-otp');
+        if (sendBtn) { sendBtn.dataset.originalText = 'Send code'; sendBtn.textContent = 'Send code'; }
     });
 
     document.getElementById('btn-send-otp').addEventListener('click', function() {
@@ -159,9 +169,12 @@
         .then(function(data) {
             setLoading(document.getElementById('btn-send-otp'), false);
             if (!data.success) {
-                showError('phone-error', data.message || 'Failed to send code.');
+                showError('phone-error', data.message || 'We couldn\'t send the code. Please try again.');
+                var sendBtn = document.getElementById('btn-send-otp');
+                if (sendBtn) { sendBtn.dataset.originalText = 'Try again'; sendBtn.textContent = 'Try again'; }
                 return;
             }
+            lastPhoneUsed = phone;
             document.getElementById('otp-step-message').textContent = data.message || 'Enter the 6-digit code sent to your number.';
             showStep('otp');
             if (otpInput) { otpInput.value = ''; otpInput.focus(); }
@@ -170,12 +183,47 @@
         .catch(function() {
             setLoading(document.getElementById('btn-send-otp'), false);
             showError('phone-error', 'Network error. Please try again.');
+            var sendBtn = document.getElementById('btn-send-otp');
+            if (sendBtn) { sendBtn.dataset.originalText = 'Try again'; sendBtn.textContent = 'Try again'; }
         });
     });
 
     document.getElementById('btn-back-to-phone').addEventListener('click', function() {
         showStep('phone');
         showError('otp-error', '');
+        var sendBtn = document.getElementById('btn-send-otp');
+        if (sendBtn) { sendBtn.dataset.originalText = 'Send code'; sendBtn.textContent = 'Send code'; }
+    });
+
+    document.getElementById('btn-resend-otp').addEventListener('click', function() {
+        if (!lastPhoneUsed || !currentIndexNumber) {
+            showError('otp-error', 'Go back and enter your phone, then send the code again.');
+            return;
+        }
+        var resendBtn = document.getElementById('btn-resend-otp');
+        resendBtn.disabled = true;
+        resendBtn.textContent = 'Sending…';
+        showError('otp-error', '');
+        fetch('{{ route("student.account.send-otp") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+            body: JSON.stringify({ index_number: currentIndexNumber, phone: lastPhoneUsed })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            resendBtn.disabled = false;
+            resendBtn.textContent = 'Resend code';
+            if (data.success) {
+                document.getElementById('otp-step-message').textContent = 'A new code has been sent. Enter it above.';
+            } else {
+                showError('otp-error', data.message || 'Could not resend. Please try again.');
+            }
+        })
+        .catch(function() {
+            resendBtn.disabled = false;
+            resendBtn.textContent = 'Resend code';
+            showError('otp-error', 'Network error. Please try again.');
+        });
     });
 
     document.getElementById('btn-verify-otp').addEventListener('click', function() {
