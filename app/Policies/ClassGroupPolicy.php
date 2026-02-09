@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\ClassGroup;
+use App\Models\Setting;
 use App\Models\User;
 
 class ClassGroupPolicy
@@ -24,11 +25,17 @@ class ClassGroupPolicy
     }
 
     /**
-     * Super Admin and examiners can create class groups. Super Admin assigns an examiner; examiners create for themselves.
+     * Super Admin and examiners can create class groups unless admin has locked examiners. Super Admin assigns an examiner; examiners create for themselves.
      */
     public function create(User $user): bool
     {
-        return $user->isStaff();
+        if (!$user->isStaff()) {
+            return false;
+        }
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        return Setting::getValue(Setting::KEY_LOCK_EXAMINER_CREATE_GROUP, '0') !== '1';
     }
 
     public function update(User $user, ClassGroup $classGroup): bool

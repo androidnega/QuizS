@@ -86,6 +86,9 @@ class Setting extends Model
     public const KEY_NOTIFY_RESULT_READY = 'notify_result_ready';
     public const KEY_NOTIFY_RESULT_EMAIL = 'notify_result_email';
 
+    /** Admin: lock examiners from creating new class groups (1 = locked). */
+    public const KEY_LOCK_EXAMINER_CREATE_GROUP = 'lock_examiner_create_group';
+
     /** Keys whose values are stored encrypted (API keys, secrets, mail password). */
     private const ENCRYPTED_KEYS = [
         self::KEY_GEMINI_API,

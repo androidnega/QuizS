@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>document.documentElement.classList.add('quizsnap-js');</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -20,8 +21,11 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/home.css') }}">
     <style>
-        .quizsnap-nojs #quizsnap-app { display: none !important; }
-        .quizsnap-nojs .quizsnap-noscript-msg { display: flex !important; }
+        /* No flash: key off html.quizsnap-js (set by head script before body paints). When JS is off, head script does not run. */
+        .quizsnap-noscript-msg { display: none !important; }
+        html.quizsnap-js .quizsnap-noscript-msg { display: none !important; }
+        html:not(.quizsnap-js) #quizsnap-app { display: none !important; }
+        html:not(.quizsnap-js) .quizsnap-noscript-msg { display: flex !important; }
         .quizsnap-blocked #quizsnap-app { display: none !important; }
         .quizsnap-app--hidden { display: none !important; }
         .quizsnap-blocked html, .quizsnap-blocked body { overflow: hidden !important; position: fixed !important; width: 100% !important; height: 100% !important; }
@@ -65,6 +69,9 @@
             <button type="button" id="quizsnap-block-continue-btn" class="quizsnap-mobile-continue btn btn-primary py-2.5 px-5 text-sm font-semibold">Continue to view site</button>
         </div>
     </div>
+    <script>
+    (function(){var w=window.innerWidth||document.documentElement.clientWidth||0;var ua=typeof navigator!=='undefined'?navigator.userAgent:'';var mobile=/Android|webOS|iPhone|iPod|iPad|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|Fennec|Kindle|Silk|Huawei|MiuiBrowser|UCBrowser/i.test(ua);if(w>0&&w<1024||mobile){try{if(sessionStorage.getItem('quizsnap-mobile-continued')==='1')return;}catch(e){}document.body.classList.add('quizsnap-blocked');var o=document.getElementById('quizsnap-block-overlay');if(o){o.classList.remove('hidden');o.classList.add('quizsnap-mobile-caution');o.setAttribute('aria-hidden','false');}var m=document.getElementById('quizsnap-block-message');if(m)m.textContent='This system is only available on desktop.';}})();
+    </script>
     @yield('copy_restriction_modal')
     <!-- Main content (shown only when JS allowed and device/screen allowed) -->
     <div id="quizsnap-app" class="quizsnap-app quizsnap-app--hidden">

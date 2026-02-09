@@ -66,7 +66,9 @@
         <h2 class="text-xs font-semibold text-gray-700 mb-3">Quick actions</h2>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('dashboard.quizzes.create') }}" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-white bg-primary-600 rounded border border-primary-600 hover:bg-primary-700">Create quiz</a>
+            @can('create', \App\Models\ClassGroup::class)
             <a href="{{ route('dashboard.class-groups.create') }}" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-gray-800 bg-action-100 rounded border border-action-200 hover:bg-action-200">New class group</a>
+            @endcan
             <a href="{{ route('dashboard.quizzes.index') }}" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 rounded border border-gray-200 hover:bg-gray-100">All quizzes</a>
         </div>
     </section>

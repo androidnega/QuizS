@@ -68,6 +68,16 @@
                         <input type="file" name="institution_logo" id="institution_logo" accept="image/*" class="input w-full text-sm">
                         <p class="text-xs text-gray-500 mt-1">Image for PDF header. Max 2MB.</p>
                     </div>
+                    @if(session('admin_role') === 'super_admin')
+                    <div class="pt-4 border-t border-gray-200">
+                        <p class="text-sm font-medium text-gray-700 mb-2">Examiner permissions</p>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="lock_examiner_create_group" value="1" {{ old('lock_examiner_create_group', $lock_examiner_create_group ?? false) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                            <span class="text-sm text-gray-700">Lock examiners from creating new class groups</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1">When on, only Super Admin can create class groups. Examiners can still view and edit existing groups.</p>
+                    </div>
+                    @endif
                 </div>
                 </div>
 

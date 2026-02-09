@@ -8,10 +8,12 @@
 <div class="w-full space-y-6">
     <div class="flex items-center justify-between flex-wrap gap-4">
         <p class="text-sm text-gray-600">@if($isSuperAdmin)Create class groups and assign them to examiners (lecturers). Examiners can then add students and create quizzes.@else Create class groups, attach courses, and manage student index lists. Quizzes belong to a class group and use its student list.@endif</p>
+        @can('create', \App\Models\ClassGroup::class)
         <a href="{{ route('dashboard.class-groups.create') }}" class="btn btn-primary">
             <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Create Class Group
         </a>
+        @endcan
     </div>
 
     @if(session('success'))

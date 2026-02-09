@@ -47,6 +47,7 @@ class SettingsController extends Controller
             'cloudinary_key_masked' => ($k = Setting::getValue(Setting::KEY_CLOUDINARY_API_KEY)) ? (strlen($k) > 8 ? substr($k, 0, 4) . '…' . substr($k, -4) : '••••') : null,
             'cloudinary_secret_set' => (bool) Setting::getValue(Setting::KEY_CLOUDINARY_API_SECRET),
             'cloudinary_folder' => Setting::getValue(Setting::KEY_CLOUDINARY_FOLDER, 'quizsnap'),
+            'lock_examiner_create_group' => Setting::getValue(Setting::KEY_LOCK_EXAMINER_CREATE_GROUP, '0') === '1',
         ]);
     }
 
@@ -78,6 +79,7 @@ class SettingsController extends Controller
             'cloudinary_api_key' => 'nullable|string|max:128',
             'cloudinary_api_secret' => 'nullable|string|max:512',
             'cloudinary_folder' => 'nullable|string|max:128',
+            'lock_examiner_create_group' => 'nullable|boolean',
         ]);
 
         Setting::setValue(Setting::KEY_APP_NAME, $request->filled('app_name') ? trim($request->app_name) : null);
@@ -122,6 +124,7 @@ class SettingsController extends Controller
             Setting::setValue(Setting::KEY_CLOUDINARY_API_SECRET, trim($apiSecret));
         }
         Setting::setValue(Setting::KEY_CLOUDINARY_FOLDER, $request->filled('cloudinary_folder') ? trim($request->cloudinary_folder) : 'quizsnap');
+        Setting::setValue(Setting::KEY_LOCK_EXAMINER_CREATE_GROUP, $request->boolean('lock_examiner_create_group') ? '1' : '0');
 
         // Ensure cache is cleared so Test Cloudinary / uploads use fresh DB values
         if ($request->hasAny(['cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret', 'cloudinary_folder'])) {
