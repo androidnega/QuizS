@@ -89,25 +89,76 @@
             </div>
         </section>
 
-        {{-- Violation Log: each violation in a row (#, Type, Details inline) --}}
+        {{-- Violation Log: clear table with time, type, severity, and details --}}
         <section class="min-w-0 bg-white rounded-lg border border-gray-200 p-3">
             <h2 class="text-sm font-semibold text-gray-900 mb-2">Violation Log</h2>
             @if($session->violations->isEmpty())
                 <div class="text-center py-4 text-gray-500 text-xs">No violations recorded.</div>
             @else
-                <ul class="space-y-1.5 text-xs">
-                    @foreach($session->violations as $idx => $v)
-                        <li class="flex flex-wrap items-center gap-2 py-1.5 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded px-1 -mx-1">
-                            <span class="text-gray-600 font-medium tabular-nums">{{ $idx + 1 }}.</span>
-                            <span class="px-1.5 py-0.5 rounded font-medium bg-red-100 text-red-800">{{ ucfirst(str_replace('_', ' ', $v->type)) }}</span>
-                            @if($v->metadata)
-                                <span class="text-gray-600"><pre class="inline text-xs bg-gray-50 p-1 rounded overflow-x-auto max-w-[140px] sm:max-w-xs whitespace-pre-wrap break-words">{{ is_string($v->metadata) ? $v->metadata : json_encode($v->metadata, JSON_PRETTY_PRINT) }}</pre></span>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
-                        </li>
-                    @endforeach
-                </ul>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-xs border border-gray-200 rounded overflow-hidden">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-2 py-1.5 text-left font-semibold text-gray-700">#</th>
+                                <th scope="col" class="px-2 py-1.5 text-left font-semibold text-gray-700">Time</th>
+                                <th scope="col" class="px-2 py-1.5 text-left font-semibold text-gray-700">Type</th>
+                                <th scope="col" class="px-2 py-1.5 text-left font-semibold text-gray-700">Severity</th>
+                                <th scope="col" class="px-2 py-1.5 text-left font-semibold text-gray-700">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100">
+                            @foreach($session->violations as $idx => $v)
+                                @php
+                                    $typeLabels = [
+                                        'blur' => 'Window lost focus',
+                                        'tab_switch' => 'Switched to another tab',
+                                        'window_resize' => 'Window resized or minimized',
+                                        'copy_paste' => 'Copy or paste attempted',
+                                        'right_click' => 'Right-click / context menu',
+                                        'screenshot_attempt' => 'Screenshot key pressed',
+                                        'multiple_ip' => 'Different IP address used',
+                                        'face_mismatch' => 'Face mismatch',
+                                        'other' => 'Other',
+                                    ];
+                                    $label = $typeLabels[$v->type] ?? ucfirst(str_replace('_', ' ', $v->type));
+                                    $meta = $v->metadata;
+                                    if (is_string($meta)) {
+                                        $decoded = @json_decode($meta, true);
+                                        $meta = $decoded !== null ? $decoded : $meta;
+                                    }
+                                    $details = '';
+                                    if (is_array($meta)) {
+                                        if (isset($meta['expected'], $meta['got'])) {
+                                            $details = 'Expected IP: ' . e($meta['expected']) . ' — Got: ' . e($meta['got']);
+                                        } elseif (isset($meta['timestamp'])) {
+                                            $details = 'At ' . (is_numeric($meta['timestamp']) ? date('M d, H:i:s', (int)$meta['timestamp']) : e($meta['timestamp']));
+                                        } else {
+                                            $details = implode('; ', array_map(fn ($k, $val) => $k . ': ' . (is_scalar($val) ? $val : json_encode($val)), array_keys($meta), $meta));
+                                        }
+                                    } elseif ((string)$meta !== '') {
+                                        $details = (string) $meta;
+                                    }
+                                @endphp
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-2 py-1.5 tabular-nums font-medium text-gray-600">{{ $idx + 1 }}</td>
+                                    <td class="px-2 py-1.5 whitespace-nowrap text-gray-700">{{ $v->occurred_at?->format('M d, H:i:s') ?? '—' }}</td>
+                                    <td class="px-2 py-1.5">
+                                        <span class="px-1.5 py-0.5 rounded font-medium bg-red-100 text-red-800">{{ $label }}</span>
+                                    </td>
+                                    <td class="px-2 py-1.5">
+                                        @if($v->severity === 'critical')
+                                            <span class="px-1.5 py-0.5 rounded font-medium bg-red-200 text-red-900">Critical</span>
+                                        @else
+                                            <span class="px-1.5 py-0.5 rounded font-medium bg-amber-100 text-amber-800">Warning</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-2 py-1.5 text-gray-600 max-w-[200px] sm:max-w-xs break-words">{{ $details ?: '—' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">Critical violations (copy/paste, screenshot, different IP) trigger immediate auto-submit. Multiple major violations (blur, tab switch, resize) may also trigger auto-submit.</p>
             @endif
         </section>
     </div>

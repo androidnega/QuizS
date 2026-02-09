@@ -243,7 +243,7 @@ class QuizManagementController extends Controller
         if ($session->quiz_id !== $quiz->id) {
             abort(404);
         }
-        $session->load(['quiz', 'result', 'violations']);
+        $session->load(['quiz', 'result', 'violations' => fn ($q) => $q->orderBy('occurred_at')]);
 
         $admin = $this->adminUser();
         if ($admin) {
