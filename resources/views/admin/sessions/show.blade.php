@@ -52,8 +52,11 @@
             <div class="flex flex-wrap gap-4">
                 <div class="flex flex-col items-center">
                     <span class="text-xs text-gray-500 mb-1">1. At start</span>
-                    @if($session->pre_face_image)
-                        @php $preUrl = \Illuminate\Support\Str::startsWith($session->pre_face_image, 'http') ? $session->pre_face_image : asset('storage/' . ltrim($session->pre_face_image, '/')); @endphp
+                    @if(!empty($session->pre_face_image))
+                        @php
+                            $preImg = $session->pre_face_image;
+                            $preUrl = (str_starts_with($preImg, 'http://') || str_starts_with($preImg, 'https://')) ? $preImg : asset('storage/' . ltrim($preImg, '/'));
+                        @endphp
                         <button type="button" class="session-img-thumb rounded-lg border border-gray-200 overflow-hidden bg-gray-50 hover:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-session-full-img="{{ $preUrl }}" data-session-img-alt="Face at start" aria-label="View full size">
                             <img src="{{ $preUrl }}" alt="Face at start" class="w-20 h-20 object-cover object-top" loading="lazy" onerror="this.style.display='none'; var s=document.createElement('span'); s.className='text-gray-400 text-xs'; s.textContent='Unavailable'; this.parentElement.appendChild(s);">
                         </button>
@@ -64,8 +67,13 @@
                 </div>
                 <div class="flex flex-col items-center">
                     <span class="text-xs text-gray-500 mb-1">2. At end</span>
-                    @if($session->post_face_image)
-                        @php $postUrl = \Illuminate\Support\Str::startsWith($session->post_face_image, 'http') ? $session->post_face_image : asset('storage/' . ltrim($session->post_face_image, '/')); @endphp
+                    @if(!empty($session->post_face_image))
+                        @php
+                            $postImg = $session->post_face_image;
+                            $postUrl = (str_starts_with($postImg, 'http://') || str_starts_with($postImg, 'https://'))
+                                ? $postImg
+                                : asset('storage/' . ltrim($postImg, '/'));
+                        @endphp
                         <button type="button" class="session-img-thumb rounded-lg border border-gray-200 overflow-hidden bg-gray-50 hover:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-session-full-img="{{ $postUrl }}" data-session-img-alt="Face at end" aria-label="View full size">
                             <img src="{{ $postUrl }}" alt="Face at end" class="w-20 h-20 object-cover object-top" loading="lazy" onerror="this.style.display='none'; var s=document.createElement('span'); s.className='text-gray-400 text-xs'; s.textContent='Unavailable'; this.parentElement.appendChild(s);">
                         </button>

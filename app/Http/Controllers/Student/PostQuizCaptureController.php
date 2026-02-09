@@ -69,14 +69,18 @@ class PostQuizCaptureController extends Controller
                 $imagePath = CloudinaryService::uploadFromDataUrl($data, 'post_s' . $session->id);
             }
             if ($imagePath === null && $imageBytes !== false) {
-                $imagePath = 'proctoring/post_' . $session->id . '_' . time() . '.jpg';
-                Storage::disk('public')->put($imagePath, $imageBytes);
+                $localPath = 'proctoring/post_' . $session->id . '_' . time() . '.jpg';
+                if (Storage::disk('public')->put($localPath, $imageBytes)) {
+                    $imagePath = $localPath;
+                }
             }
-            $session->update([
-                'post_face_image' => $imagePath,
-                'post_face_image_hash' => $postFaceImageHash,
-                'post_face_captured_at' => now(),
-            ]);
+            if ($imagePath !== null) {
+                $session->update([
+                    'post_face_image' => $imagePath,
+                    'post_face_image_hash' => $postFaceImageHash,
+                    'post_face_captured_at' => now(),
+                ]);
+            }
         }
         return response()->json(['success' => true]);
     }

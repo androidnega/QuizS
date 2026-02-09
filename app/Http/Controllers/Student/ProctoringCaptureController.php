@@ -62,6 +62,7 @@ class ProctoringCaptureController extends Controller
             return response()->json(['success' => false, 'message' => 'IP already used for this quiz.'], 403);
         }
 
+        $studentIndex = strtoupper(trim((string) $request->index_number));
         $imagePath = null;
         $preFaceImageHash = null;
         $data = $request->face_image;
@@ -72,10 +73,10 @@ class ProctoringCaptureController extends Controller
                 $preFaceImageHash = hash('sha256', $imageBytes);
             }
             if (CloudinaryService::isConfigured()) {
-                $imagePath = CloudinaryService::uploadFromDataUrl($data, 'pre_q' . $quiz->id . '_' . $request->index_number);
+                $imagePath = CloudinaryService::uploadFromDataUrl($data, 'pre_q' . $quiz->id . '_' . $studentIndex);
             }
             if ($imagePath === null && $imageBytes !== false) {
-                $imagePath = 'proctoring/pre_' . $quiz->id . '_' . $request->index_number . '_' . time() . '.jpg';
+                $imagePath = 'proctoring/pre_' . $quiz->id . '_' . $studentIndex . '_' . time() . '.jpg';
                 Storage::disk('public')->put($imagePath, $imageBytes);
             }
         }
@@ -92,7 +93,7 @@ class ProctoringCaptureController extends Controller
         $shuffledOptions = $assignment['shuffled_options'] ?? [];
         $session = QuizSession::create([
             'quiz_id' => $quiz->id,
-            'student_index' => $request->index_number,
+            'student_index' => $studentIndex,
             'ip_address' => $ip,
             'start_time' => null, // timer starts when student clicks Start Quiz on readiness screen
             'pre_face_image' => $imagePath,

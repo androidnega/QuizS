@@ -16,7 +16,7 @@
             <form id="login-form" class="space-y-4">
                 <div>
                     <label for="index_number" class="block text-sm font-medium text-gray-700 mb-1">Index number</label>
-                    <input type="text" id="index_number" name="index_number" required placeholder="BC/ITS/24/047" class="input">
+                    <input type="text" id="index_number" name="index_number" required placeholder="BC/ITS/24/047" class="input" style="text-transform: uppercase;" autocomplete="off">
                 </div>
 
                 <div id="login-error" class="hidden">
@@ -50,7 +50,7 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
             'Accept': 'application/json',
         },
         body: JSON.stringify({
-            index_number: document.getElementById('index_number').value.trim()
+            index_number: document.getElementById('index_number').value.trim().toUpperCase()
         })
     })
     .then(r => r.json())

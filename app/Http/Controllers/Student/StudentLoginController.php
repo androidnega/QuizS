@@ -36,7 +36,7 @@ class StudentLoginController extends Controller
     public function verifyIndex(Request $request): JsonResponse
     {
         $request->validate(['index_number' => 'required|string']);
-        $indexNumber = trim($request->index_number);
+        $indexNumber = strtoupper(trim($request->index_number));
         $quizId = session('quiz_id_for_login');
         if (!$quizId) {
             return response()->json([
@@ -54,7 +54,7 @@ class StudentLoginController extends Controller
         }
 
         $exists = ClassGroupStudent::where('class_group_id', $quiz->class_group_id)
-            ->where('index_number', $indexNumber)
+            ->whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper($indexNumber)])
             ->exists();
         if (!$exists) {
             return response()->json([
