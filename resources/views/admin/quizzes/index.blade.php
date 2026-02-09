@@ -43,7 +43,7 @@
                             <td class="px-2 py-2 sm:px-3 md:px-4 md:py-4 align-top">
                                 @if(!$q->hasEnoughApprovedQuestions())
                                     <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-warning-100 text-warning-800">Pending</span>
-                                @elseif($q->isActive())
+                                @elseif($q->is_published || $q->isActive())
                                     <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-success-100 text-success-800">Active</span>
                                 @else
                                     <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>
