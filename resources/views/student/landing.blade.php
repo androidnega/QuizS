@@ -75,7 +75,7 @@
                 Start Your Quiz
             </h1>
             <p class="text-gray-600 text-lg mb-10">
-                Enter your quiz token from your lecturer or examiner
+                Enter the <span style="color: #dc2626; font-weight: 600;">token</span> from your lecturer or examiner
             </p>
 
             <form action="{{ route('student.start-quiz') }}" method="post" class="mb-12" id="start-quiz-form">
