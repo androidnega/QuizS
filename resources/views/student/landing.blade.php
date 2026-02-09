@@ -122,20 +122,20 @@
             </form>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-                <div class="bg-amber-50 rounded-lg px-4 py-3 border border-amber-200 text-center">
-                    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg font-bold mx-auto mb-2">🔒</div>
+                <div class="bg-homeYellow rounded-lg px-4 py-3 border border-homeYellow text-center">
+                    <div class="w-9 h-9 bg-homeBlue rounded-lg flex items-center justify-center text-white text-lg font-bold mx-auto mb-2">🔒</div>
                     <p class="text-sm font-bold text-gray-900 mb-0.5">Secure</p>
-                    <p class="text-xs text-gray-600">Proctored environment</p>
+                    <p class="text-xs text-gray-700">Proctored environment</p>
                 </div>
                 <div class="bg-white rounded-lg px-4 py-3 border border-gray-200 text-center">
-                    <div class="w-9 h-9 bg-yellow-400 rounded-lg flex items-center justify-center text-gray-900 text-lg font-bold mx-auto mb-2">⚡</div>
+                    <div class="w-9 h-9 bg-homeYellow rounded-lg flex items-center justify-center text-gray-900 text-lg font-bold mx-auto mb-2">⚡</div>
                     <p class="text-sm font-bold text-gray-900 mb-0.5">Fast</p>
                     <p class="text-xs text-gray-600">Instant access</p>
                 </div>
-                <div class="bg-blue-50 rounded-lg px-4 py-3 border border-blue-200 text-center">
-                    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg font-bold mx-auto mb-2">✓</div>
-                    <p class="text-sm font-bold text-gray-900 mb-0.5">Reliable</p>
-                    <p class="text-xs text-gray-600">Desktop optimized</p>
+                <div class="bg-homeBlue rounded-lg px-4 py-3 border border-homeBlue text-center">
+                    <div class="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center text-white text-lg font-bold mx-auto mb-2">✓</div>
+                    <p class="text-sm font-bold text-white mb-0.5">Reliable</p>
+                    <p class="text-xs text-white/90">Desktop optimized</p>
                 </div>
             </div>
         </div>
