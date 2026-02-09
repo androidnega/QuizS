@@ -9,7 +9,7 @@
  *
  * Remove this file from the repo after use, or keep it and never share the key.
  */
-$secret = 'CHANGE_ME_BEFORE_UPLOAD';
+$secret = 'QuizSnap2026Xk9m2p7';
 
 if (($_GET['key'] ?? '') !== $secret) {
     header('HTTP/1.1 403 Forbidden');
