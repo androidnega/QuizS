@@ -1,72 +1,48 @@
-# Fix "local changes would be overwritten by merge" without cPanel terminal
+# Do exactly what Git asks: “stash” local changes to .env.example (no terminal)
 
 When cPanel Git Update fails with:
+
 ```text
 error: Your local changes to the following files would be overwritten by merge:
     .env.example
 Please commit your changes or stash them before you merge. Aborting
 ```
 
-and you **cannot use cPanel Terminal**, use the one-time script **`public/fix-git-pull.php`**.
+Git wants you to **stash** (or commit) the local changes to `.env.example` so the merge can run. You can do the same thing using **only cPanel File Manager**—no terminal.
 
 ---
 
-## Step 1: Get the script onto the server (you can’t pull yet)
+## Steps (File Manager only)
 
-Because pull is failing, you have to add the file manually:
+### 1. Open your app folder
 
-1. **Download the file from GitHub**  
-   Open:  
-   `https://github.com/androidnega/QuizS/blob/main/public/fix-git-pull.php`  
-   Click **Raw**, then **Save as** (or copy the contents).
+In **cPanel → File Manager**, go to the folder that contains **`.env`**, **`artisan`**, and **`.env.example`** (your app root, not inside `public`).
 
-2. **Upload via cPanel File Manager**  
-   - Log in to **cPanel → File Manager**.  
-   - Go to your app folder (where the site lives).  
-   - Open the **`public`** folder (often `public_html` or `domains/quizsnap.ausweblabs.com/public_html`).  
-   - **Upload** the saved `fix-git-pull.php` into that `public` folder.
+### 2. “Stash” the server’s .env.example (save it, then remove it)
 
----
+- **Option A – Rename (recommended)**  
+  - Right‑click **`.env.example`** → **Rename**.  
+  - New name: **`.env.example.stashed`** (or **`.env.example.bak`**).  
+  - Click **Rename**.  
+  So: local “changes” are gone from Git’s point of view (the tracked file no longer exists), and you still have a copy.
 
-## Step 2: Set a secret in the file
+- **Option B – Delete**  
+  - Right‑click **`.env.example`** → **Delete**.  
+  Your live site uses **`.env`**, not `.env.example`, so this is safe. You just lose the server’s current `.env.example` copy.
 
-1. In File Manager, **Edit** `public/fix-git-pull.php`.  
-2. Find the line:  
-   `$secret = 'CHANGE_ME_BEFORE_UPLOAD';`  
-3. Change it to a secret only you know, e.g.:  
-   `$secret = 'mySecretFixPull123';`  
-4. Save.
+### 3. Run Git Update again
+
+In cPanel go to **Git Version Control** (or **Deploy**) and run **Update** / **Pull** again.
+
+The merge will no longer see “local changes” to `.env.example`, so it will succeed and the repo’s **`.env.example`** will be restored in your app folder.
 
 ---
 
-## Step 3: Run the fix once in the browser
+## Summary
 
-Visit (use your real domain and the same secret you set):
+| What Git is asking | What you did (no terminal) |
+|--------------------|-----------------------------|
+| “Stash your changes” | Renamed `.env.example` → `.env.example.stashed` (or deleted it). |
+| Result | Merge can run; pull succeeds; repo’s `.env.example` is back. |
 
-```text
-https://quizsnap.ausweblabs.com/fix-git-pull.php?key=mySecretFixPull123&run=yes
-```
-
-Replace `mySecretFixPull123` with your secret.
-
-The page will:
-
-- Discard local changes to `.env.example` on the server  
-- Run `git pull`  
-- Show the command output  
-- Delete itself when done
-
-After that, **cPanel Git Update** should work again for normal pulls.
-
----
-
-## If the script can’t run `git` (e.g. disabled by host)
-
-Then the only option is to **remove the conflicting file on the server** so Git doesn’t see “local changes”:
-
-1. In **cPanel File Manager**, go to your app root (where `.env` and `artisan` are).  
-2. Find **`.env.example`**.  
-3. **Rename** it to **`.env.example.bak`** (or delete it).  
-   The live site uses **`.env`**, not `.env.example`; renaming/deleting is safe.  
-4. In cPanel, run **Git → Update** again.  
-   The pull should succeed and the repo’s `.env.example` will be restored.
+You did exactly what Git asked—you stashed the local changes (by moving/removing the file) so the merge can proceed.
