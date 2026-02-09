@@ -27,6 +27,11 @@ class Student implements Authenticatable
         return '';
     }
 
+    public function getAuthPasswordName(): string
+    {
+        return 'password';
+    }
+
     public function getRememberToken(): ?string
     {
         return null;

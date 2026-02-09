@@ -200,6 +200,16 @@ class ClassGroupController extends Controller
         return redirect()->route($this->staffRoutePrefix() . '.class-groups.index')->with('success', "Class group \"{$name}\" deleted.");
     }
 
+    /** Show the student indices management page for this class group. */
+    public function studentsIndex(ClassGroup $classGroup): View
+    {
+        $this->authorize('view', $classGroup);
+        $classGroup->load('examiner:id,username,name');
+        $students = $classGroup->students()->orderBy('index_number')->paginate(30);
+        $isSuperAdmin = $this->adminUser()?->isSuperAdmin() ?? false;
+        return view('admin.class-groups.students', compact('classGroup', 'students', 'isSuperAdmin'));
+    }
+
     /** Add a single student to the class group. */
     public function addStudent(Request $request, ClassGroup $classGroup): RedirectResponse
     {
@@ -215,7 +225,43 @@ class ClassGroupController extends Controller
             ],
             ['student_name' => $request->filled('student_name') ? trim($request->student_name) : null]
         );
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.show', $classGroup)->with('success', 'Student index added.');
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index added.');
+    }
+
+    /** Show edit form for one student in the class group. */
+    public function editStudent(ClassGroup $classGroup, ClassGroupStudent $student): View
+    {
+        $this->authorize('update', $classGroup);
+        if ($student->class_group_id !== $classGroup->id) {
+            abort(404);
+        }
+        return view('admin.class-groups.student-edit', compact('classGroup', 'student'));
+    }
+
+    /** Update a student index/name in the class group. */
+    public function updateStudent(Request $request, ClassGroup $classGroup, ClassGroupStudent $student): RedirectResponse
+    {
+        $this->authorize('update', $classGroup);
+        if ($student->class_group_id !== $classGroup->id) {
+            abort(404);
+        }
+        $request->validate([
+            'index_number' => 'required|string|max:64',
+            'student_name' => 'nullable|string|max:255',
+        ]);
+        $indexNumber = trim($request->index_number);
+        $name = $request->filled('student_name') ? trim($request->student_name) : null;
+        // If index changed, ensure no duplicate (unique is class_group_id + index_number)
+        if (strcasecmp($student->index_number, $indexNumber) !== 0) {
+            if (ClassGroupStudent::where('class_group_id', $classGroup->id)->where('id', '!=', $student->id)->whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper($indexNumber)])->exists()) {
+                return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)
+                    ->with('error', 'An index with that number already exists in this group.');
+            }
+        }
+        $student->index_number = $indexNumber;
+        $student->student_name = $name;
+        $student->save();
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index updated.');
     }
 
     /** Upload Excel to replace or merge class group students. */
@@ -288,7 +334,7 @@ class ClassGroupController extends Controller
         $message = $mode === 'replace'
             ? 'Student list replaced with ' . count($byIndex) . ' indices.'
             : 'Merged ' . count($byIndex) . ' indices into the class group.';
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.show', $classGroup)->with('success', $message);
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', $message);
     }
 
     /** Remove a student from the class group. */
@@ -299,6 +345,6 @@ class ClassGroupController extends Controller
             abort(404);
         }
         $student->delete();
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.show', $classGroup)->with('success', 'Student index removed.');
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index removed.');
     }
 }

@@ -1,0 +1,113 @@
+@php $isSuperAdmin = $isSuperAdmin ?? false; @endphp
+@extends('layouts.dashboard')
+
+@section('title', 'Student indices — ' . $classGroup->name)
+@section('dashboard_heading')
+    <span class="inline-flex items-center gap-2"><i class="fas fa-user-graduate text-primary-600"></i> Student index list</span>
+@endsection
+
+@section('dashboard_content')
+<div class="w-full space-y-6">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-error">{{ session('error') }}</div>
+    @endif
+
+    {{-- Back to class group --}}
+    <a href="{{ route('dashboard.class-groups.show', $classGroup) }}" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600">
+        <i class="fas fa-arrow-left"></i> Back to {{ $classGroup->name }}
+    </a>
+
+    <p class="text-sm text-gray-600">Manage student indices for this class group. This list is used for all quizzes in the group.</p>
+
+    @if(!$isSuperAdmin)
+    {{-- Add index --}}
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Add index</h2>
+        <form action="{{ route('dashboard.class-groups.students.add', $classGroup) }}" method="post" class="flex flex-wrap items-end gap-4">
+            @csrf
+            <div>
+                <label for="index_number" class="block text-sm font-medium text-gray-700 mb-1">Index number</label>
+                <input type="text" name="index_number" id="index_number" required maxlength="64" placeholder="e.g. BC/ITS/24/047" class="input" value="{{ old('index_number') }}">
+            </div>
+            <div>
+                <label for="student_name" class="block text-sm font-medium text-gray-700 mb-1">Name (optional)</label>
+                <input type="text" name="student_name" id="student_name" maxlength="255" class="input" value="{{ old('student_name') }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Add index</button>
+        </form>
+    </div>
+
+    {{-- Upload Excel --}}
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Upload from file</h2>
+        <form action="{{ route('dashboard.class-groups.students.upload', $classGroup) }}" method="post" enctype="multipart/form-data" class="flex flex-wrap items-end gap-4">
+            @csrf
+            <div>
+                <label for="file" class="block text-sm font-medium text-gray-700 mb-1">Excel / CSV file</label>
+                <input type="file" name="file" id="file" accept=".xlsx,.xls,.csv" required class="input file:mr-2 file:py-2 file:px-3 file:rounded file:border file:border-primary-300 file:bg-primary-50 file:text-primary-700">
+            </div>
+            <div>
+                <label for="upload_mode" class="block text-sm font-medium text-gray-700 mb-1">Mode</label>
+                <select name="upload_mode" id="upload_mode" required class="input">
+                    <option value="replace">Replace — clear list, then add from file</option>
+                    <option value="merge">Merge — add/update from file</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-secondary">Upload</button>
+        </form>
+    </div>
+    @else
+    <p class="text-sm text-gray-500">Only examiners can add or remove indices for this class group.</p>
+    @endif
+
+    {{-- Table: all indices with Edit + Remove --}}
+    <div class="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900">All indices ({{ $students->total() }})</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full divide-y divide-gray-200 min-w-[400px]">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Index</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Name</th>
+                        @if(!$isSuperAdmin)
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 bg-white">
+                    @forelse($students as $s)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $s->index_number }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ $s->student_name ?? '—' }}</td>
+                            @if(!$isSuperAdmin)
+                                <td class="px-4 py-3 text-right">
+                                    <div class="inline-flex items-center justify-end gap-3">
+                                        <a href="{{ route('dashboard.class-groups.students.edit', [$classGroup, $s]) }}" class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-800 text-sm" title="Edit"><i class="fas fa-pen"></i> Edit</a>
+                                        <form action="{{ route('dashboard.class-groups.students.destroy', [$classGroup, $s]) }}" method="post" class="inline" onsubmit="return confirm('Remove this index from the group?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center gap-1 text-danger-600 hover:text-danger-800 text-sm bg-transparent border-0 p-0 cursor-pointer" title="Remove"><i class="fas fa-trash-alt"></i> Remove</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            @endif
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="{{ $isSuperAdmin ? 2 : 3 }}" class="px-4 py-8 text-center text-gray-500 text-sm">No students yet.@if(!$isSuperAdmin) Add indices above or upload Excel/CSV.@endif</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($students->hasPages())
+            <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">{{ $students->links() }}</div>
+        @endif
+    </div>
+</div>
+@endsection
