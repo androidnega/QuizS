@@ -20,26 +20,26 @@
         <i class="fas fa-arrow-left"></i> Back to class groups
     </a>
 
-    {{-- Card: Actions --}}
-    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Group actions</h2>
-        <div class="flex flex-wrap items-center gap-3">
-            <a href="{{ route('dashboard.class-groups.edit', $classGroup) }}" class="btn btn-secondary inline-flex items-center gap-2" title="Edit {{ $classGroup->name }}"><i class="fas fa-pen"></i> Edit class group</a>
+    {{-- Card: Actions (compact) --}}
+    <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-sm font-semibold text-gray-700 mr-1">Group actions</span>
+            <a href="{{ route('dashboard.class-groups.edit', $classGroup) }}" class="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50" title="Edit {{ $classGroup->name }}"><i class="fas fa-pen text-xs"></i> Edit</a>
             <form action="{{ route('dashboard.class-groups.destroy', $classGroup) }}" method="post" class="inline" onsubmit="return confirm('Delete class group \'{{ addslashes($classGroup->name) }}\'? This cannot be undone.');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn border border-danger-300 bg-danger-50 text-danger-700 hover:bg-danger-100 inline-flex items-center gap-2" title="Delete {{ $classGroup->name }}"><i class="fas fa-trash-alt"></i> Delete group</button>
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-md border border-danger-300 bg-danger-50 px-2.5 py-1.5 text-sm font-medium text-danger-700 hover:bg-danger-100" title="Delete {{ $classGroup->name }}"><i class="fas fa-trash-alt text-xs"></i> Delete</button>
             </form>
             @if(!$isSuperAdmin)
                 @if($students->total() > 0)
-                    <a href="{{ route('dashboard.quizzes.create') }}?class_group_id={{ $classGroup->id }}" class="btn btn-primary inline-flex items-center gap-2"><i class="fas fa-plus"></i> Create quiz for this group</a>
+                    <a href="{{ route('dashboard.quizzes.create') }}?class_group_id={{ $classGroup->id }}" class="inline-flex items-center gap-1.5 rounded-md bg-primary-600 px-2.5 py-1.5 text-sm font-medium text-white hover:bg-primary-700"><i class="fas fa-plus text-xs"></i> Create quiz</a>
                 @else
-                    <span class="btn btn-primary opacity-60 cursor-not-allowed inline-flex items-center gap-2" title="Add at least one student to this class group before creating a quiz"><i class="fas fa-plus"></i> Create quiz for this group</span>
+                    <span class="inline-flex items-center gap-1.5 rounded-md bg-primary-200 px-2.5 py-1.5 text-sm font-medium text-primary-800 opacity-70 cursor-not-allowed" title="Add at least one student first"><i class="fas fa-plus text-xs"></i> Create quiz</span>
                 @endif
             @endif
         </div>
         @if(!$isSuperAdmin && $students->total() === 0)
-            <p class="mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"><strong>No students yet.</strong> Add at least one student index (or upload Excel/CSV) before you can create a quiz for this class group.</p>
+            <p class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5"><strong>No students yet.</strong> Add indices in Student index list below before creating a quiz.</p>
         @endif
     </div>
 
