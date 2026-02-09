@@ -65,9 +65,36 @@
                 </span>
                 <span style="color: #2563eb;">Quiz</span><span style="color: #eab308;">Snap</span>
             </a>
-            <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all no-underline">Staff Login</a>
+            <div class="flex items-center gap-2">
+                <button type="button" id="about-system-btn" class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400" title="About the system" aria-label="About the system">
+                    <span class="text-lg font-bold leading-none">!</span>
+                </button>
+                <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all no-underline">Staff Login</a>
+            </div>
         </div>
     </header>
+
+    {{-- About the system modal --}}
+    <div id="about-system-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50" aria-modal="true" aria-labelledby="about-system-title" role="dialog">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+                <h2 id="about-system-title" class="text-lg font-bold text-gray-900">How QuizSnap works</h2>
+                <button type="button" id="about-system-close" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 focus:outline-none" aria-label="Close">×</button>
+            </div>
+            <div class="px-5 py-4 overflow-y-auto text-sm text-gray-700 space-y-4">
+                <p><strong>QuizSnap</strong> is a proctored quiz system. Your lecturer or examiner creates a quiz and gives you a <strong>token</strong> (not a link).</p>
+                <ul class="list-disc list-inside space-y-1.5 pl-1">
+                    <li><strong>Enter token</strong> — Type the token on this page and click Start Quiz.</li>
+                    <li><strong>Verify index</strong> — Enter your index number (as in the class list).</li>
+                    <li><strong>Start photo</strong> — Allow camera access and capture your face before the quiz.</li>
+                    <li><strong>Take the quiz</strong> — Answer questions; the timer runs until you finish or time runs out.</li>
+                    <li><strong>End photo</strong> — Capture a final face image before submission.</li>
+                    <li><strong>Result</strong> — View your score and feedback (if enabled).</li>
+                </ul>
+                <p class="text-gray-600"><strong>Security:</strong> Desktop only; copying is disabled. Start and end photos are stored for proctoring. Use a stable connection and do not switch tabs during the quiz.</p>
+            </div>
+        </div>
+    </div>
 
     <main class="flex flex-1 flex-col items-center justify-center px-6 py-16 sm:py-20">
         <div class="w-full max-w-2xl text-center">
@@ -237,6 +264,30 @@
             }
         });
     }
+})();
+(function() {
+    var btn = document.getElementById('about-system-btn');
+    var modal = document.getElementById('about-system-modal');
+    var closeBtn = document.getElementById('about-system-close');
+    if (!btn || !modal) return;
+    function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+    btn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+    });
 })();
 </script>
 @endpush
