@@ -58,6 +58,16 @@
         </div>
     </div>
 
+    {{-- Resize / exit fullscreen blur overlay: blocks interaction until full screen or maximized --}}
+    <div id="resize-blur-overlay" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/80 backdrop-blur-sm px-4 pointer-events-auto" aria-hidden="true">
+        <div class="bg-white border border-gray-200 rounded-xl p-6 max-w-md w-full shadow-lg text-center">
+            <h4 id="resize-blur-title" class="font-semibold text-gray-800 mb-2">Window resized or left full screen</h4>
+            <p id="resize-blur-message" class="text-sm text-gray-600 mb-2">Return to full screen or maximize this window to continue. The timer is still running.</p>
+            <p id="resize-blur-warning" class="text-sm font-medium text-amber-700 mb-3 hidden">Repeated violations will result in auto-submission of your quiz.</p>
+            <p id="resize-blur-final-warning" class="text-sm font-bold text-red-600 mb-3 hidden">One more resize or exit from full screen will auto-submit your quiz.</p>
+        </div>
+    </div>
+
     {{-- Main: full width --}}
     <main class="w-full px-4 sm:px-6 py-6 min-w-0 overflow-hidden">
         <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start w-full max-w-[1600px] mx-auto">
@@ -146,7 +156,8 @@ window.QuizSnapQuiz = {
     durationSeconds: {{ $durationSeconds }},
     remainingSeconds: {{ $remainingSeconds }},
     totalPages: {{ $totalPages }},
-    perPage: {{ $perPage }}
+    perPage: {{ $perPage }},
+    windowResizeLimit: 3
 };
 document.addEventListener('DOMContentLoaded', function() {
     window.QuizSnapQuiz.showRightClickWarning = function() {
@@ -163,6 +174,10 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     window.QuizSnapQuiz.showTabSwitchWarning = function() {
         var el = document.getElementById('tab-switch-once-warning');
+        if (el) { el.classList.remove('hidden'); }
+    };
+    window.QuizSnapQuiz.showResizeFinalWarning = function() {
+        var el = document.getElementById('resize-blur-final-warning');
         if (el) { el.classList.remove('hidden'); }
     };
 

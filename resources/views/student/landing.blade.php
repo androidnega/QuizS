@@ -74,24 +74,24 @@
         </div>
     </header>
 
-    {{-- About the system modal --}}
-    <div id="about-system-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50" aria-modal="true" aria-labelledby="about-system-title" role="dialog">
-        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-                <h2 id="about-system-title" class="text-lg font-bold text-gray-900">How QuizSnap works</h2>
-                <button type="button" id="about-system-close" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 focus:outline-none" aria-label="Close">×</button>
+    {{-- About the system modal: clean and simple --}}
+    <div id="about-system-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-black/50" aria-modal="true" aria-labelledby="about-system-title" role="dialog">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                <h2 id="about-system-title" class="text-xl font-bold text-gray-900">How QuizSnap works</h2>
+                <button type="button" id="about-system-close" class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none text-xl" aria-label="Close">×</button>
             </div>
-            <div class="px-5 py-4 overflow-y-auto text-sm text-gray-700 space-y-4">
-                <p><strong>QuizSnap</strong> is a proctored quiz system. Your lecturer or examiner creates a quiz and gives you a <strong>token</strong> (not a link).</p>
-                <ul class="list-disc list-inside space-y-1.5 pl-1">
-                    <li><strong>Enter token</strong> — Type the token on this page and click Start Quiz.</li>
-                    <li><strong>Verify index</strong> — Enter your index number (as in the class list).</li>
-                    <li><strong>Start photo</strong> — Allow camera access and capture your face before the quiz.</li>
-                    <li><strong>Take the quiz</strong> — Answer questions; the timer runs until you finish or time runs out.</li>
-                    <li><strong>End photo</strong> — Capture a final face image before submission.</li>
-                    <li><strong>Result</strong> — View your score and feedback (if enabled).</li>
-                </ul>
-                <p class="text-gray-600"><strong>Security:</strong> Desktop only; copying is disabled. Start and end photos are stored for proctoring. Use a stable connection and do not switch tabs during the quiz.</p>
+            <div class="px-6 py-6 overflow-y-auto text-base text-gray-700">
+                <p class="mb-6">Your lecturer or examiner gives you a <strong>token</strong>. Enter it here to start.</p>
+                <ol class="list-decimal list-inside space-y-3 text-gray-700">
+                    <li><strong>Enter token</strong> — Type the token and click Start Quiz.</li>
+                    <li><strong>Verify index</strong> — Enter your index number.</li>
+                    <li><strong>Start photo</strong> — Allow camera and capture your face.</li>
+                    <li><strong>Take the quiz</strong> — Answer the questions before time runs out.</li>
+                    <li><strong>End photo</strong> — Capture a final photo, then submit.</li>
+                    <li><strong>Result</strong> — View your score and feedback.</li>
+                </ol>
+                <p class="mt-6 pt-6 border-t border-gray-100 text-gray-600">QuizSnap runs on desktop only for a clear, fair quiz. Start and end photos help verify your session. Please stay on the quiz tab and use a stable connection.</p>
             </div>
         </div>
     </div>

@@ -144,7 +144,9 @@
         saveDebounceTimer = setTimeout(flushSavePending, SAVE_DEBOUNCE_MS);
     }
 
-    function recordViolation(type) {
+    function recordViolation(type, metadata) {
+        var body = { type: type };
+        if (metadata) body.metadata = typeof metadata === 'string' ? metadata : JSON.stringify(metadata);
         fetch(violationUrl, {
             method: 'POST',
             headers: {
@@ -152,12 +154,17 @@
                 'X-CSRF-TOKEN': csrf(),
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ type: type }),
+            body: JSON.stringify(body),
         })
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data && data.auto_submitted && data.redirect) {
                     window.location.href = data.redirect;
+                }
+                if (type === 'window_resize' && data && data.next_violation_auto_submits) {
+                    if (window.QuizSnapQuiz && window.QuizSnapQuiz.showResizeFinalWarning) {
+                        window.QuizSnapQuiz.showResizeFinalWarning();
+                    }
                 }
             })
             .catch(function () {});
@@ -314,4 +321,110 @@
             goToFinalPhoto();
         });
     }
+
+    // --- Window / fullscreen enforcement (resize, exit fullscreen) ---
+    var resizeBlurOverlay = document.getElementById('resize-blur-overlay');
+    var resizeBlurWarning = document.getElementById('resize-blur-warning');
+    var resizeBlurFinalWarning = document.getElementById('resize-blur-final-warning');
+    var windowResizeLimit = (window.QuizSnapQuiz && window.QuizSnapQuiz.windowResizeLimit) || 3;
+    var wasFullscreenOrMaximized = (function () {
+        if (document.fullscreenElement || document.webkitFullscreenElement) return true;
+        var margin = 50;
+        var w = window.outerWidth || window.innerWidth;
+        var h = window.outerHeight || window.innerHeight;
+        var availW = (window.screen && window.screen.availWidth) || w;
+        var availH = (window.screen && window.screen.availHeight) || h;
+        return (w >= availW - margin && h >= availH - margin);
+    })();
+    var resizeDebounceTimer = null;
+    var RESIZE_DEBOUNCE_MS = 600;
+
+    function isFullscreenOrMaximized() {
+        if (document.fullscreenElement || document.webkitFullscreenElement) return true;
+        var margin = 50;
+        var w = window.outerWidth || window.innerWidth;
+        var h = window.outerHeight || window.innerHeight;
+        var availW = (window.screen && window.screen.availWidth) || w;
+        var availH = (window.screen && window.screen.availHeight) || h;
+        return (w >= availW - margin && h >= availH - margin);
+    }
+
+    function showResizeBlur(showFinalWarning) {
+        if (!resizeBlurOverlay) return;
+        resizeBlurOverlay.classList.remove('hidden');
+        resizeBlurOverlay.setAttribute('aria-hidden', 'false');
+        if (resizeBlurWarning) {
+            resizeBlurWarning.classList.remove('hidden');
+            resizeBlurWarning.textContent = 'Repeated violations will result in auto-submission of your quiz.';
+        }
+        if (resizeBlurFinalWarning) {
+            if (showFinalWarning) {
+                resizeBlurFinalWarning.classList.remove('hidden');
+            } else {
+                resizeBlurFinalWarning.classList.add('hidden');
+            }
+        }
+    }
+
+    function hideResizeBlur() {
+        if (!resizeBlurOverlay) return;
+        resizeBlurOverlay.classList.add('hidden');
+        resizeBlurOverlay.setAttribute('aria-hidden', 'true');
+        if (resizeBlurWarning) resizeBlurWarning.classList.add('hidden');
+        if (resizeBlurFinalWarning) resizeBlurFinalWarning.classList.add('hidden');
+    }
+
+    function onWindowResizeOrExitFullscreen() {
+        if (remainingSeconds <= 0) return;
+        if (!wasFullscreenOrMaximized) return;
+        wasFullscreenOrMaximized = false;
+        showResizeBlur(false);
+        var timestamp = new Date().toISOString();
+        recordViolation('window_resize', { timestamp: timestamp });
+        if (resizeBlurWarning) resizeBlurWarning.classList.remove('hidden');
+    }
+
+    function checkWindowState() {
+        if (remainingSeconds <= 0) return;
+        var nowOk = isFullscreenOrMaximized();
+        if (nowOk) {
+            wasFullscreenOrMaximized = true;
+            hideResizeBlur();
+        }
+    }
+
+    if (resizeBlurOverlay) {
+        document.addEventListener('keydown', function (e) {
+            if (resizeBlurOverlay && !resizeBlurOverlay.classList.contains('hidden')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true);
+        document.addEventListener('keypress', function (e) {
+            if (resizeBlurOverlay && !resizeBlurOverlay.classList.contains('hidden')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true);
+    }
+
+    function handleResizeOrFullscreenChange() {
+        if (remainingSeconds <= 0) return;
+        if (isFullscreenOrMaximized()) {
+            wasFullscreenOrMaximized = true;
+            hideResizeBlur();
+        } else {
+            if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
+            resizeDebounceTimer = setTimeout(function () {
+                resizeDebounceTimer = null;
+                onWindowResizeOrExitFullscreen();
+            }, RESIZE_DEBOUNCE_MS);
+        }
+    }
+
+    window.addEventListener('resize', handleResizeOrFullscreenChange);
+    document.addEventListener('fullscreenchange', handleResizeOrFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleResizeOrFullscreenChange);
+
+    setInterval(checkWindowState, 800);
 })();

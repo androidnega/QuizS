@@ -210,7 +210,7 @@ class StudentQuizController extends Controller
             return response()->json(['success' => false], 401);
         }
         $request->validate([
-            'type' => 'required|string|in:blur,tab_switch,copy_paste,right_click,other',
+            'type' => 'required|string|in:blur,tab_switch,copy_paste,right_click,window_resize,other',
         ]);
         $session = QuizSession::where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
@@ -254,7 +254,27 @@ class StudentQuizController extends Controller
                 $session->update(['auto_submit_after' => now()->addSeconds(20)]);
             }
         }
+        // Window resize / exit fullscreen: no auto-submit on first; auto-submit after limit (e.g. 3)
+        $windowResizeLimit = 3;
+        if (!$autoSubmitted && $type === 'window_resize') {
+            $resizeCount = $session->violations()->where('type', 'window_resize')->count();
+            if ($resizeCount >= $windowResizeLimit) {
+                $session->update([
+                    'post_face_skipped_at' => now(),
+                    'post_face_skipped_reason' => 'auto_submit',
+                    'auto_submit_after' => null,
+                ]);
+                $this->finalizeQuiz($session);
+                $autoSubmitted = true;
+            }
+        }
         $response = ['success' => true, 'auto_submitted' => $autoSubmitted];
+        if ($type === 'window_resize' && !$autoSubmitted) {
+            $resizeCount = $session->violations()->where('type', 'window_resize')->count();
+            $response['window_resize_count'] = $resizeCount;
+            $response['window_resize_limit'] = $windowResizeLimit;
+            $response['next_violation_auto_submits'] = ($resizeCount + 1) >= $windowResizeLimit;
+        }
         if ($autoSubmitted) {
             $response['redirect'] = $this->resultUrlWithToken($session->session_token);
         }

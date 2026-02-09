@@ -24,7 +24,7 @@ class QuizViolation extends Model
 
     public static function types(): array
     {
-        return ['blur', 'multiple_ip', 'copy_paste', 'right_click', 'face_mismatch', 'tab_switch', 'other'];
+        return ['blur', 'multiple_ip', 'copy_paste', 'right_click', 'face_mismatch', 'tab_switch', 'window_resize', 'other'];
     }
 
     /**
