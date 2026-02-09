@@ -13,4 +13,10 @@ class ClassGroupStudent extends Model
     {
         return $this->belongsTo(ClassGroup::class);
     }
+
+    /** Linked student account (by index_number) if they have logged in and set phone. */
+    public function studentAccount(): BelongsTo
+    {
+        return $this->belongsTo(Student::class, 'index_number', 'index_number');
+    }
 }

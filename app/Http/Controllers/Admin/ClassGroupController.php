@@ -205,7 +205,7 @@ class ClassGroupController extends Controller
     {
         $this->authorize('view', $classGroup);
         $classGroup->load('examiner:id,username,name');
-        $students = $classGroup->students()->orderBy('index_number')->paginate(30);
+        $students = $classGroup->students()->with('studentAccount')->orderBy('index_number')->paginate(30);
         $isSuperAdmin = $this->adminUser()?->isSuperAdmin() ?? false;
         return view('admin.class-groups.students', compact('classGroup', 'students', 'isSuperAdmin'));
     }
