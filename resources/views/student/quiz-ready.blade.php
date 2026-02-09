@@ -43,18 +43,21 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/quiz-window-state.js') }}"></script>
 <script>
 (function() {
-    function isFullscreenOrMaximized() {
-        if (document.fullscreenElement) return true;
-        if (document.webkitFullscreenElement) return true;
-        var margin = 50;
-        var w = window.outerWidth || window.innerWidth;
-        var h = window.outerHeight || window.innerHeight;
-        var availW = window.screen?.availWidth ?? window.innerWidth;
-        var availH = window.screen?.availHeight ?? window.innerHeight;
-        return (w >= availW - margin && h >= availH - margin);
-    }
+    var isFullscreenOrMaximized = window.QuizSnapWindowState && window.QuizSnapWindowState.isFullscreenOrMaximized
+        ? window.QuizSnapWindowState.isFullscreenOrMaximized
+        : function() {
+            if (document.fullscreenElement || document.webkitFullscreenElement) return true;
+            var outerW = window.outerWidth;
+            var outerH = window.outerHeight;
+            if (!window.screen) return false;
+            var availW = window.screen.availWidth;
+            var availH = window.screen.availHeight;
+            if (availW <= 0 || availH <= 0) return false;
+            return (outerW >= availW - 100 && outerH >= availH - 100);
+        };
     function checkGate() {
         var gate = document.getElementById('fullscreen-gate');
         var link = document.getElementById('start-quiz-link');
@@ -76,7 +79,9 @@
     window.addEventListener('resize', checkGate);
     document.addEventListener('fullscreenchange', checkGate);
     document.addEventListener('webkitfullscreenchange', checkGate);
-    setInterval(checkGate, 1000);
+    document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') checkGate(); });
+    window.addEventListener('focus', checkGate);
+    setInterval(checkGate, 800);
 })();
 </script>
 @endpush

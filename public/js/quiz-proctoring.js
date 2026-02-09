@@ -327,26 +327,28 @@
     var resizeBlurWarning = document.getElementById('resize-blur-warning');
     var resizeBlurFinalWarning = document.getElementById('resize-blur-final-warning');
     var windowResizeLimit = (window.QuizSnapQuiz && window.QuizSnapQuiz.windowResizeLimit) || 3;
-    var wasFullscreenOrMaximized = (function () {
-        if (document.fullscreenElement || document.webkitFullscreenElement) return true;
-        var margin = 50;
-        var w = window.outerWidth || window.innerWidth;
-        var h = window.outerHeight || window.innerHeight;
-        var availW = (window.screen && window.screen.availWidth) || w;
-        var availH = (window.screen && window.screen.availHeight) || h;
-        return (w >= availW - margin && h >= availH - margin);
-    })();
-    var resizeDebounceTimer = null;
-    var RESIZE_DEBOUNCE_MS = 600;
+    var isFullscreenOrMaximized = (window.QuizSnapWindowState && window.QuizSnapWindowState.isFullscreenOrMaximized)
+        ? window.QuizSnapWindowState.isFullscreenOrMaximized
+        : function () {
+            if (document.fullscreenElement || document.webkitFullscreenElement) return true;
+            var outerW = window.outerWidth;
+            var outerH = window.outerHeight;
+            if (!window.screen) return false;
+            var availW = window.screen.availWidth;
+            var availH = window.screen.availHeight;
+            if (availW <= 0 || availH <= 0) return false;
+            var tol = 100;
+            return (outerW >= availW - tol && outerH >= availH - tol);
+        };
+    var wasFullscreenOrMaximized = isFullscreenOrMaximized();
+    var invalidStateTimer = null;
+    var INVALID_PERSISTENCE_MS = 1500;
 
-    function isFullscreenOrMaximized() {
-        if (document.fullscreenElement || document.webkitFullscreenElement) return true;
-        var margin = 50;
-        var w = window.outerWidth || window.innerWidth;
-        var h = window.outerHeight || window.innerHeight;
-        var availW = (window.screen && window.screen.availWidth) || w;
-        var availH = (window.screen && window.screen.availHeight) || h;
-        return (w >= availW - margin && h >= availH - margin);
+    function clearInvalidStateTimer() {
+        if (invalidStateTimer) {
+            clearTimeout(invalidStateTimer);
+            invalidStateTimer = null;
+        }
     }
 
     function showResizeBlur(showFinalWarning) {
@@ -388,6 +390,7 @@
         if (remainingSeconds <= 0) return;
         var nowOk = isFullscreenOrMaximized();
         if (nowOk) {
+            clearInvalidStateTimer();
             wasFullscreenOrMaximized = true;
             hideResizeBlur();
         }
@@ -411,20 +414,28 @@
     function handleResizeOrFullscreenChange() {
         if (remainingSeconds <= 0) return;
         if (isFullscreenOrMaximized()) {
+            clearInvalidStateTimer();
             wasFullscreenOrMaximized = true;
             hideResizeBlur();
         } else {
-            if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
-            resizeDebounceTimer = setTimeout(function () {
-                resizeDebounceTimer = null;
-                onWindowResizeOrExitFullscreen();
-            }, RESIZE_DEBOUNCE_MS);
+            if (!wasFullscreenOrMaximized) return;
+            if (invalidStateTimer) return;
+            invalidStateTimer = setTimeout(function () {
+                invalidStateTimer = null;
+                if (!isFullscreenOrMaximized()) {
+                    onWindowResizeOrExitFullscreen();
+                }
+            }, INVALID_PERSISTENCE_MS);
         }
     }
 
     window.addEventListener('resize', handleResizeOrFullscreenChange);
     document.addEventListener('fullscreenchange', handleResizeOrFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleResizeOrFullscreenChange);
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') checkWindowState();
+    });
+    window.addEventListener('focus', checkWindowState);
 
-    setInterval(checkWindowState, 800);
+    setInterval(checkWindowState, 500);
 })();

@@ -143,6 +143,7 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/quiz-window-state.js') }}"></script>
 <script src="{{ asset('js/quiz-proctoring.js') }}" defer></script>
 <script>
 window.QuizSnapQuiz = {
