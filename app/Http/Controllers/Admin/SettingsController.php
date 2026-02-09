@@ -105,6 +105,12 @@ class SettingsController extends Controller
             Setting::setValue(Setting::KEY_DEEPSEEK_API, trim($request->deepseek_api_key));
         }
 
+        // Ensure AI key caches are cleared so admin dashboard and question generation use fresh DB values
+        if ($request->hasAny(['gemini_api_key', 'clear_gemini_key', 'deepseek_api_key', 'clear_deepseek_key'])) {
+            Cache::forget('setting:' . Setting::KEY_GEMINI_API);
+            Cache::forget('setting:' . Setting::KEY_DEEPSEEK_API);
+        }
+
         Setting::setValue(Setting::KEY_CLOUDINARY_CLOUD_NAME, $request->filled('cloudinary_cloud_name') ? trim($request->cloudinary_cloud_name) : null);
         if ($request->filled('cloudinary_api_key')) {
             Setting::setValue(Setting::KEY_CLOUDINARY_API_KEY, trim($request->cloudinary_api_key));

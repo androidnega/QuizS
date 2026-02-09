@@ -15,6 +15,7 @@ class AiQuestionService
     private const GEMINI_MODEL_PRIMARY = 'gemini-2.5-flash';
     private const GEMINI_MODEL_FALLBACK = 'gemini-2.0-flash';
 
+    /** Prefer database (Setting) over config/env so admin dashboard keys are used for generation. */
     private function getGeminiKey(): ?string
     {
         $key = Setting::getValue(Setting::KEY_GEMINI_API);
@@ -24,6 +25,7 @@ class AiQuestionService
         return config('services.gemini.key', env('GEMINI_API_KEY')) ?: null;
     }
 
+    /** Prefer database (Setting) over config/env so admin dashboard keys are used for generation. */
     private function getDeepSeekKey(): ?string
     {
         $key = Setting::getValue(Setting::KEY_DEEPSEEK_API);
