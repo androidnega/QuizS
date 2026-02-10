@@ -9,7 +9,7 @@ use App\Models\User;
 class ClassGroupPolicy
 {
     /**
-     * Super Admin can do everything. Examiner can access only their own class groups.
+     * All staff (Super Admin and Examiners) can access class groups.
      */
     public function viewAny(User $user): bool
     {
@@ -18,10 +18,7 @@ class ClassGroupPolicy
 
     public function view(User $user, ClassGroup $classGroup): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-        return $classGroup->examiner_id === $user->id;
+        return $user->isStaff();
     }
 
     /**
@@ -40,17 +37,11 @@ class ClassGroupPolicy
 
     public function update(User $user, ClassGroup $classGroup): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-        return $classGroup->examiner_id === $user->id;
+        return $user->isStaff();
     }
 
     public function delete(User $user, ClassGroup $classGroup): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-        return $classGroup->examiner_id === $user->id;
+        return $user->isStaff();
     }
 }

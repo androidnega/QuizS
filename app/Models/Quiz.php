@@ -34,29 +34,11 @@ class Quiz extends Model
     }
 
     /**
-     * Resolve route model binding with authorization check for examiners.
-     * Super Admins can access all quizzes, Examiners only their assigned ones.
+     * Resolve route model binding. Access control is handled by QuizPolicy.
      */
     public function resolveRouteBinding($value, $field = null)
     {
-        $quiz = parent::resolveRouteBinding($value, $field);
-        
-        if (!$quiz) {
-            return null;
-        }
-        
-        // If user is authenticated and is an examiner, check access
-        if (auth()->check() && session('admin_authenticated')) {
-            $user = \App\Models\User::find(session('admin_user_id'));
-            if ($user && $user->isExaminer() && !$user->isSuperAdmin()) {
-                $classGroupIds = $user->classGroupIds();
-                if (!empty($classGroupIds) && !in_array($quiz->class_group_id, $classGroupIds, true)) {
-                    abort(403, 'You do not have access to this quiz.');
-                }
-            }
-        }
-        
-        return $quiz;
+        return parent::resolveRouteBinding($value, $field);
     }
 
     /** Generate a unique token: alphanumeric with hyphen (e.g. KTdie54-3Sx9). */

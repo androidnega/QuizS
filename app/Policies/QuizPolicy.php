@@ -8,7 +8,7 @@ use App\Models\User;
 class QuizPolicy
 {
     /**
-     * Super Admin can do everything. Examiner can access only quizzes under their class groups.
+     * All staff (Super Admin and Examiners) can access quizzes.
      */
     public function viewAny(User $user): bool
     {
@@ -17,14 +17,7 @@ class QuizPolicy
 
     public function view(User $user, Quiz $quiz): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-        if (! $quiz->class_group_id) {
-            return false;
-        }
-        $classGroupIds = $user->classGroupIds();
-        return in_array($quiz->class_group_id, $classGroupIds, true);
+        return $user->isStaff();
     }
 
     public function create(User $user): bool
@@ -34,11 +27,11 @@ class QuizPolicy
 
     public function update(User $user, Quiz $quiz): bool
     {
-        return $this->view($user, $quiz);
+        return $user->isStaff();
     }
 
     public function delete(User $user, Quiz $quiz): bool
     {
-        return $this->view($user, $quiz);
+        return $user->isStaff();
     }
 }
