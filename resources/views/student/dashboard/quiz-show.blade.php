@@ -53,12 +53,28 @@
                         $shuffledOpts = $session->shuffled_question_options[$answer->question_id] ?? $session->shuffled_question_options[(string)$answer->question_id] ?? null;
                         $yourText = null;
                         $correctText = null;
+                        
+                        // Try shuffled options first
                         if (is_array($shuffledOpts)) {
                             foreach ($shuffledOpts as $o) {
                                 $k = $o['key'] ?? $o;
                                 $t = $o['text'] ?? $o;
                                 if ((string)$k === trim((string)$answer->student_answer)) $yourText = $t;
                                 if ((string)$k === trim((string)$sessionCorrect)) $correctText = $t;
+                            }
+                        }
+                        
+                        // Fallback to question's original options if shuffled not available
+                        if (($yourText === null || $correctText === null) && is_array($answer->question->options)) {
+                            foreach ($answer->question->options as $opt) {
+                                $optKey = $opt['key'] ?? '';
+                                $optText = $opt['text'] ?? '';
+                                if ($yourText === null && (string)$optKey === trim((string)$answer->student_answer)) {
+                                    $yourText = $optText;
+                                }
+                                if ($correctText === null && (string)$optKey === trim((string)$sessionCorrect)) {
+                                    $correctText = $optText;
+                                }
                             }
                         }
                     @endphp
