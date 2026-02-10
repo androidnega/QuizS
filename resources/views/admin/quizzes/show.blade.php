@@ -208,7 +208,7 @@
             @if($unapprovedPools->isNotEmpty())
             <!-- Question Pool (Unapproved) - AI-generated awaiting approval -->
             <section class="card p-6 border-2 border-warning-200 bg-warning-50/30">
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-warning-100 rounded-lg flex items-center justify-center">
                             <svg class="w-6 h-6 text-warning-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -219,6 +219,10 @@
                             <h2 class="text-xl font-semibold text-gray-900">Question Pool (Unapproved)</h2>
                             <p class="text-sm text-gray-600">{{ $unapprovedPoolsTotal }} AI-generated question(s) awaiting approval (showing {{ $unapprovedPools->count() }} on this page)</p>
                         </div>
+                    </div>
+                    <div class="w-full sm:w-auto sm:min-w-[200px]">
+                        <label for="pool-search" class="block text-xs font-medium text-gray-600 mb-1">Search pool</label>
+                        <input type="text" id="pool-search" placeholder="Type to filter questions…" class="input w-full text-sm py-2 px-3" autocomplete="off">
                     </div>
                     @if(!$quiz->hasStarted())
                     <form action="{{ route('dashboard.quizzes.approve-all-pool', $quiz) }}" method="post" class="inline" onsubmit="return confirm('This will approve ALL {{ $unapprovedPoolsTotal }} pending questions. Continue?');">
@@ -232,9 +236,17 @@
                     </form>
                     @endif
                 </div>
-                <div class="space-y-4">
+                <div class="space-y-4" id="pool-questions-list">
                     @foreach($unapprovedPools as $idx => $pool)
-                        <div class="border border-warning-200 rounded-lg p-4 bg-white flex flex-wrap items-start justify-between gap-3">
+                        @php
+                            $poolOptTexts = is_array($pool->options ?? null) ? implode(' ', array_column($pool->options, 'text')) : '';
+                            $poolSearchText = implode(' ', array_filter([
+                                $pool->question_text ?? '',
+                                $pool->topic ?? '',
+                                $poolOptTexts,
+                            ]));
+                        @endphp
+                        <div class="border border-warning-200 rounded-lg p-4 bg-white flex flex-wrap items-start justify-between gap-3 pool-question-row" data-search="{{ strtolower(strip_tags($poolSearchText)) }}">
                             <div class="flex-1 min-w-0">
                                 <p class="text-gray-900 mb-2">{{ $pool->question_text }}</p>
                                 @if($pool->options)
@@ -279,7 +291,7 @@
 
             <!-- Questions Section (Approved) - paginated -->
             <section class="card p-6">
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
                             <svg class="w-6 h-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -291,6 +303,10 @@
                             <p class="text-sm text-gray-600">{{ $approvedQuestionsTotal }} question(s) in quiz (showing {{ $approvedQuestions->count() }} on this page)</p>
                         </div>
                     </div>
+                </div>
+                <div class="mb-4 pb-4 border-b border-gray-200">
+                    <label for="questions-search" class="block text-sm font-medium text-gray-700 mb-2">Search questions</label>
+                    <input type="text" id="questions-search" placeholder="Type to filter by question text, topic, type…" class="input w-full max-w-md text-sm py-2 px-3" autocomplete="off">
                 </div>
 
                 @if($approvedQuestions->isEmpty())
@@ -307,9 +323,17 @@
                         @endif
                     </div>
                 @else
-                    <div class="space-y-4">
+                    <div class="space-y-4" id="approved-questions-list">
                         @foreach($approvedQuestions as $idx => $q)
-                            <div class="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors flex flex-wrap items-start justify-between gap-3">
+                            @php
+                                $qSearchText = implode(' ', array_filter([
+                                    $q->text ?? '',
+                                    $q->topic ?? '',
+                                    $q->type ?? '',
+                                    $q->source ?? '',
+                                ]));
+                            @endphp
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors flex flex-wrap items-start justify-between gap-3 approved-question-row" data-search="{{ strtolower(strip_tags($qSearchText)) }}">
                                 <div class="flex items-start gap-3 flex-1 min-w-0">
                                     <span class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-semibold text-sm">
                                         {{ ($approvedQuestions->currentPage() - 1) * $approvedQuestions->perPage() + $idx + 1 }}
@@ -488,16 +512,39 @@
     if (!input || !rows.length) return;
     function filter() {
         var q = (input.value || '').trim().toUpperCase();
-        var visible = 0;
         for (var i = 0; i < rows.length; i++) {
             var index = (rows[i].getAttribute('data-student-index') || '').toUpperCase();
-            var show = !q || index.indexOf(q) !== -1;
-            rows[i].style.display = show ? '' : 'none';
-            if (show) visible++;
+            rows[i].style.display = !q || index.indexOf(q) !== -1 ? '' : 'none';
         }
     }
     input.addEventListener('input', filter);
     input.addEventListener('keyup', filter);
+})();
+</script>
+@endpush
+@endif
+
+@if($activeTab === 'overview')
+@push('scripts')
+<script>
+(function() {
+    function liveSearch(inputId, rowSelector) {
+        var input = document.getElementById(inputId);
+        var rows = document.querySelectorAll(rowSelector);
+        if (!input || !rows.length) return;
+        function filter() {
+            var q = (input.value || '').trim().toLowerCase();
+            for (var i = 0; i < rows.length; i++) {
+                var text = (rows[i].getAttribute('data-search') || '');
+                var show = !q || text.indexOf(q) !== -1;
+                rows[i].style.display = show ? '' : 'none';
+            }
+        }
+        input.addEventListener('input', filter);
+        input.addEventListener('keyup', filter);
+    }
+    liveSearch('questions-search', '.approved-question-row');
+    liveSearch('pool-search', '.pool-question-row');
 })();
 </script>
 @endpush
