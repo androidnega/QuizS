@@ -422,13 +422,43 @@ class ClassGroupController extends Controller
 
         if ($mode === 'replace') {
             $rowsDeleted = $classGroup->students()->count();
+            
+            // Delete quiz acceptances and sessions for removed students
+            $quizIds = $classGroup->quizzes()->pluck('id');
+            if ($quizIds->isNotEmpty()) {
+                $removedIndices = $classGroup->students()->pluck('index_number');
+                foreach ($removedIndices as $removedIndex) {
+                    \App\Models\QuizAcceptance::whereIn('quiz_id', $quizIds)
+                        ->whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper($removedIndex)])
+                        ->delete();
+                    
+                    \App\Models\QuizSession::whereIn('quiz_id', $quizIds)
+                        ->whereRaw('UPPER(TRIM(student_index)) = ?', [strtoupper($removedIndex)])
+                        ->delete();
+                }
+            }
+            
             $classGroup->students()->delete();
         }
+        
         foreach ($byIndex as $index => $name) {
-            $existing = ClassGroupStudent::where('class_group_id', $classGroup->id)->where('index_number', $index)->first();
+            $indexTrimmed = trim($index);
+            
+            // If name not provided, try to get from quiz results
+            $nameFromResults = null;
+            if (empty($name)) {
+                $studentAccount = \App\Models\Student::where('index_number', $indexTrimmed)->first();
+                if ($studentAccount && $studentAccount->student_name) {
+                    $nameFromResults = $studentAccount->student_name;
+                }
+            }
+            
+            $finalName = $name ?: $nameFromResults;
+            
+            $existing = ClassGroupStudent::where('class_group_id', $classGroup->id)->where('index_number', $indexTrimmed)->first();
             ClassGroupStudent::updateOrCreate(
-                ['class_group_id' => $classGroup->id, 'index_number' => $index],
-                ['student_name' => $name]
+                ['class_group_id' => $classGroup->id, 'index_number' => $indexTrimmed],
+                ['student_name' => $finalName]
             );
             if ($existing) {
                 $rowsUpdated++;
