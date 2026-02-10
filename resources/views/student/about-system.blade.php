@@ -55,15 +55,15 @@
                     <span style="color: #3b82f6;">Quiz</span><span style="color: #fbbf24;">Snap</span>
                 </a>
                 <nav class="flex items-center gap-6">
-                    <a href="{{ route('about-system') }}" class="text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors no-underline" style="text-decoration: none;">
+                    <a href="{{ route('about-system') }}" class="text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors no-underline" style="text-decoration: none; color: #475569;">
                         About System
                     </a>
                     @if(isset($student) && $student)
-                        <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-white bg-blue-600 px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors" style="display: inline-block; text-decoration: none;">
+                        <a href="{{ route('dashboard') }}" style="display: inline-block; padding: 0.625rem 1.5rem; background-color: #2563eb; color: #ffffff !important; font-weight: 600; font-size: 0.875rem; border-radius: 0.5rem; text-decoration: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#1d4ed8'" onmouseout="this.style.backgroundColor='#2563eb'">
                             Dashboard
                         </a>
                     @else
-                        <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-white bg-blue-600 px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors" style="display: inline-block; text-decoration: none;">
+                        <a href="{{ route('student.account.login.form') }}" style="display: inline-block; padding: 0.625rem 1.5rem; background-color: #2563eb; color: #ffffff !important; font-weight: 600; font-size: 0.875rem; border-radius: 0.5rem; text-decoration: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#1d4ed8'" onmouseout="this.style.backgroundColor='#2563eb'">
                             Student Login
                         </a>
                     @endif
