@@ -40,6 +40,7 @@ class StudentDashboardController extends Controller
 
         $classGroupIds = $classGroups->pluck('id')->filter()->values()->all();
         $scheduledQuiz = null;
+        $scheduledQuizSession = null;
         if (!empty($classGroupIds)) {
             $candidates = Quiz::whereIn('class_group_id', $classGroupIds)
                 ->where('is_published', true)
@@ -51,6 +52,15 @@ class StudentDashboardController extends Controller
                 ->get();
             $ready = $candidates->filter(fn (Quiz $q) => $q->hasEnoughApprovedQuestions() && (($q->starts_at && $q->starts_at->isFuture()) || $q->isActive()));
             $scheduledQuiz = $ready->sortBy(fn (Quiz $q) => $q->starts_at && $q->starts_at->isFuture() ? $q->starts_at->timestamp : PHP_INT_MAX)->first();
+            
+            // Check if student has already completed this quiz
+            if ($scheduledQuiz) {
+                $scheduledQuizSession = QuizSession::where('quiz_id', $scheduledQuiz->id)
+                    ->where('student_index', $student->index_number)
+                    ->whereNotNull('ended_at')
+                    ->with('result')
+                    ->first();
+            }
         }
 
         $hour = (int) now()->format('G');
@@ -62,6 +72,7 @@ class StudentDashboardController extends Controller
             'sessionsCount' => $sessionsCount,
             'recentSessions' => $recentSessions,
             'scheduledQuiz' => $scheduledQuiz,
+            'scheduledQuizSession' => $scheduledQuizSession,
             'greeting' => $greeting,
         ]);
     }
