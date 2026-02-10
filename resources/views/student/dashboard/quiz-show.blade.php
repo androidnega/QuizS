@@ -40,6 +40,39 @@
     </div>
     @endif
 
+    @if($session->pre_face_image || $session->post_face_image)
+    <div class="rounded-xl border-2 border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Face verification photos</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @if($session->pre_face_image)
+            <div class="space-y-2">
+                <p class="text-sm font-medium text-gray-700">Before quiz</p>
+                @php
+                    $preFaceUrl = str_starts_with($session->pre_face_image, 'http') 
+                        ? $session->pre_face_image 
+                        : asset('storage/' . $session->pre_face_image);
+                @endphp
+                <img src="{{ $preFaceUrl }}" alt="Before quiz photo" class="w-full h-auto rounded-lg border border-gray-200">
+                <p class="text-xs text-gray-500">Captured before starting</p>
+            </div>
+            @endif
+
+            @if($session->post_face_image)
+            <div class="space-y-2">
+                <p class="text-sm font-medium text-gray-700">After quiz</p>
+                @php
+                    $postFaceUrl = str_starts_with($session->post_face_image, 'http') 
+                        ? $session->post_face_image 
+                        : asset('storage/' . $session->post_face_image);
+                @endphp
+                <img src="{{ $postFaceUrl }}" alt="After quiz photo" class="w-full h-auto rounded-lg border border-gray-200">
+                <p class="text-xs text-gray-500">Captured {{ $session->post_face_captured_at ? $session->post_face_captured_at->format('M j, Y g:i A') : 'after submission' }}</p>
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
     @if(isset($showFullReview) && $showFullReview && $session->quiz->canShowFullReview() && $session->answers->isNotEmpty())
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8">
         <h2 class="text-sm font-semibold text-gray-900 mb-3">Questions & answers</h2>
