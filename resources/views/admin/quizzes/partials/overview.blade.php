@@ -212,11 +212,32 @@
                     @php
                         $qSearchText = implode(' ', array_filter([$q->text ?? '', $q->topic ?? '', $q->type ?? '', $q->source ?? '']));
                     @endphp
-                    <div class="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors flex flex-wrap items-start justify-between gap-3 approved-question-row" data-search="{{ strtolower(strip_tags($qSearchText)) }}">
-                        <div class="flex items-start gap-3 flex-1 min-w-0">
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors approved-question-row" data-search="{{ strtolower(strip_tags($qSearchText)) }}">
+                        <div class="flex items-start gap-3 mb-3">
                             <span class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-semibold text-sm">{{ ($approvedQuestions->currentPage() - 1) * $approvedQuestions->perPage() + $idx + 1 }}</span>
-                            <div class="flex-1">
-                                <p class="text-gray-900 mb-2">{{ $q->text }}</p>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-gray-900 mb-3">{{ $q->text }}</p>
+                                @if($q->options && is_array($q->options))
+                                    <div class="mb-3 space-y-1.5">
+                                        @foreach($q->options as $opt)
+                                            @php
+                                                $optKey = $opt['key'] ?? '';
+                                                $optText = $opt['text'] ?? '';
+                                                $isCorrect = $optKey === $q->correct_answer;
+                                            @endphp
+                                            <div class="flex items-start gap-2 text-sm {{ $isCorrect ? 'font-medium text-success-700 bg-success-50 -mx-2 px-2 py-1.5 rounded' : 'text-gray-700' }}">
+                                                <span class="font-semibold flex-shrink-0">{{ $optKey }}.</span>
+                                                <span class="flex-1">{{ $optText }}</span>
+                                                @if($isCorrect)
+                                                    <span class="flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-success-700">
+                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                                        Correct
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
                                 <div class="flex items-center gap-3 text-xs flex-wrap">
                                     <span class="inline-flex px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ ucfirst($q->type) }}</span>
                                     <span class="inline-flex px-2 py-1 rounded-full @if($q->source === 'ai') bg-primary-100 text-primary-700 @else bg-gray-100 text-gray-700 @endif">{{ ucfirst($q->source) }}</span>
@@ -224,7 +245,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 flex-shrink-0">
+                        <div class="flex items-center gap-2 justify-end">
                             @if(!$quiz->hasStarted())
                             <a href="{{ route('dashboard.quizzes.questions.edit', [$quiz, $q]) }}" class="btn btn-secondary text-sm">Edit</a>
                             <form action="{{ route('dashboard.quizzes.questions.destroy', [$quiz, $q]) }}" method="post" class="inline" onsubmit="return confirm('Remove this question from the quiz?');">@csrf @method('DELETE')<button type="submit" class="btn bg-danger-100 text-danger-700 hover:bg-danger-200 text-sm">Delete</button></form>
