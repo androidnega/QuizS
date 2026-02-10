@@ -1,6 +1,6 @@
 @extends('layouts.student-dashboard')
 
-@section('title', $session->quiz->title ?? 'Quiz result')
+@section('title', isset($session->quiz->title) ? $session->quiz->title : 'Quiz result')
 @php $dashboardTitle = 'Past quiz'; @endphp
 
 @section('dashboard_content')
@@ -81,10 +81,14 @@
             @foreach($session->answers as $idx => $answer)
                 @if(isset($answer->question) && $answer->question)
                     @php
-                        $sessionCorrect = $session->assigned_correct_answers[$answer->question_id] ?? $session->assigned_correct_answers[(string)$answer->question_id] ?? ($answer->question->correct_answer ?? '');
+                        $assignedCorrect = is_array($session->assigned_correct_answers) ? $session->assigned_correct_answers : [];
+                        $sessionCorrect = $assignedCorrect[$answer->question_id] ?? $assignedCorrect[(string)$answer->question_id] ?? ($answer->question->correct_answer ?? '');
                         $studentAnswerValue = $answer->student_answer ?? '';
                         $correct = trim((string)$studentAnswerValue) === trim((string)$sessionCorrect);
-                        $shuffledOpts = $session->shuffled_question_options[$answer->question_id] ?? $session->shuffled_question_options[(string)$answer->question_id] ?? null;
+                        $shuffledOpts = null;
+                        if (is_array($session->shuffled_question_options)) {
+                            $shuffledOpts = $session->shuffled_question_options[$answer->question_id] ?? $session->shuffled_question_options[(string)$answer->question_id] ?? null;
+                        }
                         $yourText = null;
                         $correctText = null;
                         

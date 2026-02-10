@@ -108,7 +108,7 @@ Route::get('/student/dashboard/profile', fn () => redirect()->route('dashboard.m
 Route::get('/dashboard', [\App\Http\Controllers\DashboardGatewayController::class, '__invoke'])->middleware('dashboard.auth')->name('dashboard');
 Route::middleware(['dashboard.auth', 'student.auth'])->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/my-quizzes', [\App\Http\Controllers\Student\StudentDashboardController::class, 'quizzes'])->name('my-quizzes');
-    Route::get('/my-quizzes/{session}', [\App\Http\Controllers\Student\StudentDashboardController::class, 'showQuiz'])->name('my-quizzes.show');
+    Route::get('/my-quizzes/{sessionId}', [\App\Http\Controllers\Student\StudentDashboardController::class, 'showQuiz'])->name('my-quizzes.show');
     Route::get('/my-profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'profile'])->name('my-profile');
     Route::put('/my-profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'updateProfile'])->name('my-profile.update');
 });

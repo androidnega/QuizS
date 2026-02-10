@@ -116,29 +116,48 @@ class StudentDashboardController extends Controller
     /**
      * Show one past quiz. Marks (score) always shown. Full Q&A review only for last 21 days.
      */
-    public function showQuiz(Request $request, $session): View|RedirectResponse
+    public function showQuiz(Request $request, $sessionId): View|RedirectResponse
     {
-        $student = $this->student();
-        $quizSession = QuizSession::where('id', $session)
-            ->where('student_index', $student->index_number)
-            ->with(['quiz.course', 'result', 'answers.question'])
-            ->firstOrFail();
+        try {
+            $student = $this->student();
+            
+            // Validate session ID is numeric
+            if (!is_numeric($sessionId)) {
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Invalid quiz session.');
+            }
+            
+            $quizSession = QuizSession::where('id', $sessionId)
+                ->where('student_index', $student->index_number)
+                ->with(['quiz.course', 'result', 'answers.question'])
+                ->first();
+            
+            if (!$quizSession) {
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz session not found or you do not have access to it.');
+            }
 
-        if (!$quizSession->quiz) {
-            return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz not found.');
+            if (!$quizSession->quiz) {
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz not found.');
+            }
+
+            if (!$quizSession->quiz->canShowScore()) {
+                return redirect()->route('dashboard.my-quizzes')->with('info', 'Results are not available for this quiz.');
+            }
+
+            $reviewAvailableWithinDays = 21;
+            $showFullReview = $quizSession->created_at && $quizSession->created_at->gte(now()->subDays($reviewAvailableWithinDays));
+
+            return view('student.dashboard.quiz-show', [
+                'student' => $student,
+                'session' => $quizSession,
+                'showFullReview' => $showFullReview,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error showing quiz review: ' . $e->getMessage(), [
+                'session_id' => $sessionId ?? null,
+                'student_id' => $student->id ?? null,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('dashboard.my-quizzes')->with('error', 'An error occurred while loading the quiz review. Please try again.');
         }
-
-        if (!$quizSession->quiz->canShowScore()) {
-            return redirect()->route('dashboard.my-quizzes')->with('info', 'Results are not available for this quiz.');
-        }
-
-        $reviewAvailableWithinDays = 21;
-        $showFullReview = $quizSession->created_at->gte(now()->subDays($reviewAvailableWithinDays));
-
-        return view('student.dashboard.quiz-show', [
-            'student' => $student,
-            'session' => $quizSession,
-            'showFullReview' => $showFullReview,
-        ]);
     }
 }
