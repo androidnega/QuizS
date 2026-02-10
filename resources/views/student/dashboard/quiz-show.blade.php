@@ -157,5 +157,6 @@
         <p class="text-sm text-gray-600">No answers recorded for this quiz session.</p>
     </div>
     @endif
+
 </div>
 @endsection
