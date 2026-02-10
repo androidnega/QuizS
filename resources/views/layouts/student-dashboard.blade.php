@@ -17,7 +17,8 @@
                 <a href="{{ route('dashboard.my-quizzes') }}" class="px-3 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('dashboard.my-quizzes*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">My quizzes</a>
             </nav>
 
-            @if(isset($student) && $student)
+            @isset($student)
+            @if($student)
             <div class="relative shrink-0" id="student-profile-menu">
                 <button type="button" id="student-profile-btn" class="flex items-center gap-2 rounded-lg py-2 pl-2 pr-2 sm:pr-3 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-300" aria-expanded="false" aria-haspopup="true" aria-controls="student-profile-dropdown">
                     <span class="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-primary-100 text-primary-700 font-semibold text-sm">{{ $student->initials }}</span>
@@ -42,7 +43,9 @@
             <script>
             (function(){var btn=document.getElementById('student-profile-btn');var drop=document.getElementById('student-profile-dropdown');if(!btn||!drop)return;function open(){drop.classList.remove('hidden');btn.setAttribute('aria-expanded','true');}function close(){drop.classList.add('hidden');btn.setAttribute('aria-expanded','false');}btn.addEventListener('click',function(e){e.stopPropagation();if(drop.classList.contains('hidden'))open();else close();});document.addEventListener('click',function(){close();});drop.addEventListener('click',function(e){e.stopPropagation();});})();
             </script>
-            @else
+            @endif
+            @endisset
+            @if(!isset($student) || !$student)
             <div class="flex items-center gap-2 shrink-0">
                 <a href="{{ route('dashboard.my-profile') }}" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Profile</a>
                 <form action="{{ route('student.account.logout') }}" method="post" class="inline">@csrf<button type="submit" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Log out</button></form>
