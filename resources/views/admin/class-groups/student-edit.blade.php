@@ -28,10 +28,21 @@
             </div>
             <div>
                 <label for="student_name" class="block text-sm font-medium text-gray-700 mb-1">Name (optional)</label>
-                <input type="text" name="student_name" id="student_name" maxlength="255" class="input w-full" value="{{ old('student_name', $student->student_name) }}">
+                <input type="text" name="student_name" id="student_name" maxlength="255" class="input w-full" value="{{ old('student_name', $student->student_name ?? $studentAccount?->student_name) }}">
                 @error('student_name')
                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                 @enderror
+                @if($studentAccount && $studentAccount->student_name)
+                <p class="text-xs text-gray-500 mt-1">Student's account name: {{ $studentAccount->student_name }}</p>
+                @endif
+            </div>
+            <div>
+                <label for="phone_contact" class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+                <input type="text" name="phone_contact" id="phone_contact" maxlength="20" class="input w-full" value="{{ old('phone_contact', $phone) }}" placeholder="Optional">
+                @error('phone_contact')
+                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                @enderror
+                <p class="text-xs text-gray-500 mt-1">Phone number for OTP login. Leave empty to require student to provide it.</p>
             </div>
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">Save changes</button>

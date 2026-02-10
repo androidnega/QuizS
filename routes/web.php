@@ -145,6 +145,7 @@ Route::middleware('admin.auth')->group(function () {
         Route::put('/class-groups/{classGroup}', [ClassGroupController::class, 'update'])->name('class-groups.update');
         Route::delete('/class-groups/{classGroup}', [ClassGroupController::class, 'destroy'])->name('class-groups.destroy');
         Route::get('/class-groups/{classGroup}/students', [ClassGroupController::class, 'studentsIndex'])->name('class-groups.students.index');
+        Route::get('/class-groups/{classGroup}/students/{student}', [ClassGroupController::class, 'showStudent'])->name('class-groups.students.show');
         Route::get('/class-groups/{classGroup}/students/{student}/edit', [ClassGroupController::class, 'editStudent'])->name('class-groups.students.edit');
         Route::post('/class-groups/{classGroup}/students', [ClassGroupController::class, 'addStudent'])->name('class-groups.students.add');
         Route::post('/class-groups/{classGroup}/students/upload', [ClassGroupController::class, 'uploadStudents'])->name('class-groups.students.upload');

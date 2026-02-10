@@ -89,7 +89,8 @@
                     @forelse($students as $s)
                         @php
                             $phone = $s->studentAccount?->phone_contact ?? null;
-                            $displayName = $s->student_name ?? $s->studentAccount?->student_name ?? '—';
+                            // Priority: student account name > class group name > "—"
+                            $displayName = $s->studentAccount?->student_name ?? $s->student_name ?? '—';
                         @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $s->index_number }}</td>
@@ -98,20 +99,10 @@
                             @if(!$isSuperAdmin)
                                 <td class="px-4 py-3 text-right">
                                     <div class="inline-flex items-center justify-end gap-3">
-                                        <button type="button" class="student-view-btn inline-flex items-center gap-1 text-gray-600 hover:text-primary-600 text-sm bg-transparent border-0 p-0 cursor-pointer" title="View info"
-                                            data-index="{{ e($s->index_number) }}"
-                                            data-name="{{ e($displayName) }}"
-                                            data-phone="{{ e($phone ?? '') }}">
+                                        <a href="{{ route('dashboard.class-groups.students.show', [$classGroup, $s]) }}" class="inline-flex items-center gap-1 text-gray-600 hover:text-primary-600 text-sm" title="View details">
                                             <i class="fas fa-eye"></i> View
-                                        </button>
+                                        </a>
                                         <a href="{{ route('dashboard.class-groups.students.edit', [$classGroup, $s]) }}" class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-800 text-sm" title="Edit"><i class="fas fa-pen"></i> Edit</a>
-                                        @if($phone)
-                                        <form action="{{ route('dashboard.class-groups.students.remove-phone', [$classGroup, $s]) }}" method="post" class="inline" onsubmit="return confirm('Remove phone number? Student will be asked for a new phone on next login.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center gap-1 text-orange-600 hover:text-orange-800 text-sm bg-transparent border-0 p-0 cursor-pointer" title="Remove phone"><i class="fas fa-phone-slash"></i> Remove phone</button>
-                                        </form>
-                                        @endif
                                         <form action="{{ route('dashboard.class-groups.students.destroy', [$classGroup, $s]) }}" method="post" class="inline" onsubmit="return confirm('Remove this index from the group?');">
                                             @csrf
                                             @method('DELETE')
@@ -134,30 +125,6 @@
         @endif
     </div>
 
-    {{-- Modal: Student info --}}
-    <div id="student-info-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="student-info-modal-title">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-                <h2 id="student-info-modal-title" class="text-lg font-semibold text-gray-900">Student info</h2>
-                <button type="button" id="student-info-modal-close" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600" aria-label="Close">&times;</button>
-            </div>
-            <div class="px-4 py-4 space-y-3 text-sm">
-                <div>
-                    <span class="font-medium text-gray-500 block">Index number</span>
-                    <span id="modal-index" class="text-gray-900 font-mono"></span>
-                </div>
-                <div>
-                    <span class="font-medium text-gray-500 block">Name</span>
-                    <span id="modal-name" class="text-gray-900"></span>
-                </div>
-                <div>
-                    <span class="font-medium text-gray-500 block">Phone</span>
-                    <span id="modal-phone" class="text-gray-900"></span>
-                </div>
-            </div>
-        </div>
-    </div>
-
     @push('scripts')
     <script>
     (function() {
@@ -172,39 +139,6 @@
                 }, 350);
             });
         }
-    })();
-    (function() {
-        var modal = document.getElementById('student-info-modal');
-        var closeBtn = document.getElementById('student-info-modal-close');
-        var indexEl = document.getElementById('modal-index');
-        var nameEl = document.getElementById('modal-name');
-        var phoneEl = document.getElementById('modal-phone');
-        if (!modal || !indexEl || !nameEl || !phoneEl) return;
-        function openModal(index, name, phone) {
-            indexEl.textContent = index || '—';
-            nameEl.textContent = name || '—';
-            phoneEl.textContent = phone || '—';
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeModal() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.body.style.overflow = '';
-        }
-        document.querySelectorAll('.student-view-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                openModal(this.getAttribute('data-index'), this.getAttribute('data-name'), this.getAttribute('data-phone'));
-            });
-        });
-        if (closeBtn) closeBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeModal();
-        });
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.classList.contains('flex')) closeModal();
-        });
     })();
     </script>
     @endpush

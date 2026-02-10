@@ -240,6 +240,53 @@ class ClassGroupController extends Controller
         return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index added.');
     }
 
+    /** Show details page for one student in the class group. */
+    public function showStudent(ClassGroup $classGroup, ClassGroupStudent $student): View
+    {
+        $this->authorize('view', $classGroup);
+        if ($student->class_group_id !== $classGroup->id) {
+            abort(404);
+        }
+        
+        $student->load('studentAccount');
+        $studentAccount = $student->studentAccount;
+        $phone = $studentAccount?->phone_contact ?? null;
+        
+        // Display name priority: student account name > class group name > "—"
+        $displayName = $studentAccount?->student_name ?? $student->student_name ?? '—';
+        
+        // Quiz stats
+        $quizzesCount = 0;
+        $averageScore = null;
+        $lastQuizDate = null;
+        
+        if ($studentAccount) {
+            $sessions = $studentAccount->quizSessions()->with('result')->get();
+            $quizzesCount = $sessions->count();
+            
+            if ($quizzesCount > 0) {
+                $scores = $sessions->filter(fn($s) => $s->result)->map(fn($s) => $s->result->score);
+                if ($scores->isNotEmpty()) {
+                    $averageScore = $scores->average();
+                }
+                
+                $lastSession = $sessions->sortByDesc('created_at')->first();
+                $lastQuizDate = $lastSession?->created_at?->format('M j, Y');
+            }
+        }
+        
+        return view('admin.class-groups.student-show', compact(
+            'classGroup', 
+            'student', 
+            'studentAccount',
+            'phone', 
+            'displayName',
+            'quizzesCount',
+            'averageScore',
+            'lastQuizDate'
+        ));
+    }
+
     /** Show edit form for one student in the class group. */
     public function editStudent(ClassGroup $classGroup, ClassGroupStudent $student): View
     {
@@ -247,10 +294,15 @@ class ClassGroupController extends Controller
         if ($student->class_group_id !== $classGroup->id) {
             abort(404);
         }
-        return view('admin.class-groups.student-edit', compact('classGroup', 'student'));
+        
+        $student->load('studentAccount');
+        $studentAccount = $student->studentAccount;
+        $phone = $studentAccount?->phone_contact ?? null;
+        
+        return view('admin.class-groups.student-edit', compact('classGroup', 'student', 'studentAccount', 'phone'));
     }
 
-    /** Update a student index/name in the class group. */
+    /** Update a student index/name/phone in the class group. */
     public function updateStudent(Request $request, ClassGroup $classGroup, ClassGroupStudent $student): RedirectResponse
     {
         $this->authorize('update', $classGroup);
@@ -260,9 +312,12 @@ class ClassGroupController extends Controller
         $request->validate([
             'index_number' => 'required|string|max:64',
             'student_name' => 'nullable|string|max:255',
+            'phone_contact' => 'nullable|string|max:20',
         ]);
         $indexNumber = trim($request->index_number);
         $name = $request->filled('student_name') ? trim($request->student_name) : null;
+        $phone = $request->filled('phone_contact') ? trim($request->phone_contact) : null;
+        
         // If index changed, ensure no duplicate (unique is class_group_id + index_number)
         if (strcasecmp($student->index_number, $indexNumber) !== 0) {
             if (ClassGroupStudent::where('class_group_id', $classGroup->id)->where('id', '!=', $student->id)->whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper($indexNumber)])->exists()) {
@@ -270,10 +325,19 @@ class ClassGroupController extends Controller
                     ->with('error', 'An index with that number already exists in this group.');
             }
         }
+        
         $student->index_number = $indexNumber;
         $student->student_name = $name;
         $student->save();
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index updated.');
+        
+        // Update phone in Student account if exists
+        $studentAccount = \App\Models\Student::where('index_number', $indexNumber)->first();
+        if ($studentAccount) {
+            $studentAccount->phone_contact = $phone;
+            $studentAccount->save();
+        }
+        
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.show', [$classGroup, $student])->with('success', 'Student details updated.');
     }
 
     /** Upload Excel to replace or merge class group students. */
