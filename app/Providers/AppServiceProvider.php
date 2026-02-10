@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\QuizSession;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,6 +17,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->ensureSqliteDatabaseExists();
+
+        // Resolve quizSession by id so session/student data page always loads (no scoping conflict)
+        Route::bind('quizSession', function (string $value) {
+            return QuizSession::findOrFail($value);
+        });
 
         View::composer('*', function ($view): void {
             if (request()->routeIs('admin.*')) {

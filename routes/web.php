@@ -173,6 +173,10 @@ Route::middleware('admin.auth')->group(function () {
         Route::delete('/class-groups/{classGroup}/students/{student}', [ClassGroupController::class, 'destroyStudent'])->name('class-groups.students.destroy');
         Route::delete('/class-groups/{classGroup}/students/{student}/phone', [ClassGroupController::class, 'removeStudentPhone'])->name('class-groups.students.remove-phone');
 
+        // Quiz session detail — all staff (examiners + super admins) so session/student data always shows
+        Route::get('/quizzes/{quiz}/sessions/{quizSession}', [QuizManagementController::class, 'showSession'])->name('quizzes.sessions.show');
+        Route::post('/quizzes/{quiz}/sessions/{quizSession}/reset-ip', [QuizManagementController::class, 'resetSessionIp'])->name('quizzes.sessions.reset-ip');
+
         // Quizzes — examiner only
         Route::middleware('examiner.only')->group(function () {
             Route::get('/students', fn () => redirect()->route('dashboard.class-groups.index', [], 301))->name('students.index');
@@ -189,8 +193,6 @@ Route::middleware('admin.auth')->group(function () {
             Route::get('/quizzes/{quiz}/scores/export/excel', [QuizManagementController::class, 'exportScoresExcel'])->name('quizzes.scores.export.excel');
             Route::get('/quizzes/{quiz}/scores/export', [QuizManagementController::class, 'exportScores'])->name('quizzes.scores.export');
             Route::get('/quizzes/{quiz}/violations/export', [QuizManagementController::class, 'exportViolations'])->name('quizzes.violations.export');
-            Route::get('/quizzes/{quiz}/sessions/{quizSession}', [QuizManagementController::class, 'showSession'])->name('quizzes.sessions.show');
-            Route::post('/quizzes/{quiz}/sessions/{quizSession}/reset-ip', [QuizManagementController::class, 'resetSessionIp'])->name('quizzes.sessions.reset-ip');
             Route::post('/quizzes/{quiz}/question-pools/{pool}/approve', [QuizManagementController::class, 'approvePool'])->name('quizzes.pool.approve');
             Route::get('/quizzes/{quiz}/question-pools/{pool}/edit', [QuizManagementController::class, 'editPool'])->name('quizzes.pool.edit');
             Route::put('/quizzes/{quiz}/question-pools/{pool}', [QuizManagementController::class, 'updatePool'])->name('quizzes.pool.update');
