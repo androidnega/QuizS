@@ -234,17 +234,11 @@
                                 @if($q->options && is_array($q->options))
                                     @php
                                         $correctOption = collect($q->options)->firstWhere('key', $q->correct_answer);
-                                        $correctText = $correctOption['text'] ?? 'N/A';
+                                        $correctText = $correctOption['text'] ?? '';
                                     @endphp
-                                    <div class="mb-3 inline-flex items-start gap-2 text-sm font-medium text-success-700 bg-success-50 px-3 py-2 rounded-lg">
-                                        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                        </svg>
-                                        <div>
-                                            <span class="block text-xs font-semibold text-success-600 mb-0.5">Correct Answer:</span>
-                                            <span class="text-success-900">{{ $q->correct_answer }}. {{ $correctText }}</span>
-                                        </div>
-                                    </div>
+                                    @if($correctText)
+                                        <p class="text-gray-700 text-sm mb-3">{{ $correctText }}</p>
+                                    @endif
                                 @endif
                                 <div class="flex items-center gap-3 text-xs flex-wrap">
                                     <span class="inline-flex px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ ucfirst($q->type) }}</span>
