@@ -121,8 +121,12 @@ class StudentDashboardController extends Controller
         $student = $this->student();
         $quizSession = QuizSession::where('id', $session)
             ->where('student_index', $student->index_number)
-            ->with(['quiz', 'result', 'answers.question'])
+            ->with(['quiz.course', 'result', 'answers.question'])
             ->firstOrFail();
+
+        if (!$quizSession->quiz) {
+            return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz not found.');
+        }
 
         if (!$quizSession->quiz->canShowScore()) {
             return redirect()->route('dashboard.my-quizzes')->with('info', 'Results are not available for this quiz.');
