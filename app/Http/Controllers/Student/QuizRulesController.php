@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassGroupStudent;
 use App\Models\Quiz;
 use App\Models\QuizAcceptance;
+use App\Models\QuizSession;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -57,16 +60,69 @@ class QuizRulesController extends Controller
     }
 
     /**
-     * Store acceptance (dos & don'ts accepted). Store quiz_id in session so login validates index against this quiz's class group.
+     * Store acceptance (dos & don'ts accepted). 
+     * If student is already logged in, skip login form and go directly to proctoring.
+     * Otherwise, store quiz_id in session so login validates index against this quiz's class group.
      */
     public function accept(Request $request): JsonResponse
     {
         $quizId = $request->input('quiz_id');
         $sessionData = ['rules_accepted' => true];
+        
         if ($quizId) {
             $request->validate(['quiz_id' => 'exists:quizzes,id']);
-            $quiz = Quiz::find($quizId);
+            $quiz = Quiz::with('classGroup')->find($quizId);
+            
             if ($quiz && $quiz->isActive()) {
+                // Check if student is already logged in
+                $studentId = session('student_id');
+                $student = $studentId ? Student::find($studentId) : null;
+                
+                if ($student && $student->index_number) {
+                    // Student is logged in, verify they're in the quiz's class group
+                    $inClassGroup = ClassGroupStudent::where('class_group_id', $quiz->class_group_id)
+                        ->whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper($student->index_number)])
+                        ->exists();
+                    
+                    if ($inClassGroup) {
+                        // Check IP hasn't been used for this quiz
+                        $ip = $request->ip();
+                        if (QuizSession::where('quiz_id', $quiz->id)->where('ip_address', $ip)->exists()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'This IP address has already been used for this quiz. Access denied.',
+                            ], 422);
+                        }
+                        
+                        // Record acceptance
+                        QuizAcceptance::create([
+                            'quiz_id' => $quiz->id,
+                            'index_number' => $student->index_number,
+                            'ip_address' => $ip,
+                            'accepted_at' => now(),
+                        ]);
+                        
+                        // Set quiz session data and redirect to proctoring
+                        session([
+                            'quiz_id' => $quiz->id,
+                            'index_number' => $student->index_number,
+                            'rules_accepted' => true,
+                        ]);
+                        session()->forget('eligible_courses');
+                        
+                        return response()->json([
+                            'success' => true,
+                            'redirect' => route('student.proctoring.capture'),
+                        ]);
+                    } else {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Your index number is not registered for this quiz class group.',
+                        ], 422);
+                    }
+                }
+                
+                // Student not logged in, proceed with normal login flow
                 $indexNumber = $request->input('index_number') ?? session('student_index') ?? 'pending';
                 QuizAcceptance::create([
                     'quiz_id' => $quiz->id,
