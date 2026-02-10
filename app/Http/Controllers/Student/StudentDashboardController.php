@@ -87,10 +87,41 @@ class StudentDashboardController extends Controller
 
     /**
      * List all quizzes (sessions) this student has taken. Marks are kept forever.
+     * Active quizzes (available to take) are shown first.
      */
     public function quizzes(): View
     {
         $student = $this->student();
+        $student->load(['classGroupStudents.classGroup']);
+        $classGroups = $student->classGroupStudents->map(fn ($s) => $s->classGroup)->filter()->unique('id')->values();
+        $classGroupIds = $classGroups->pluck('id')->filter()->values()->all();
+        
+        // Get active quizzes the student can take
+        $activeQuizzes = collect();
+        if (!empty($classGroupIds)) {
+            $activeQuizzes = Quiz::whereIn('class_group_id', $classGroupIds)
+                ->where('is_published', true)
+                ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNull('ends_at')->orWhere('ends_at', '>', now());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                })
+                ->with('course')
+                ->get()
+                ->filter(fn (Quiz $q) => $q->hasEnoughApprovedQuestions() && $q->isActive())
+                ->filter(function (Quiz $quiz) use ($student) {
+                    // Only show if student hasn't completed it yet
+                    $hasSession = QuizSession::where('quiz_id', $quiz->id)
+                        ->where('student_index', $student->index_number)
+                        ->whereNotNull('ended_at')
+                        ->exists();
+                    return !$hasSession;
+                });
+        }
+        
+        // Get completed quiz sessions
         $sessions = QuizSession::where('student_index', $student->index_number)
             ->with(['quiz', 'result'])
             ->orderByDesc('created_at')
@@ -99,6 +130,7 @@ class StudentDashboardController extends Controller
         return view('student.dashboard.quizzes', [
             'student' => $student,
             'sessions' => $sessions,
+            'activeQuizzes' => $activeQuizzes,
         ]);
     }
 

@@ -7,11 +7,39 @@
 <div class="space-y-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-900">My quizzes</h1>
-        <p class="text-gray-600 mt-1">All your past quizzes. Marks are kept forever; question review is available for 21 days after each quiz.</p>
+        <p class="text-gray-600 mt-1">Active quizzes you can take and your past quiz results. Marks are kept forever; question review is available for 21 days after each quiz.</p>
     </div>
+
+    @if(isset($activeQuizzes) && $activeQuizzes->isNotEmpty())
+    <div class="rounded-lg border-2 border-primary-300 bg-primary-50 p-4 mb-6">
+        <h2 class="text-base font-semibold text-primary-900 mb-3">Active Quizzes</h2>
+        <div class="space-y-3">
+            @foreach($activeQuizzes as $quiz)
+            <div class="flex items-center justify-between bg-white rounded-lg border border-primary-200 p-3">
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-900 truncate">{{ $quiz->title }}</p>
+                    @if($quiz->course)
+                    <p class="text-xs text-gray-600 mt-0.5">{{ $quiz->course->name }}</p>
+                    @endif
+                    <p class="text-xs text-gray-500 mt-1">{{ $quiz->duration_minutes }} min · {{ $quiz->getQuestionsPerStudent() }} questions</p>
+                </div>
+                <a href="{{ route('student.rules.show.quiz', ['token' => $quiz->link_token]) }}" class="ml-4 flex-shrink-0 inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 transition-colors">
+                    Start Quiz
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
     @if($sessions->isNotEmpty())
     <div class="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-base font-semibold text-gray-900">Completed Quizzes</h2>
+        </div>
         <ul class="divide-y divide-gray-100">
             @foreach($sessions as $s)
             <li class="px-4 py-4 flex flex-wrap items-center justify-between gap-3">
