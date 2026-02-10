@@ -61,6 +61,15 @@
                 </div>
             </details>
             <span class="flex-1"></span>
+            @if($quiz->hasStarted() && !$quiz->hasEnded())
+            <div class="flex items-center gap-2">
+                <form action="{{ route('dashboard.quizzes.extend-time', $quiz) }}" method="post" class="inline flex items-center gap-1" onsubmit="return confirm('Extend quiz time? This will add time to all active student sessions.');">
+                    @csrf
+                    <input type="number" name="additional_minutes" min="1" max="120" value="10" required class="w-16 text-xs border border-gray-300 rounded px-1.5 py-0.5" placeholder="min">
+                    <button type="submit" class="btn bg-success-100 text-success-700 hover:bg-success-200 text-xs py-0.5 px-2">Extend Time</button>
+                </form>
+            </div>
+            @endif
             @if($showEndQuiz)
             <form action="{{ route('dashboard.quizzes.end', $quiz) }}" method="post" class="inline" onsubmit="return confirm('End this quiz now? Students will no longer be able to start or submit.');">
                 @csrf

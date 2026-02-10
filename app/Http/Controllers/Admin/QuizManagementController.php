@@ -399,6 +399,48 @@ class QuizManagementController extends Controller
     }
 
     /**
+     * Extend quiz time while quiz is ongoing.
+     * Adds additional minutes to the quiz duration.
+     */
+    public function extendTime(Request $request, Quiz $quiz): RedirectResponse
+    {
+        $this->authorize('update', $quiz);
+        
+        // Only allow extending time if quiz has started (has active sessions)
+        if (!$quiz->hasStarted()) {
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
+                ->with('error', 'Cannot extend time: quiz has not started yet.');
+        }
+        
+        // Check if quiz has ended
+        if ($quiz->hasEnded()) {
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
+                ->with('error', 'Cannot extend time: quiz has already ended.');
+        }
+        
+        $request->validate([
+            'additional_minutes' => 'required|integer|min:1|max:120',
+        ]);
+        
+        $additionalMinutes = (int) $request->input('additional_minutes');
+        $newDuration = $quiz->duration_minutes + $additionalMinutes;
+        
+        // Cap at reasonable maximum (e.g., 600 minutes = 10 hours)
+        if ($newDuration > 600) {
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
+                ->with('error', 'Total duration cannot exceed 600 minutes (10 hours).');
+        }
+        
+        $quiz->update(['duration_minutes' => $newDuration]);
+        
+        // Broadcast update so students' timers refresh
+        broadcast(new DataUpdated('quizzes'))->toOthers();
+        
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
+            ->with('success', "Quiz time extended by {$additionalMinutes} minute(s). New duration: {$newDuration} minutes. Students' timers will update automatically.");
+    }
+
+    /**
      * Show edit form for an unapproved pool item.
      */
     public function editPool(Quiz $quiz, QuestionPool $pool): View|RedirectResponse
