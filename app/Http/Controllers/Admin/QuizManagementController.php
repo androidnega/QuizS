@@ -246,10 +246,12 @@ class QuizManagementController extends Controller
     /**
      * Show session detail: result, faces, violation logs.
      * Logs admin view of face images for audit trail.
+     * Route uses {quizSession} to avoid conflict with Laravel's session.
      */
-    public function showSession(Quiz $quiz, QuizSession $session): View|RedirectResponse
+    public function showSession(Quiz $quiz, QuizSession $quizSession): View|RedirectResponse
     {
         $this->authorize('view', $quiz);
+        $session = $quizSession;
         if ($session->quiz_id !== $quiz->id) {
             abort(404);
         }
@@ -282,9 +284,10 @@ class QuizManagementController extends Controller
     /**
      * Reset IP lock for a session (allow the IP to be used again).
      */
-    public function resetSessionIp(Quiz $quiz, QuizSession $session): RedirectResponse
+    public function resetSessionIp(Quiz $quiz, QuizSession $quizSession): RedirectResponse
     {
         $this->authorize('update', $quiz);
+        $session = $quizSession;
         if ($session->quiz_id !== $quiz->id) {
             abort(404);
         }
