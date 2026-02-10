@@ -7,7 +7,33 @@
 <style>
     body,
     .home-page-wrap { 
-        background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%) !important; 
+        background: #f8fafc !important; 
+    }
+    .home-main {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 1.25rem;
+    }
+    .home-hero {
+        width: 100%;
+        max-width: 72rem;
+        text-align: center;
+    }
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        max-width: 58rem;
+        margin: 0 auto;
+    }
+    .feature-card {
+        border: 1px solid transparent;
+        border-radius: 1rem;
+        padding: 1rem 0.9rem;
+        min-height: 9.5rem;
     }
     .logo-text { 
         font-size: 1.75rem; 
@@ -21,6 +47,20 @@
         width: 2.25rem; 
         height: 2.25rem; 
         flex-shrink: 0; 
+    }
+    @media (max-width: 1023px) {
+        .feature-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 640px) {
+        .feature-grid {
+            grid-template-columns: 1fr;
+        }
+        .feature-card {
+            padding: 1rem;
+            min-height: auto;
+        }
     }
 </style>
 @endpush
@@ -50,45 +90,45 @@
         </div>
     </header>
 
-    <main class="flex flex-1 flex-col items-center justify-center px-6 py-20">
-        <div class="w-full max-w-5xl text-center">
-            <div class="mb-16">
-                <h1 class="text-5xl sm:text-6xl font-bold text-slate-900 mb-6 tracking-tight">
+    <main class="home-main">
+        <div class="home-hero">
+            <div class="mb-10">
+                <h1 class="text-4xl sm:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
                     Welcome to QuizSnap
                 </h1>
-                <p class="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
                     A modern platform for secure and efficient online assessments
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                <div class="bg-white rounded-2xl p-10 border border-slate-200 shadow-sm hover:shadow-lg transition-all">
-                    <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <div class="feature-grid">
+                <div class="feature-card" style="background-color: #dbeafe; border-color: #bfdbfe;">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2" style="background-color: #3b82f6;">
+                        <svg class="w-6 h-6" style="color: #ffffff;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-slate-900 mb-3">Secure</h3>
+                    <h3 class="text-base font-semibold text-slate-900 mb-1">Secure</h3>
                     <p class="text-sm text-slate-600 leading-relaxed">Proctored environment with advanced security measures</p>
                 </div>
                 
-                <div class="bg-white rounded-2xl p-10 border border-slate-200 shadow-sm hover:shadow-lg transition-all">
-                    <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <div class="feature-card" style="background-color: #f3e8ff; border-color: #e9d5ff;">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2" style="background-color: #a855f7;">
+                        <svg class="w-6 h-6" style="color: #ffffff;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-slate-900 mb-3">Fast</h3>
+                    <h3 class="text-base font-semibold text-slate-900 mb-1">Fast</h3>
                     <p class="text-sm text-slate-600 leading-relaxed">Instant access and seamless experience</p>
                 </div>
                 
-                <div class="bg-white rounded-2xl p-10 border border-slate-200 shadow-sm hover:shadow-lg transition-all">
-                    <div class="w-16 h-16 bg-cyan-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-8 h-8 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <div class="feature-card" style="background-color: #ccfbf1; border-color: #99f6e4;">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2" style="background-color: #14b8a6;">
+                        <svg class="w-6 h-6" style="color: #ffffff;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-slate-900 mb-3">Reliable</h3>
+                    <h3 class="text-base font-semibold text-slate-900 mb-1">Reliable</h3>
                     <p class="text-sm text-slate-600 leading-relaxed">Desktop optimized for consistent performance</p>
                 </div>
             </div>
