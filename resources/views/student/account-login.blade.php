@@ -45,7 +45,7 @@
                 </div>
                 <div>
                     <label for="otp_name" class="block text-sm font-medium text-gray-700 mb-1">Your name (optional)</label>
-                    <input type="text" id="otp_name" name="student_name" placeholder="Full name" class="input w-full" autocomplete="name">
+                    <input type="text" id="otp_name" name="student_name" placeholder="Full name" class="input w-full" autocomplete="name" style="text-transform: capitalize;">
                 </div>
                 <div id="otp-error" class="hidden">
                     <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800" id="otp-error-text"></div>

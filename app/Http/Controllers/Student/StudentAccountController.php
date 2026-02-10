@@ -165,7 +165,7 @@ class StudentAccountController extends Controller
             $student->phone_contact = $phone;
         }
         if ($name !== null && $name !== '') {
-            $student->student_name = $name;
+            $student->student_name = ucwords(strtolower(trim($name)));
         }
         $student->save();
 

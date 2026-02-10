@@ -97,7 +97,7 @@ class StudentDashboardController extends Controller
         $request->validate([
             'student_name' => 'nullable|string|max:255',
         ]);
-        $student->student_name = $request->filled('student_name') ? trim($request->student_name) : null;
+        $student->student_name = $request->filled('student_name') ? ucwords(strtolower(trim($request->student_name))) : null;
         $student->save();
         return redirect()->route('dashboard.my-profile')->with('success', 'Profile updated.');
     }

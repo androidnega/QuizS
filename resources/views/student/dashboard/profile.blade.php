@@ -26,7 +26,7 @@
             </div>
             <div>
                 <label for="student_name" class="block text-sm font-medium text-gray-700 mb-1">Your name (optional)</label>
-                <input type="text" id="student_name" name="student_name" value="{{ old('student_name', $student->student_name) }}" placeholder="Full name" class="input w-full" maxlength="255" autocomplete="name">
+                <input type="text" id="student_name" name="student_name" value="{{ old('student_name', $student->student_name) }}" placeholder="Full name" class="input w-full" maxlength="255" autocomplete="name" style="text-transform: capitalize;">
                 @error('student_name')
                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                 @enderror
