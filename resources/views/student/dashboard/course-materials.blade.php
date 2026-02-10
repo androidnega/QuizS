@@ -14,11 +14,14 @@
         <p class="text-gray-600 mt-1">Weekly course files and notes</p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         @for($week = 1; $week <= 3; $week++)
-        <button type="button" class="week-btn rounded-lg border border-gray-200 bg-gray-50 p-4 text-center hover:bg-gray-100 transition-colors" data-week="{{ $week }}">
-            <h3 class="text-base font-semibold text-gray-900">Week {{ $week }}</h3>
-            <p class="text-xs text-gray-500 mt-1">Click to view</p>
+        <button type="button" class="week-btn rounded-xl border-2 border-slate-200 bg-white p-6 text-center hover:border-blue-300 hover:bg-blue-50 transition-all shadow-sm hover:shadow-md" data-week="{{ $week }}">
+            <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <span class="text-2xl font-bold text-blue-600">{{ $week }}</span>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">Week {{ $week }}</h3>
+            <p class="text-sm text-gray-600">Click to view</p>
         </button>
         @endfor
     </div>
