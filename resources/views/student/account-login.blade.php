@@ -57,8 +57,6 @@
         </div>
         <p class="text-center mt-4 text-sm text-gray-500">
             <a href="{{ route('student.landing') }}" class="text-blue-600 hover:underline">Start a quiz</a>
-            &middot;
-            <a href="{{ route('login') }}" class="text-gray-600 hover:underline">Staff login</a>
         </p>
     </div>
 </div>

@@ -70,7 +70,6 @@
                     <span class="text-lg font-bold leading-none">!</span>
                 </button>
                 <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-primary-600 px-4 py-2 rounded-lg border border-primary-200 hover:bg-primary-50 transition-all no-underline">Student Login</a>
-                <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all no-underline">Staff Login</a>
             </div>
         </div>
     </header>
