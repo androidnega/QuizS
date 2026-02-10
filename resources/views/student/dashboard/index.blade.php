@@ -73,7 +73,7 @@
     </section>
     @endif
 
-    <button type="button" id="course-materials-btn" class="w-full rounded-lg border border-gray-200 bg-white p-4 text-left hover:bg-gray-50 transition-colors">
+    <a href="{{ route('dashboard.course-materials') }}" class="w-full rounded-lg border border-gray-200 bg-white p-4 text-left hover:bg-gray-50 transition-colors block">
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-base font-semibold text-gray-900">Course Materials</h2>
@@ -83,113 +83,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
         </div>
-    </button>
-
-    {{-- Course Materials Modal --}}
-    <div id="course-materials-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50" aria-modal="true" aria-labelledby="course-materials-title" role="dialog">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-                <h2 id="course-materials-title" class="text-lg font-semibold text-gray-900">Course Materials</h2>
-                <button type="button" id="course-materials-close" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none text-xl" aria-label="Close">×</button>
-            </div>
-            <div class="px-5 py-4 overflow-y-auto flex-1">
-                <div class="grid grid-cols-3 gap-3">
-                    @for($week = 1; $week <= 3; $week++)
-                    <button type="button" class="week-btn rounded-lg border border-gray-200 bg-gray-50 p-3 text-center hover:bg-gray-100 transition-colors" data-week="{{ $week }}">
-                        <h3 class="text-sm font-semibold text-gray-900">Week {{ $week }}</h3>
-                        <p class="text-xs text-gray-500 mt-1">Click to view</p>
-                    </button>
-                    @endfor
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Coming Soon Modal --}}
-    <div id="coming-soon-modal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/50" aria-modal="true" aria-labelledby="coming-soon-title" role="dialog">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-                <h2 id="coming-soon-title" class="text-lg font-semibold text-gray-900">Week <span id="coming-soon-week"></span></h2>
-                <button type="button" id="coming-soon-close" class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none text-xl" aria-label="Close">×</button>
-            </div>
-            <div class="px-5 py-6 text-center">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <p class="text-base font-medium text-gray-900 mb-2">Coming Soon</p>
-                <p class="text-sm text-gray-600">Course materials for this week will be available soon.</p>
-            </div>
-        </div>
-    </div>
+    </a>
 </div>
 
 @push('scripts')
-<script>
-(function() {
-    // Course Materials Modal
-    var materialsBtn = document.getElementById('course-materials-btn');
-    var materialsModal = document.getElementById('course-materials-modal');
-    var materialsClose = document.getElementById('course-materials-close');
-    
-    if (materialsBtn && materialsModal) {
-        function openMaterialsModal() {
-            materialsModal.classList.remove('hidden');
-            materialsModal.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeMaterialsModal() {
-            materialsModal.classList.add('hidden');
-            materialsModal.classList.remove('flex');
-            document.body.style.overflow = '';
-        }
-        materialsBtn.addEventListener('click', openMaterialsModal);
-        if (materialsClose) materialsClose.addEventListener('click', closeMaterialsModal);
-        materialsModal.addEventListener('click', function(e) {
-            if (e.target === materialsModal) closeMaterialsModal();
-        });
-    }
-
-    // Coming Soon Modal
-    var comingSoonModal = document.getElementById('coming-soon-modal');
-    var comingSoonClose = document.getElementById('coming-soon-close');
-    var comingSoonWeek = document.getElementById('coming-soon-week');
-    var weekButtons = document.querySelectorAll('.week-btn');
-    
-    if (comingSoonModal) {
-        function openComingSoonModal(week) {
-            if (comingSoonWeek) comingSoonWeek.textContent = week;
-            comingSoonModal.classList.remove('hidden');
-            comingSoonModal.classList.add('flex');
-        }
-        function closeComingSoonModal() {
-            comingSoonModal.classList.add('hidden');
-            comingSoonModal.classList.remove('flex');
-        }
-        weekButtons.forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var week = this.getAttribute('data-week');
-                if (materialsModal) {
-                    materialsModal.classList.add('hidden');
-                    materialsModal.classList.remove('flex');
-                }
-                openComingSoonModal(week);
-            });
-        });
-        if (comingSoonClose) comingSoonClose.addEventListener('click', closeComingSoonModal);
-        comingSoonModal.addEventListener('click', function(e) {
-            if (e.target === comingSoonModal) closeComingSoonModal();
-        });
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (!comingSoonModal.classList.contains('hidden')) closeComingSoonModal();
-                if (materialsModal && !materialsModal.classList.contains('hidden')) closeMaterialsModal();
-            }
-        });
-    }
-})();
-</script>
 @if(isset($scheduledQuiz) && $scheduledQuiz && $scheduledQuiz->starts_at && $scheduledQuiz->starts_at->isFuture())
 <script>
 (function() {

@@ -120,6 +120,7 @@ Route::middleware(['dashboard.auth', 'student.auth'])->prefix('dashboard')->name
     Route::get('/my-quizzes/{sessionId}', [\App\Http\Controllers\Student\StudentDashboardController::class, 'showQuiz'])->name('my-quizzes.show');
     Route::get('/my-profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'profile'])->name('my-profile');
     Route::put('/my-profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'updateProfile'])->name('my-profile.update');
+    Route::get('/course-materials', [\App\Http\Controllers\Student\StudentDashboardController::class, 'courseMaterials'])->name('course-materials');
 });
 
 // Staff login

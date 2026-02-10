@@ -160,4 +160,15 @@ class StudentDashboardController extends Controller
             return redirect()->route('dashboard.my-quizzes')->with('error', 'An error occurred while loading the quiz review. Please try again.');
         }
     }
+
+    /**
+     * Show course materials page with weekly content.
+     */
+    public function courseMaterials(): View
+    {
+        $student = $this->student();
+        return view('student.dashboard.course-materials', [
+            'student' => $student,
+        ]);
+    }
 }
