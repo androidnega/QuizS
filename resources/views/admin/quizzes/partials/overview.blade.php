@@ -174,7 +174,7 @@
             @endforeach
         </div>
         @if($unapprovedPools->hasPages())
-        <div class="mt-6 flex justify-center">{{ $unapprovedPools->links() }}</div>
+        <div class="mt-6 flex justify-center">{{ $unapprovedPools->appends(['tab' => 'overview'])->links() }}</div>
         @endif
     </section>
     @endif
@@ -236,7 +236,7 @@
                 @endforeach
             </div>
             @if($approvedQuestions->hasPages())
-            <div class="mt-6 flex justify-center">{{ $approvedQuestions->links() }}</div>
+            <div class="mt-6 flex justify-center">{{ $approvedQuestions->appends(['tab' => 'overview'])->links() }}</div>
             @endif
         @endif
     </section>

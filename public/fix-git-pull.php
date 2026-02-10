@@ -41,9 +41,16 @@ chdir($baseDir);
 $out = [];
 $code = 0;
 
-// Discard local changes to .env.example so pull can merge
-exec(sprintf('%s checkout -- .env.example 2>&1', escapeshellcmd($git)), $out, $code);
-echo "git checkout -- .env.example (exit $code):\n" . implode("\n", $out) . "\n\n";
+// Discard local changes to files that often block pull (env, this script)
+$toDiscard = ['.env.example', 'public/fix-git-pull.php'];
+foreach ($toDiscard as $f) {
+    if (file_exists($baseDir . '/' . $f)) {
+        $out = [];
+        $code = 0;
+        exec(sprintf('%s checkout -- %s 2>&1', escapeshellcmd($git), escapeshellarg($f)), $out, $code);
+        echo "git checkout -- $f (exit $code):\n" . implode("\n", $out) . "\n\n";
+    }
+}
 
 $out = [];
 $code = 0;

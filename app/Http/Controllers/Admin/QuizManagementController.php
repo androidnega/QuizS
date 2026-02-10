@@ -232,7 +232,11 @@ class QuizManagementController extends Controller
         $data = compact('quiz', 'unapprovedPools', 'unapprovedPoolsTotal', 'approvedQuestions', 'approvedQuestionsTotal', 'sessionsPaginator', 'sessionsStats');
 
         // Live tab/pagination: return only the tab HTML fragment for AJAX requests
-        if ($request->ajax() && in_array($tab = $request->get('tab'), ['overview', 'sessions', 'scores'], true)) {
+        if ($request->ajax()) {
+            $tab = $request->get('tab');
+            if (! in_array($tab, ['overview', 'sessions', 'scores'], true)) {
+                $tab = 'overview'; // default so pagination (e.g. questions_page=2) returns overview partial, not full page
+            }
             return response()->view('admin.quizzes.partials.' . $tab, $data);
         }
 
