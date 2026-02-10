@@ -6,7 +6,7 @@
 @endsection
 
 @section('dashboard_content')
-<div class="w-full max-w-2xl">
+<div class="w-full">
     @if(session('success'))
         <div class="alert alert-success mb-4">{{ session('success') }}</div>
     @endif
