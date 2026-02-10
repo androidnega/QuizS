@@ -78,28 +78,26 @@
                 $label = 'Keep trying';
             }
         @endphp
-        <div class="rounded-lg border-2 border-teal-300 p-6" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #14b8a6 100%);">
-            <div class="flex items-start justify-between mb-4">
+        <div class="rounded-lg border border-teal-400 p-4" style="background-color: #06b6d4;">
+            <div class="flex items-start justify-between mb-3">
                 <div class="flex-1">
-                    <h2 class="text-base font-semibold text-white mb-2">Last Quiz Result</h2>
-                    <p class="text-sm font-semibold text-white mb-1">{{ $lastQuiz->quiz->title ?? 'Quiz' }}</p>
+                    <h2 class="text-sm font-semibold text-white mb-1">Last Quiz Result</h2>
+                    <p class="text-sm font-semibold text-white">{{ $lastQuiz->quiz->title ?? 'Quiz' }}</p>
                     @if($lastQuiz->quiz->course)
                     <p class="text-xs text-white/90 mt-0.5">{{ $lastQuiz->quiz->course->name }}</p>
                     @endif
-                    <p class="text-xs text-white/80 mt-2">Taken {{ $lastQuiz->created_at ? $lastQuiz->created_at->format('M j, Y g:i A') : 'Date not available' }}</p>
+                    <p class="text-xs text-white/80 mt-1">Taken {{ $lastQuiz->created_at ? $lastQuiz->created_at->format('M j, Y g:i A') : 'Date not available' }}</p>
                 </div>
-                <div class="text-right ml-4 flex-shrink-0">
-                    <div class="inline-flex flex-col items-center bg-white/20 backdrop-blur-sm rounded-lg px-5 py-3 border-2 border-white/30">
-                        <span class="text-3xl font-bold tabular-nums text-white">{{ $score }}%</span>
-                        <span class="text-xs font-semibold text-white mt-1">{{ $label }}</span>
+                <div class="text-right ml-3 flex-shrink-0">
+                    <div class="inline-flex flex-col items-center bg-white/20 rounded-lg px-3 py-2 border border-white/30">
+                        <span class="text-2xl font-bold tabular-nums text-white">{{ $score }}%</span>
+                        <span class="text-xs font-semibold text-white mt-0.5">{{ $label }}</span>
                     </div>
                 </div>
             </div>
-            <div class="flex items-center justify-between pt-4 border-t border-white/30">
-                <div class="flex items-center gap-4">
-                    <span class="text-sm text-white"><span class="font-bold">{{ $correctCount }}</span> / <span class="font-bold">{{ $totalQuestions }}</span> correct</span>
-                </div>
-                <a href="{{ route('dashboard.my-quizzes.show', ['sessionId' => $lastQuiz->id]) }}" class="text-sm font-semibold text-white hover:text-white/90 flex items-center gap-1 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+            <div class="flex items-center justify-between pt-2 border-t border-white/30">
+                <span class="text-sm text-white"><span class="font-bold">{{ $correctCount }}</span> / <span class="font-bold">{{ $totalQuestions }}</span> correct</span>
+                <a href="{{ route('dashboard.my-quizzes.show', ['sessionId' => $lastQuiz->id]) }}" class="text-sm font-semibold text-white hover:text-white/90 flex items-center gap-1 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors">
                     View Details
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
