@@ -261,6 +261,9 @@ Route::middleware('admin.auth')->group(function () {
             Route::post('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('users.store');
             Route::get('/users/{user}/edit', [\App\Http\Controllers\Admin\UserManagementController::class, 'edit'])->name('users.edit');
             Route::put('/users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'update'])->name('users.update');
+            Route::get('/users/{user}/view-as', [\App\Http\Controllers\Admin\UserManagementController::class, 'showViewAsForm'])->name('users.view-as-form');
+            Route::post('/users/{user}/view-as', [\App\Http\Controllers\Admin\UserManagementController::class, 'viewAs'])->name('users.view-as');
+            Route::post('/users/exit-view-as', [\App\Http\Controllers\Admin\UserManagementController::class, 'exitViewAs'])->name('users.exit-view-as');
         });
     });
 });

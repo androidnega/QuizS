@@ -49,7 +49,14 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">••••••</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900">Edit</a>
+                                    <div class="flex items-center justify-end gap-3">
+                                        <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900">Edit</a>
+                                        @if(isset($isSuperAdmin) && $isSuperAdmin && $u->isExaminer())
+                                            <a href="{{ route('dashboard.users.view-as-form', $u) }}" class="text-success-600 hover:text-success-900" title="View as this examiner">
+                                                View Dashboard
+                                            </a>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
