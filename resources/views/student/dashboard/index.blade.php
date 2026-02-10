@@ -22,21 +22,21 @@
             <span class="mt-2 inline-block text-xs font-medium text-blue-700">Edit profile →</span>
         </a>
         @if(isset($scheduledQuiz) && $scheduledQuiz)
-        <div class="flex-1 min-w-[180px] rounded-lg border-2 border-blue-700 p-4" style="background-color: #1e3a5f;">
-            <p class="text-xs font-medium text-blue-200">Scheduled quiz</p>
+        <div class="flex-1 min-w-[180px] rounded-lg border-2 p-4" style="background-color: #1e3a5f; border-color: #2c5282;">
+            <p class="text-xs font-medium" style="color: #fbbf24;">SCHEDULED QUIZ</p>
             <p class="mt-1 text-base font-semibold text-white">{{ $scheduledQuiz->title }}</p>
             @if($scheduledQuiz->course)
-            <p class="text-xs text-blue-200 mt-0.5">{{ $scheduledQuiz->course->name }}</p>
+            <p class="text-xs mt-0.5" style="color: #e2e8f0;">{{ $scheduledQuiz->course->name }}</p>
             @endif
-            <p class="text-xs text-blue-300 mt-1">{{ $scheduledQuiz->duration_minutes }} min · {{ $scheduledQuiz->getQuestionsPerStudent() }} questions</p>
+            <p class="text-xs mt-1" style="color: #cbd5e0;">{{ $scheduledQuiz->duration_minutes }} min · {{ $scheduledQuiz->getQuestionsPerStudent() }} questions</p>
             @if($scheduledQuiz->starts_at && $scheduledQuiz->starts_at->isFuture())
-            <p class="text-xs text-blue-200 mt-2">Starts {{ $scheduledQuiz->starts_at->format('M j, g:i A') }}</p>
+            <p class="text-xs mt-2" style="color: #e2e8f0;">Starts {{ $scheduledQuiz->starts_at->format('M j, g:i A') }}</p>
             <div class="mt-2 flex items-center gap-2">
-                <span id="quiz-countdown-{{ $scheduledQuiz->id }}" class="text-base font-bold tabular-nums text-yellow-300">--:--:--</span>
-                <a href="{{ route('student.quiz-will-start', ['token' => $scheduledQuiz->link_token]) }}" class="text-xs font-medium text-yellow-300 hover:text-yellow-200">View countdown</a>
+                <span id="quiz-countdown-{{ $scheduledQuiz->id }}" class="text-base font-bold tabular-nums" style="color: #fbbf24;">--:--:--</span>
+                <a href="{{ route('student.quiz-will-start', ['token' => $scheduledQuiz->link_token]) }}" class="text-xs font-medium" style="color: #fbbf24;">View countdown</a>
             </div>
             @else
-            <a href="{{ route('student.rules.show.quiz', ['token' => $scheduledQuiz->link_token]) }}" class="mt-3 inline-flex items-center justify-center w-full rounded-lg bg-yellow-400 text-gray-900 py-2 px-4 text-sm font-semibold hover:bg-yellow-300">
+            <a href="{{ route('student.rules.show.quiz', ['token' => $scheduledQuiz->link_token]) }}" class="mt-3 inline-flex items-center justify-center w-full rounded-lg py-2 px-4 text-sm font-semibold" style="background-color: #fbbf24; color: #1e3a5f;">
                 Start quiz →
             </a>
             @endif
