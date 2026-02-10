@@ -97,9 +97,9 @@
 
 @section('content')
 <div class="home-page-wrap min-h-screen flex flex-col font-sans antialiased">
-    <header class="shrink-0 bg-white/80 backdrop-blur-sm border-b border-slate-200/50 sticky top-0 z-50">
+    <header class="shrink-0 bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div class="mx-auto max-w-7xl px-6">
-            <div class="flex h-16 items-center justify-between">
+            <div class="flex h-20 items-center justify-between">
                 <a href="{{ route('student.landing') }}" class="logo-text no-underline">
                     <span class="logo-mark" aria-hidden="true">
                         <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
@@ -111,19 +111,25 @@
                     </span>
                     <span style="color: #3b82f6;">Quiz</span><span style="color: #fbbf24;">Snap</span>
                 </a>
-                <div class="flex flex-col items-end gap-2">
+                <div class="flex items-center gap-6">
+                    <a href="{{ route('about-system') }}" class="text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors no-underline">
+                        About System
+                    </a>
                     @if(isset($student) && $student)
-                        <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-white bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline shadow-sm">
+                        <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors no-underline">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
                             Dashboard
                         </a>
                     @else
-                        <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-white bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline shadow-sm">
+                        <a href="{{ route('student.account.login.form') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors no-underline">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                            </svg>
                             Student Login
                         </a>
                     @endif
-                    <a href="{{ route('about-system') }}" class="text-xs font-medium text-slate-600 hover:text-blue-600 transition-all no-underline">
-                        About System
-                    </a>
                 </div>
             </div>
         </div>
