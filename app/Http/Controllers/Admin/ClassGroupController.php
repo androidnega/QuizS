@@ -406,11 +406,9 @@ class ClassGroupController extends Controller
                 // Delete student accounts
                 \App\Models\Student::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
                 
-                // Clear cached OTP data (using both formats)
+                // Clear cached OTP data
                 \Illuminate\Support\Facades\Cache::forget('student_otp:' . $removedIndex);
                 \Illuminate\Support\Facades\Cache::forget('student_otp:' . $indexUpper);
-                \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\Student\StudentAccountController::OTP_CACHE_PREFIX . $removedIndex);
-                \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\Student\StudentAccountController::OTP_CACHE_PREFIX . $indexUpper);
             }
             
             $classGroup->students()->delete();
@@ -471,11 +469,9 @@ class ClassGroupController extends Controller
         // Delete student account (phone, name, etc.) - complete reset
         \App\Models\Student::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
         
-        // Clear any cached OTP data for this student (using both formats)
+        // Clear any cached OTP data for this student
         \Illuminate\Support\Facades\Cache::forget('student_otp:' . $indexNumber);
         \Illuminate\Support\Facades\Cache::forget('student_otp:' . $indexUpper);
-        \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\Student\StudentAccountController::OTP_CACHE_PREFIX . $indexNumber);
-        \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\Student\StudentAccountController::OTP_CACHE_PREFIX . $indexUpper);
         
         // Delete class group student record
         $student->delete();
