@@ -14,7 +14,7 @@
         <p class="text-gray-600 mt-1">Weekly course files and notes</p>
     </div>
 
-    <div class="grid grid-cols-3 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         @for($week = 1; $week <= 3; $week++)
         <button type="button" class="week-btn rounded-lg border border-gray-200 bg-gray-50 p-4 text-center hover:bg-gray-100 transition-colors" data-week="{{ $week }}">
             <h3 class="text-base font-semibold text-gray-900">Week {{ $week }}</h3>
