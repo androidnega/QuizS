@@ -105,9 +105,15 @@
     </div>
     @endif
 
-    @if($session->quiz->canShowScore() && !$session->quiz->canShowFullReview() && (!isset($showFullReview) || $showFullReview))
+    @if($session->quiz->canShowScore() && !$session->quiz->canShowFullReview())
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p class="text-sm text-gray-600">Answer review is not shown for this quiz.</p>
+    </div>
+    @endif
+
+    @if($session->quiz->canShowFullReview() && isset($showFullReview) && $showFullReview && $session->answers->isEmpty())
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <p class="text-sm text-gray-600">No answers recorded for this quiz session.</p>
     </div>
     @endif
 </div>
