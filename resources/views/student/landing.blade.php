@@ -22,6 +22,34 @@
         max-width: 72rem;
         text-align: center;
     }
+    .home-input { 
+        outline: none; 
+        border: 2px solid #e2e8f0;
+        background: #fff; 
+        transition: all 0.2s ease;
+    }
+    .home-input:focus { 
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .home-input.token-valid { background-color: #f0fdf4 !important; border-color: #22c55e !important; color: #15803d; }
+    .home-input.token-invalid { background-color: #fef2f2 !important; border-color: #ef4444 !important; color: #dc2626; }
+    .home-input.token-loading { background-color: #fffbeb !important; border-color: #f59e0b !important; color: #d97706; }
+    .btn-home-cta.btn-cta-disabled, .btn-home-cta:disabled { 
+        background: #cbd5e1 !important; 
+        color: #fff !important; 
+        cursor: not-allowed; 
+        pointer-events: none;
+    }
+    .btn-home-cta:not(.btn-cta-disabled):not(:disabled) { 
+        background: #3b82f6; 
+        color: #fff !important; 
+        font-weight: 600;
+        border: none;
+    }
+    .btn-home-cta:not(.btn-cta-disabled):not(:disabled):hover {
+        background: #2563eb;
+    }
     .feature-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -48,6 +76,7 @@
         height: 2.25rem; 
         flex-shrink: 0; 
     }
+    .home-input { -webkit-user-select: text !important; -moz-user-select: text !important; user-select: text !important; }
     @media (max-width: 1023px) {
         .feature-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -61,6 +90,7 @@
             padding: 1rem;
             min-height: auto;
         }
+        .home-form-container { gap: 0.5rem; }
     }
 </style>
 @endpush
@@ -81,9 +111,16 @@
                 <span style="color: #3b82f6;">Quiz</span><span style="color: #fbbf24;">Snap</span>
             </a>
             <div class="flex items-center gap-3">
+                <a href="{{ route('about-system') }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-all no-underline">
+                    About System
+                </a>
                 @if(isset($student) && $student)
-                    <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all no-underline">
+                    <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-white bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline">
                         Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-white bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline">
+                        Student Login
                     </a>
                 @endif
             </div>
@@ -92,7 +129,7 @@
 
     <main class="home-main">
         <div class="home-hero">
-            <div class="mb-10">
+            <div class="mb-8">
                 <h1 class="text-4xl sm:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
                     Welcome to QuizSnap
                 </h1>
@@ -100,6 +137,22 @@
                     A modern platform for secure and efficient online assessments
                 </p>
             </div>
+
+            <form action="{{ route('student.start-quiz') }}" method="post" class="mb-10 max-w-2xl mx-auto" id="start-quiz-form">
+                @csrf
+                <div class="home-form-container flex flex-col sm:flex-row gap-3 mb-2">
+                    <label for="quiz-token" class="sr-only">Quiz token</label>
+                    <input type="text" id="quiz-token" name="link" placeholder="Enter quiz token (e.g. KTdie54-3Sx9)" required autocomplete="off"
+                        class="home-input flex-1 rounded-lg px-5 py-3 text-base min-h-[52px] sm:rounded-r-none">
+                    <button type="submit" id="start-quiz-btn" disabled class="btn-home-cta btn-cta-disabled rounded-lg px-6 py-3 font-semibold text-base min-h-[52px] sm:rounded-l-none">
+                        Start Quiz →
+                    </button>
+                </div>
+                <div id="token-message" class="text-sm min-h-[1.25rem] text-center font-medium"></div>
+                @error('link')
+                    <div class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 font-medium mt-2">{{ $message }}</div>
+                @enderror
+            </form>
 
             <div class="feature-grid">
                 <div class="feature-card" style="background-color: #dbeafe; border-color: #bfdbfe;">
@@ -142,3 +195,124 @@
     </footer>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function() {
+    var DEBOUNCE_MS = 350;
+    var input = document.getElementById('quiz-token');
+    var messageEl = document.getElementById('token-message');
+    var form = document.getElementById('start-quiz-form');
+    var validateUrl = '{{ route("student.validate-token") }}';
+    var csrf = document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').content;
+    var debounceTimer = null;
+    var lastToken = '';
+    var btn = document.getElementById('start-quiz-btn');
+
+    function setButtonState(enable) {
+        if (!btn) return;
+        btn.disabled = !enable;
+        btn.classList.toggle('btn-cta-disabled', !enable);
+    }
+
+    function setState(klass, text) {
+        input.classList.remove('token-valid', 'token-invalid', 'token-loading');
+        if (klass) input.classList.add(klass);
+        if (messageEl) {
+            messageEl.textContent = text || '';
+            messageEl.className = 'text-sm min-h-[1.25rem] text-center font-medium';
+            if (text) {
+                if (klass === 'token-valid') messageEl.classList.add('text-green-600', 'font-medium');
+                else if (klass === 'token-invalid') messageEl.classList.add('text-red-600');
+                else messageEl.classList.add('text-amber-600');
+            }
+        }
+        setButtonState(klass === 'token-valid');
+    }
+
+    function runValidation(tokenValue) {
+        if (!tokenValue || tokenValue.length < 8) {
+            setState('token-invalid', 'Please enter a valid quiz token.');
+            setButtonState(false);
+            return;
+        }
+        setState('token-loading', 'Checking…');
+        setButtonState(false);
+        var fd = new FormData();
+        fd.append('_token', csrf);
+        fd.append('token', tokenValue);
+        fetch(validateUrl, { method: 'POST', body: fd, headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.valid) {
+                    setState('token-valid', 'Valid token, proceed.');
+                } else {
+                    setState('token-invalid', data.message || 'Invalid token.');
+                }
+            })
+            .catch(function() {
+                setState('token-invalid', 'Could not validate. Try again.');
+            });
+    }
+
+    function onTokenInput() {
+        var raw = (input && input.value) ? input.value.trim() : '';
+        if (debounceTimer) clearTimeout(debounceTimer);
+        if (!raw || raw.length < 8) {
+            setState('', '');
+            setButtonState(false);
+            lastToken = '';
+            return;
+        }
+        lastToken = raw;
+        debounceTimer = setTimeout(function() {
+            debounceTimer = null;
+            runValidation(raw);
+        }, DEBOUNCE_MS);
+    }
+
+    if (input) {
+        input.addEventListener('input', onTokenInput);
+        input.addEventListener('paste', function() {
+            setTimeout(function() {
+                var raw = (input && input.value) ? input.value.trim() : '';
+                if (raw.length >= 8) {
+                    if (debounceTimer) clearTimeout(debounceTimer);
+                    debounceTimer = null;
+                    runValidation(raw);
+                } else {
+                    onTokenInput();
+                }
+            }, 50);
+        });
+        input.addEventListener('blur', function() {
+            if (lastToken && !input.value.trim()) {
+                if (debounceTimer) clearTimeout(debounceTimer);
+                debounceTimer = null;
+                setState('', '');
+                setButtonState(false);
+                lastToken = '';
+            }
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!input.classList.contains('token-valid')) {
+                e.preventDefault();
+                var raw = (input && input.value) ? input.value.trim() : '';
+                if (raw.length >= 8) {
+                    if (debounceTimer) clearTimeout(debounceTimer);
+                    debounceTimer = null;
+                    runValidation(raw);
+                } else {
+                    setState('token-invalid', 'Please enter a valid quiz token (e.g. KTdie54-3Sx9).');
+                    setButtonState(false);
+                }
+                return false;
+            }
+        });
+    }
+})();
+</script>
+@endpush

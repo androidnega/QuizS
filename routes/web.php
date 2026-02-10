@@ -49,6 +49,12 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
     return view('student.landing', compact('student'));
 })->name('student.landing');
 
+Route::get('/about-system', function () {
+    $studentId = session('student_id');
+    $student = $studentId ? \App\Models\Student::find($studentId) : null;
+    return view('student.about-system', compact('student'));
+})->name('about-system');
+
 Route::post('/student/validate-token', [TokenValidationController::class, 'validateToken'])->name('student.validate-token');
 Route::post('/student/start-quiz', function (\Illuminate\Http\Request $request) {
     $request->validate(['link' => 'required|string|max:2048']);
