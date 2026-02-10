@@ -10,7 +10,23 @@ class Student extends Model implements Authenticatable
 {
     protected $table = 'students';
 
-    protected $fillable = ['index_number', 'phone_contact', 'student_name'];
+    protected $fillable = ['index_number', 'index_number_hash', 'phone_contact', 'student_name'];
+
+    /**
+     * Normalize index for hashing and comparison (trim + lowercase).
+     */
+    public static function normalizeIndex(?string $index): string
+    {
+        return $index !== null ? strtolower(trim($index)) : '';
+    }
+
+    /**
+     * SHA-256 hash of normalized index number. Use for lookups; store in index_number_hash.
+     */
+    public static function hashIndexNumber(?string $index): string
+    {
+        return hash('sha256', self::normalizeIndex($index));
+    }
 
     public function getAuthIdentifierName(): string
     {

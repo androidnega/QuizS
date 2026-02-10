@@ -340,7 +340,7 @@ class ClassGroupController extends Controller
         $student->save();
         
         // Update phone in Student account if exists
-        $studentAccount = \App\Models\Student::where('index_number', $indexNumber)->first();
+        $studentAccount = \App\Models\Student::where('index_number_hash', \App\Models\Student::hashIndexNumber($indexNumber))->first();
         if ($studentAccount) {
             $studentAccount->phone_contact = $phone;
             $studentAccount->save();
@@ -403,8 +403,8 @@ class ClassGroupController extends Controller
                 // Delete ALL quiz acceptances
                 \App\Models\QuizAcceptance::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
                 
-                // Delete student accounts
-                \App\Models\Student::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
+                // Delete student accounts (lookup by hash)
+                \App\Models\Student::where('index_number_hash', \App\Models\Student::hashIndexNumber($indexUpper))->delete();
                 
                 // Clear cached OTP data
                 \Illuminate\Support\Facades\Cache::forget('student_otp:' . $removedIndex);
@@ -466,8 +466,8 @@ class ClassGroupController extends Controller
         // Delete ALL quiz acceptances for this student (across all quizzes)
         \App\Models\QuizAcceptance::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
         
-        // Delete student account (phone, name, etc.) - complete reset
-        \App\Models\Student::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
+        // Delete student account (phone, name, etc.) - complete reset; lookup by hash
+        \App\Models\Student::where('index_number_hash', \App\Models\Student::hashIndexNumber($indexUpper))->delete();
         
         // Clear any cached OTP data for this student
         \Illuminate\Support\Facades\Cache::forget('student_otp:' . $indexNumber);
@@ -488,8 +488,8 @@ class ClassGroupController extends Controller
             abort(404);
         }
         
-        // Find the Student record by index_number and remove phone
-        $studentAccount = \App\Models\Student::where('index_number', $student->index_number)->first();
+        // Find the Student record by index hash and remove phone
+        $studentAccount = \App\Models\Student::where('index_number_hash', \App\Models\Student::hashIndexNumber($student->index_number))->first();
         if ($studentAccount) {
             $studentAccount->phone_contact = null;
             $studentAccount->save();

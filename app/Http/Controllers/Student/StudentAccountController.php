@@ -59,19 +59,28 @@ class StudentAccountController extends Controller
         }
         
         $request->validate(['index_number' => 'required|string|max:100']);
-        $indexNumber = strtoupper(trim($request->index_number));
+        $inputIndex = trim((string) $request->index_number);
+        $inputNormalized = strtolower($inputIndex);
 
-        $exists = ClassGroupStudent::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexNumber])->exists();
-        if (!$exists) {
+        // Match class_group_students case- and trim-insensitively (admin may have added as "BC/ITN/23/285" or "bc/itn/23/285")
+        $cgStudent = ClassGroupStudent::whereRaw('LOWER(TRIM(index_number)) = ?', [$inputNormalized])->first();
+        if (!$cgStudent) {
             return response()->json([
                 'success' => false,
                 'message' => 'Index number not found. You must be added to a class group first.',
             ], 422);
         }
 
+        // Use a canonical (uppercase) form for display; store hash for lookups
+        $indexNumber = strtoupper(trim($cgStudent->index_number));
+        $indexHash = Student::hashIndexNumber($cgStudent->index_number);
+
         $student = Student::firstOrCreate(
-            ['index_number' => $indexNumber],
-            ['index_number' => $indexNumber]
+            ['index_number_hash' => $indexHash],
+            [
+                'index_number' => $indexNumber,
+                'index_number_hash' => $indexHash,
+            ]
         );
 
         if (!$student->hasPhone()) {
@@ -131,7 +140,7 @@ class StudentAccountController extends Controller
             'index_number' => 'required|string|max:100',
             'phone' => 'required|string|max:20',
         ]);
-        $indexNumber = strtoupper(trim($request->index_number));
+        $inputIndex = trim((string) $request->index_number);
         $phone = preg_replace('/\D/', '', trim($request->phone));
         if (strlen($phone) < 10) {
             return response()->json([
@@ -140,10 +149,11 @@ class StudentAccountController extends Controller
             ], 422);
         }
 
-        $student = Student::where('index_number', $indexNumber)->first();
+        $student = Student::where('index_number_hash', Student::hashIndexNumber($inputIndex))->first();
         if (!$student) {
             return response()->json(['success' => false, 'message' => 'Invalid session. Start again.'], 422);
         }
+        $indexNumber = $student->index_number;
 
         // Check if there's an existing valid OTP for this index
         $existingCached = Cache::get(self::OTP_CACHE_PREFIX . $indexNumber);
@@ -201,9 +211,19 @@ class StudentAccountController extends Controller
             'code' => 'required|string|size:6',
             'student_name' => 'nullable|string|max:255',
         ]);
-        $indexNumber = strtoupper(trim($request->index_number));
+        $inputIndex = trim((string) $request->index_number);
         $code = trim($request->code);
         $name = $request->filled('student_name') ? trim($request->student_name) : null;
+
+        $indexHash = Student::hashIndexNumber($inputIndex);
+        $student = Student::where('index_number_hash', $indexHash)->first();
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid session. Start again.',
+            ], 422);
+        }
+        $indexNumber = $student->index_number;
 
         $cached = Cache::get(self::OTP_CACHE_PREFIX . $indexNumber);
         if (!$cached || ($cached['code'] ?? '') !== $code) {
@@ -211,12 +231,6 @@ class StudentAccountController extends Controller
                 'success' => false,
                 'message' => 'Invalid or expired code. Please request a new one.',
             ], 422);
-        }
-
-        $student = Student::where('index_number', $indexNumber)->first();
-        if (!$student) {
-            Cache::forget(self::OTP_CACHE_PREFIX . $indexNumber);
-            return response()->json(['success' => false, 'message' => 'Invalid session. Start again.'], 422);
         }
 
         // Tie phone to account if this was first-time (phone from cache)
