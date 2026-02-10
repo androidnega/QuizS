@@ -192,22 +192,8 @@
             </div>
         </div>
         <div class="mb-4 pb-4 border-b border-gray-200">
-            <form method="get" action="{{ route('dashboard.quizzes.show', $quiz) }}" id="questions-search-form" class="flex items-end gap-3">
-                <input type="hidden" name="tab" value="overview">
-                <div class="flex-1 max-w-md">
-                    <label for="questions-search" class="block text-sm font-medium text-gray-700 mb-2">Search questions (across all pages)</label>
-                    <input type="text" name="questions_search" id="questions-search" value="{{ $questionsSearch ?? '' }}" placeholder="Type to search by question text, topic, type…" class="input w-full text-sm py-2 px-3" autocomplete="off">
-                </div>
-                <button type="submit" class="btn btn-primary text-sm">Search</button>
-                @if($questionsSearch ?? '')
-                    <a href="{{ route('dashboard.quizzes.show', ['quiz' => $quiz, 'tab' => 'overview']) }}" class="btn btn-secondary text-sm">Clear</a>
-                @endif
-            </form>
-            @if(($questionsSearch ?? '') !== '')
-                <p class="text-sm text-gray-600 mt-2">
-                    Showing {{ $approvedQuestionsFiltered }} of {{ $approvedQuestionsTotal }} questions matching "<strong>{{ $questionsSearch }}</strong>"
-                </p>
-            @endif
+            <label for="questions-search" class="block text-sm font-medium text-gray-700 mb-2">Search questions</label>
+            <input type="text" id="questions-search" placeholder="Type to filter by question text, topic, type…" class="input w-full max-w-md text-sm py-2 px-3" autocomplete="off">
         </div>
         @if($approvedQuestions->isEmpty())
             <div class="text-center py-12">
@@ -228,7 +214,7 @@
                     @endphp
                     <div class="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors approved-question-row" data-search="{{ strtolower(strip_tags($qSearchText)) }}">
                         <div class="flex items-start gap-3 mb-3">
-                            <span class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-semibold text-sm">{{ ($approvedQuestions->currentPage() - 1) * $approvedQuestions->perPage() + $idx + 1 }}</span>
+                            <span class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-semibold text-sm">{{ $idx + 1 }}</span>
                             <div class="flex-1 min-w-0">
                                 <p class="text-gray-900 mb-2">{{ $q->text }}</p>
                                 @if($q->options && is_array($q->options))
@@ -258,9 +244,6 @@
                     </div>
                 @endforeach
             </div>
-            @if($approvedQuestions->hasPages())
-            <div class="mt-6 flex justify-center">{{ $approvedQuestions->appends(['tab' => 'overview'])->links() }}</div>
-            @endif
         @endif
     </section>
 </div>

@@ -155,16 +155,17 @@
                 var index = (row.getAttribute('data-student-index') || '').toUpperCase();
                 row.style.display = !qUpper || index.indexOf(qUpper) !== -1 ? '' : 'none';
             });
-        } else if (id === 'pool-search') {
+        } else if (id === 'questions-search' || id === 'pool-search') {
             var qLower = q.toLowerCase();
-            container.querySelectorAll('.pool-question-row').forEach(function(row) {
+            var selector = id === 'questions-search' ? '.approved-question-row' : '.pool-question-row';
+            container.querySelectorAll(selector).forEach(function(row) {
                 var text = (row.getAttribute('data-search') || '');
                 row.style.display = !qLower || text.indexOf(qLower) !== -1 ? '' : 'none';
             });
         }
     });
     container.addEventListener('keyup', function(e) {
-        if (e.target && (e.target.id === 'sessions-search-index' || e.target.id === 'pool-search')) {
+        if (e.target && (e.target.id === 'sessions-search-index' || e.target.id === 'questions-search' || e.target.id === 'pool-search')) {
             e.target.dispatchEvent(new Event('input', { bubbles: true }));
         }
     });
