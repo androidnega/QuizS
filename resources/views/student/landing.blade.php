@@ -17,10 +17,14 @@
         justify-content: center;
         padding: 4rem 1.25rem;
     }
-    .home-container {
+    .site-container {
         width: 100%;
         max-width: 1200px;
         margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+    .home-container {
+        width: 100%;
         background: white;
         border-radius: 1rem;
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -109,7 +113,7 @@
 @section('content')
 <div class="home-page-wrap min-h-screen flex flex-col font-sans antialiased">
     <header class="shrink-0 bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-        <div class="mx-auto max-w-7xl px-6">
+        <div class="site-container">
             <div class="flex h-20 items-center justify-between">
                 <a href="{{ route('student.landing') }}" class="logo-text no-underline">
                     <span class="logo-mark" aria-hidden="true">
@@ -204,7 +208,7 @@
     </main>
 
     <footer class="shrink-0 border-t border-slate-200 bg-white py-8">
-        <div class="mx-auto max-w-7xl px-6 text-center">
+        <div class="site-container text-center">
             <p class="text-sm text-slate-500">&copy; {{ date('Y') }} QuizSnap. All rights reserved.</p>
         </div>
     </footer>
