@@ -34,9 +34,11 @@
                 @if($scheduledQuizSession->result)
                     <p class="text-xs mt-2" style="color: #e2e8f0;">Score: <span class="text-lg font-bold" style="color: #fbbf24;">{{ number_format($scheduledQuizSession->result->score, 1) }}%</span></p>
                 @endif
+                @if(isset($scheduledQuizSession->id))
                 <a href="{{ route('dashboard.my-quizzes.show', ['session' => $scheduledQuizSession->id]) }}" class="mt-3 inline-flex items-center justify-center w-full rounded-lg py-2 px-4 text-sm font-semibold" style="background-color: #fbbf24; color: #1e3a5f;">
                     View Results →
                 </a>
+                @endif
             @elseif($scheduledQuiz->starts_at && $scheduledQuiz->starts_at->isFuture())
                 <p class="text-xs mt-2" style="color: #e2e8f0;">Starts {{ $scheduledQuiz->starts_at->format('M j, g:i A') }}</p>
                 <div class="mt-2 flex items-center gap-2">

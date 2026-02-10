@@ -17,15 +17,15 @@
             <li class="px-4 py-4 flex flex-wrap items-center justify-between gap-3">
                 <div class="min-w-0">
                     <a href="{{ route('dashboard.my-quizzes.show', ['session' => $s->id]) }}" class="font-medium text-gray-900 truncate block hover:text-primary-600">{{ $s->quiz->title ?? 'Quiz' }}</a>
-                    <p class="text-sm text-gray-500">{{ $s->created_at->format('M j, Y g:i A') }}</p>
+                    <p class="text-sm text-gray-500">{{ $s->created_at ? $s->created_at->format('M j, Y g:i A') : 'Date not available' }}</p>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
-                    @if($s->result)
+                    @if(isset($s->result) && $s->result)
                     <span class="inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700">
-                        {{ number_format($s->result->score, 1) }}%
+                        {{ number_format($s->result->score ?? 0, 1) }}%
                     </span>
                     <span class="text-sm text-gray-500">
-                        {{ $s->result->correct_count }}/{{ $s->result->total_questions }} correct
+                        {{ $s->result->correct_count ?? 0 }}/{{ $s->result->total_questions ?? 0 }} correct
                     </span>
                     <a href="{{ route('dashboard.my-quizzes.show', ['session' => $s->id]) }}" class="text-sm font-medium text-primary-600 hover:underline">Review</a>
                     @else
