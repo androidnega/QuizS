@@ -195,7 +195,7 @@ class QuizManagementController extends Controller
         }
     }
 
-    public function show(Quiz $quiz): View
+    public function show(Request $request, Quiz $quiz): View|Response
     {
         $this->authorize('view', $quiz);
         $quiz->load(['course', 'classGroup', 'questions', 'questionPools']);
@@ -229,7 +229,14 @@ class QuizManagementController extends Controller
             'students_with_violations' => $completedSessions->filter(fn ($s) => $s->violations->count() > 0)->count(),
         ];
 
-        return view('admin.quizzes.show', compact('quiz', 'unapprovedPools', 'unapprovedPoolsTotal', 'approvedQuestions', 'approvedQuestionsTotal', 'sessionsPaginator', 'sessionsStats'));
+        $data = compact('quiz', 'unapprovedPools', 'unapprovedPoolsTotal', 'approvedQuestions', 'approvedQuestionsTotal', 'sessionsPaginator', 'sessionsStats');
+
+        // Live tab/pagination: return only the tab HTML fragment for AJAX requests
+        if ($request->ajax() && in_array($tab = $request->get('tab'), ['overview', 'sessions', 'scores'], true)) {
+            return response()->view('admin.quizzes.partials.' . $tab, $data);
+        }
+
+        return view('admin.quizzes.show', $data);
     }
 
     /**
