@@ -15,22 +15,27 @@
     </div>
 
     @if($session->result && $session->quiz->canShowScore())
-    <div class="rounded-xl border-2 border-primary-200 bg-primary-50 p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-2">Your result</h2>
-        <div class="flex items-center gap-4 flex-wrap">
-            <div class="w-14 h-14 rounded-full flex items-center justify-center
-                @if($session->result->score >= 70) bg-success-100
-                @elseif($session->result->score >= 50) bg-warning-100
-                @else bg-danger-100 @endif">
-                <span class="text-2xl font-bold tabular-nums
-                    @if($session->result->score >= 70) text-success-700
-                    @elseif($session->result->score >= 50) text-warning-700
-                    @else text-danger-700 @endif">{{ round($session->result->score, 0) }}%</span>
+    @php
+        $score = round($session->result->score, 0);
+        $correctCount = $session->result->correct_count;
+        $totalQuestions = $session->result->total_questions;
+        if ($score >= 80) { $scoreBg = 'bg-success-100 border-success-300'; $scoreText = 'text-success-800'; $label = 'Excellent'; }
+        elseif ($score >= 60) { $scoreBg = 'bg-primary-100 border-primary-300'; $scoreText = 'text-primary-800'; $label = 'Good'; }
+        elseif ($score >= 40) { $scoreBg = 'bg-warning-100 border-warning-300'; $scoreText = 'text-warning-800'; $label = 'Average'; }
+        else { $scoreBg = 'bg-danger-100 border-danger-300'; $scoreText = 'text-danger-800'; $label = 'Keep trying'; }
+    @endphp
+    <div class="rounded-xl border-2 border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Your result</h2>
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="rounded-xl border-2 min-w-[6rem] px-6 py-4 flex flex-col items-center justify-center {{ $scoreBg }}">
+                <span class="text-3xl font-bold tabular-nums {{ $scoreText }}">{{ $score }}%</span>
+                <span class="text-xs font-medium {{ $scoreText }} mt-0.5">{{ $label }}</span>
             </div>
-            <div>
-                <p class="font-semibold text-gray-900">{{ $session->result->correct_count }} / {{ $session->result->total_questions }} correct</p>
-                <p class="text-sm text-gray-500">{{ $session->result->total_questions }} questions</p>
+            <div class="rounded-xl border-2 min-w-[6rem] px-6 py-4 flex flex-col items-center justify-center {{ $scoreBg }}">
+                <span class="text-2xl font-bold tabular-nums {{ $scoreText }}">{{ $correctCount }} / {{ $totalQuestions }}</span>
+                <span class="text-xs font-medium {{ $scoreText }} mt-0.5">correct</span>
             </div>
+            <p class="text-sm text-gray-500 self-center">{{ $totalQuestions }} questions</p>
         </div>
     </div>
     @endif

@@ -23,6 +23,28 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('staffPrefix', 'examiner');
             }
         });
+
+        View::composer('layouts.student-dashboard', function ($view): void {
+            $user = auth()->user();
+            $student = null;
+            $greeting = 'Hello';
+            if ($user instanceof \App\Models\Student) {
+                $student = $user;
+            } elseif (session('student_id')) {
+                $student = \App\Models\Student::find(session('student_id'));
+            }
+            if ($student) {
+                $hour = (int) now()->format('G');
+                if ($hour >= 5 && $hour < 12) {
+                    $greeting = 'Good morning';
+                } elseif ($hour >= 12 && $hour < 17) {
+                    $greeting = 'Good afternoon';
+                } else {
+                    $greeting = 'Good evening';
+                }
+            }
+            $view->with(compact('student', 'greeting'));
+        });
     }
 
     /**

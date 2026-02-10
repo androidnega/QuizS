@@ -70,4 +70,29 @@ class Student extends Model implements Authenticatable
             ? $this->student_name
             : $this->index_number;
     }
+
+    /** First name only (first word of student_name, or index_number if no name). */
+    public function getFirstNameAttribute(): string
+    {
+        $name = trim($this->student_name ?? '');
+        if ($name === '') {
+            return $this->index_number;
+        }
+        $first = explode(' ', $name, 2)[0] ?? '';
+        return $first !== '' ? $first : $this->index_number;
+    }
+
+    /** Initials for avatar placeholder (e.g. "Emmanuel Kofi" → "EK"). */
+    public function getInitialsAttribute(): string
+    {
+        $name = trim($this->student_name ?? '');
+        if ($name === '') {
+            return strtoupper(substr($this->index_number, 0, 2));
+        }
+        $words = preg_split('/\s+/', $name, 3);
+        if (count($words) === 1) {
+            return strtoupper(substr($words[0], 0, 2));
+        }
+        return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+    }
 }

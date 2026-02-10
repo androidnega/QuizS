@@ -37,11 +37,15 @@ class StudentDashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $hour = (int) now()->format('G');
+        $greeting = ($hour >= 5 && $hour < 12) ? 'Good morning' : (($hour >= 12 && $hour < 17) ? 'Good afternoon' : 'Good evening');
+
         return view('student.dashboard.index', [
             'student' => $student,
             'classGroups' => $classGroups,
             'sessionsCount' => $sessionsCount,
             'recentSessions' => $recentSessions,
+            'greeting' => $greeting,
         ]);
     }
 
