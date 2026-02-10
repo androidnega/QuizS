@@ -28,11 +28,11 @@ class ProctoringCaptureController extends Controller
         $quizId = session('quiz_id');
         $indexNumber = session('index_number');
         if (!$quizId || !$indexNumber) {
-            return redirect()->route('student.login.form')->with('error', 'Please complete index and course selection first.');
+            return redirect()->route('student.landing')->with('error', 'Session expired. Please enter your quiz link again to continue.');
         }
         $quiz = Quiz::find($quizId);
         if (!$quiz || !$quiz->isActive()) {
-            return redirect()->route('student.landing')->with('error', 'Quiz is not active.');
+            return redirect()->route('student.landing')->with('error', 'This quiz is not active. Please check the link and try again.');
         }
         $ip = $request->ip();
         $studentIndex = strtoupper(trim((string) $indexNumber));
@@ -57,8 +57,6 @@ class ProctoringCaptureController extends Controller
     /**
      * Store face image, bind IP, create session, assign questions.
      */
-    public function store(Request $request): JsonResponse
-    {
         $request->validate([
             'quiz_id' => 'required|exists:quizzes,id',
             'index_number' => 'required|string',
@@ -66,13 +64,12 @@ class ProctoringCaptureController extends Controller
         ]);
         $quiz = Quiz::with('questions')->findOrFail($request->quiz_id);
         if (!$quiz->isActive()) {
-            return response()->json(['success' => false, 'message' => 'Quiz is not active.'], 403);
+            return response()->json(['success' => false, 'message' => 'Quiz is not active. Please try again from the quiz link.'], 403);
         }
         $ip = $request->ip();
         $studentIndex = strtoupper(trim((string) $request->index_number));
-        
+
         if ($this->isIpDeviceRestrictionEnabled()) {
-            // Check if IP was used by a different student for this quiz
             $ipUsedByOther = QuizSession::where('quiz_id', $quiz->id)
                 ->where('ip_address', $ip)
                 ->whereRaw('UPPER(TRIM(student_index)) != ?', [$studentIndex])
@@ -83,7 +80,6 @@ class ProctoringCaptureController extends Controller
             }
         }
 
-        $studentIndex = strtoupper(trim((string) $request->index_number));
         $imagePath = null;
         $preFaceImageHash = null;
         $data = $request->face_image;
@@ -93,39 +89,64 @@ class ProctoringCaptureController extends Controller
             if ($imageBytes !== false) {
                 $preFaceImageHash = hash('sha256', $imageBytes);
             }
-            if (CloudinaryService::isConfigured()) {
-                $imagePath = CloudinaryService::uploadFromDataUrl($data, 'pre_q' . $quiz->id . '_' . $studentIndex);
-            }
-            if ($imagePath === null && $imageBytes !== false) {
-                $imagePath = 'proctoring/pre_' . $quiz->id . '_' . $studentIndex . '_' . time() . '.jpg';
-                Storage::disk('public')->put($imagePath, $imageBytes);
+            try {
+                if (CloudinaryService::isConfigured()) {
+                    $imagePath = CloudinaryService::uploadFromDataUrl($data, 'pre_q' . $quiz->id . '_' . $studentIndex);
+                }
+                if ($imagePath === null && $imageBytes !== false) {
+                    $imagePath = 'proctoring/pre_' . $quiz->id . '_' . $studentIndex . '_' . time() . '.jpg';
+                    Storage::disk('public')->put($imagePath, $imageBytes);
+                }
+            } catch (\Throwable $e) {
+                report($e);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Could not save your photo. Please try again.',
+                ], 500);
             }
         }
 
-        $assignment = $this->assignmentService->assignQuestions($quiz);
+        try {
+            $assignment = $this->assignmentService->assignQuestions($quiz);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Quiz is not ready. Please try again in a moment.',
+            ], 503);
+        }
+
         $assignedIds = $assignment['question_ids'] ?? [];
         if (count($assignedIds) < $quiz->getQuestionsPerStudent()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Not enough approved questions for this quiz. Please approve more questions in the admin panel.',
+                'message' => 'Not enough questions for this quiz. Please contact your instructor.',
             ], 403);
         }
         $correctAnswersSnapshot = $assignment['correct_answers'] ?? [];
         $shuffledOptions = $assignment['shuffled_options'] ?? [];
-        $session = QuizSession::create([
-            'quiz_id' => $quiz->id,
-            'student_index' => $studentIndex,
-            'ip_address' => $ip,
-            'start_time' => null, // timer starts when student clicks Start Quiz on readiness screen
-            'pre_face_image' => $imagePath,
-            'pre_face_image_hash' => $preFaceImageHash,
-            'assigned_question_ids' => $assignedIds,
-            'assigned_correct_answers' => $correctAnswersSnapshot,
-            'shuffled_question_options' => $shuffledOptions,
-            'session_token' => QuizSession::generateToken(),
-        ]);
 
-        // Store quiz session token in HttpOnly session only; no token in response or URL
+        try {
+            $session = QuizSession::create([
+                'quiz_id' => $quiz->id,
+                'student_index' => $studentIndex,
+                'ip_address' => $ip,
+                'start_time' => null,
+                'pre_face_image' => $imagePath,
+                'pre_face_image_hash' => $preFaceImageHash,
+                'assigned_question_ids' => $assignedIds,
+                'assigned_correct_answers' => $correctAnswersSnapshot,
+                'shuffled_question_options' => $shuffledOptions,
+                'session_token' => QuizSession::generateToken(),
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not start your session. Please try again.',
+            ], 500);
+        }
+
         session(['quiz_session_token' => $session->session_token]);
 
         return response()->json([

@@ -23,17 +23,17 @@ class PostQuizCaptureController extends Controller
     {
         $token = session('quiz_session_token');
         if (!$token) {
-            return redirect()->route('student.landing')->with('error', 'No active quiz session.');
+            return redirect()->route('student.quiz.complete')->with('info', 'Your session expired. If you just finished the quiz, check your results below.');
         }
         $session = QuizSession::with('quiz')->where('session_token', $token)->first();
         if (!$session) {
-            return redirect()->route('student.landing')->with('error', 'Session invalid.');
+            return redirect()->route('student.quiz.complete')->with('info', 'Session not found. If you completed the quiz, your results may already be saved.');
         }
         if ($session->ended_at) {
             return redirect()->route('student.quiz.complete');
         }
         if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
-            return redirect()->route('student.landing')->with('error', 'Session invalid.');
+            return redirect()->route('student.quiz.complete')->with('info', 'Session could not be verified. If you completed the quiz, check your results.');
         }
         return view('student.final-photo-capture', [
             'quiz' => $session->quiz,
@@ -66,21 +66,29 @@ class PostQuizCaptureController extends Controller
             if ($imageBytes !== false) {
                 $postFaceImageHash = hash('sha256', $imageBytes);
             }
-            if (CloudinaryService::isConfigured()) {
-                $imagePath = CloudinaryService::uploadFromDataUrl($data, 'post_s' . $session->id);
-            }
-            if ($imagePath === null && $imageBytes !== false) {
-                $localPath = 'proctoring/post_' . $session->id . '_' . time() . '.jpg';
-                if (Storage::disk('public')->put($localPath, $imageBytes)) {
-                    $imagePath = $localPath;
+            try {
+                if (CloudinaryService::isConfigured()) {
+                    $imagePath = CloudinaryService::uploadFromDataUrl($data, 'post_s' . $session->id);
                 }
-            }
-            if ($imagePath !== null) {
-                $session->update([
-                    'post_face_image' => $imagePath,
-                    'post_face_image_hash' => $postFaceImageHash,
-                    'post_face_captured_at' => now(),
-                ]);
+                if ($imagePath === null && $imageBytes !== false) {
+                    $localPath = 'proctoring/post_' . $session->id . '_' . time() . '.jpg';
+                    if (Storage::disk('public')->put($localPath, $imageBytes)) {
+                        $imagePath = $localPath;
+                    }
+                }
+                if ($imagePath !== null) {
+                    $session->update([
+                        'post_face_image' => $imagePath,
+                        'post_face_image_hash' => $postFaceImageHash,
+                        'post_face_captured_at' => now(),
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                report($e);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Could not save your photo. Please try again.',
+                ], 500);
             }
         }
         return response()->json(['success' => true]);

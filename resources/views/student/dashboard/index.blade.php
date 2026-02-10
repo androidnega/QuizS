@@ -54,11 +54,11 @@
             @endif
         </div>
         @else
-        <a href="{{ route('student.landing') }}" class="flex-1 min-w-[180px] rounded-lg border border-gray-300 bg-gray-100 p-4 block">
+        <button type="button" id="enter-token-open-btn" class="flex-1 min-w-[180px] rounded-lg border border-gray-300 bg-gray-100 p-4 block text-left hover:bg-gray-200 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
             <p class="text-xs font-medium text-gray-700">Start a quiz</p>
             <p class="mt-1 text-base font-semibold text-gray-900">Enter token</p>
             <span class="mt-2 inline-block text-xs font-medium text-gray-600">Go →</span>
-        </a>
+        </button>
         @endif
     </div>
 
@@ -131,7 +131,165 @@
     </a>
 </div>
 
+{{-- Enter quiz token modal (stays on dashboard) --}}
+<div id="enter-token-modal" class="fixed inset-0 z-50 hidden" aria-modal="true" aria-labelledby="enter-token-modal-title" role="dialog">
+    <div class="fixed inset-0 bg-black/50" id="enter-token-modal-backdrop"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 pointer-events-auto" id="enter-token-modal-panel">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="enter-token-modal-title" class="text-lg font-semibold text-gray-900">Enter quiz token</h2>
+                <button type="button" id="enter-token-close-btn" class="p-1 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form action="{{ route('student.start-quiz') }}" method="post" id="enter-token-form">
+                @csrf
+                <label for="enter-token-input" class="sr-only">Quiz token</label>
+                <input type="text" id="enter-token-input" name="link" placeholder="e.g. KTdie54-3Sx9" required autocomplete="off"
+                    class="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <p id="enter-token-message" class="mt-2 text-sm min-h-[1.25rem] font-medium"></p>
+                <div class="mt-4 flex gap-2 justify-end">
+                    <button type="button" id="enter-token-cancel-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">Cancel</button>
+                    <button type="submit" id="enter-token-submit-btn" disabled class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600">Start Quiz →</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
+{{-- Enter token modal: open/close and validation --}}
+<script>
+(function() {
+    var modal = document.getElementById('enter-token-modal');
+    var openBtn = document.getElementById('enter-token-open-btn');
+    var closeBtn = document.getElementById('enter-token-close-btn');
+    var cancelBtn = document.getElementById('enter-token-cancel-btn');
+    var backdrop = document.getElementById('enter-token-modal-backdrop');
+    var panel = document.getElementById('enter-token-modal-panel');
+    var input = document.getElementById('enter-token-input');
+    var messageEl = document.getElementById('enter-token-message');
+    var form = document.getElementById('enter-token-form');
+    var submitBtn = document.getElementById('enter-token-submit-btn');
+
+    function openModal() {
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        if (input) {
+            input.value = '';
+            input.classList.remove('border-green-500', 'border-red-500', 'bg-amber-50');
+            input.classList.add('border-gray-300');
+        }
+        if (messageEl) messageEl.textContent = '';
+        if (submitBtn) { submitBtn.disabled = true; }
+        setTimeout(function() { if (input) input.focus(); }, 100);
+    }
+    function closeModal() {
+        if (!modal) return;
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+    if (panel) panel.addEventListener('click', function(e) { e.stopPropagation(); });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) closeModal();
+    });
+
+    var DEBOUNCE_MS = 350;
+    var debounceTimer = null;
+    var lastToken = '';
+    var validateUrl = '{{ route("student.validate-token") }}';
+    var csrf = document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').content;
+
+    function setSubmitState(enable) {
+        if (submitBtn) submitBtn.disabled = !enable;
+    }
+    function setState(klass, text) {
+        if (!input) return;
+        input.classList.remove('border-green-500', 'border-red-500', 'bg-amber-50', 'bg-green-50', 'bg-red-50');
+        if (klass === 'valid') {
+            input.classList.add('border-green-500', 'bg-green-50');
+        } else if (klass === 'invalid') {
+            input.classList.add('border-red-500', 'bg-red-50');
+        } else if (klass === 'loading') {
+            input.classList.add('border-amber-400', 'bg-amber-50');
+        } else {
+            input.classList.add('border-gray-300');
+        }
+        if (messageEl) {
+            messageEl.textContent = text || '';
+            messageEl.className = 'mt-2 text-sm min-h-[1.25rem] font-medium';
+            if (text) {
+                if (klass === 'valid') messageEl.classList.add('text-green-600');
+                else if (klass === 'invalid') messageEl.classList.add('text-red-600');
+                else messageEl.classList.add('text-amber-600');
+            }
+        }
+        setSubmitState(klass === 'valid');
+    }
+    function runValidation(tokenValue) {
+        if (!tokenValue || tokenValue.length < 8) {
+            setState('invalid', 'Please enter a valid quiz token.');
+            return;
+        }
+        setState('loading', 'Checking…');
+        setSubmitState(false);
+        var fd = new FormData();
+        fd.append('_token', csrf);
+        fd.append('token', tokenValue);
+        fetch(validateUrl, { method: 'POST', body: fd, headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.valid) setState('valid', 'Valid token, proceed.');
+                else setState('invalid', data.message || 'Invalid token.');
+            })
+            .catch(function() { setState('invalid', 'Could not validate. Try again.'); });
+    }
+    function onTokenInput() {
+        var raw = (input && input.value) ? input.value.trim() : '';
+        if (debounceTimer) clearTimeout(debounceTimer);
+        if (!raw || raw.length < 8) {
+            setState('', '');
+            setSubmitState(false);
+            lastToken = '';
+            return;
+        }
+        lastToken = raw;
+        debounceTimer = setTimeout(function() { debounceTimer = null; runValidation(raw); }, DEBOUNCE_MS);
+    }
+    if (input) {
+        input.addEventListener('input', onTokenInput);
+        input.addEventListener('paste', function() {
+            setTimeout(function() {
+                var raw = (input && input.value) ? input.value.trim() : '';
+                if (raw.length >= 8) {
+                    if (debounceTimer) clearTimeout(debounceTimer);
+                    debounceTimer = null;
+                    runValidation(raw);
+                } else onTokenInput();
+            }, 50);
+        });
+    }
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!input || !input.classList.contains('border-green-500')) {
+                e.preventDefault();
+                var raw = (input && input.value) ? input.value.trim() : '';
+                if (raw.length >= 8) {
+                    if (debounceTimer) clearTimeout(debounceTimer);
+                    debounceTimer = null;
+                    runValidation(raw);
+                } else setState('invalid', 'Please enter a valid quiz token (e.g. KTdie54-3Sx9).');
+                return false;
+            }
+        });
+    }
+})();
+</script>
 @if(isset($scheduledQuiz) && $scheduledQuiz && $scheduledQuiz->starts_at && $scheduledQuiz->starts_at->isFuture())
 <script>
 (function() {

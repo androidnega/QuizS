@@ -1,6 +1,6 @@
 /**
- * StudentQuiz: Timer, auto-save, tab/window blur detection, optional post-quiz face.
- * ProctoringEnforcer: blur → warning/auto-submit; disable copy-paste, right-click.
+ * StudentQuiz: Timer, auto-save, tab blur (delayed to avoid refresh=false positive), offline-safe saves.
+ * No auto-submit on refresh or network failure. Violation only after 2.5s hidden.
  */
 (function () {
     const c = window.QuizSnapQuiz || {};
@@ -11,12 +11,15 @@
     const finalPhotoUrl = c.finalPhotoUrl;
     const timeSyncUrl = c.timeSyncUrl;
     const csrfToken = c.csrfToken;
+    const storagePrefix = c.storagePrefix || 'quizsnap_quiz';
     let remainingSeconds = c.remainingSeconds || 0;
     let endTimeMs = null;
     let timerInterval = null;
     let timeSyncInterval = null;
-    let blurCount = 0;
     const TIME_SYNC_INTERVAL_MS = 30000;
+    const BLUR_RECORD_DELAY_MS = 2500;
+    let blurRecordTimer = null;
+    let isUnloading = false;
 
     const timerEl = document.getElementById('quiz-timer');
     const timerStickyEl = document.getElementById('quiz-timer-sticky');
@@ -110,30 +113,71 @@
     var savePending = {};
     var saveDebounceTimer = null;
     var SAVE_DEBOUNCE_MS = 1200;
+    var offlineBanner = null;
+
+    function showOfflineBanner(show) {
+        if (!show) {
+            if (offlineBanner) { offlineBanner.remove(); offlineBanner = null; }
+            return;
+        }
+        if (offlineBanner) return;
+        offlineBanner = document.createElement('div');
+        offlineBanner.setAttribute('role', 'status');
+        offlineBanner.className = 'fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 px-3 py-2 rounded-lg bg-amber-100 border border-amber-300 text-amber-800 text-sm font-medium shadow';
+        offlineBanner.textContent = 'Offline. Answers saved locally and will sync when back online.';
+        document.body.appendChild(offlineBanner);
+    }
+
+    function persistPendingToStorage() {
+        var list = [];
+        for (var id in savePending) { list.push(savePending[id]); }
+        if (list.length === 0) return;
+        try {
+            localStorage.setItem(storagePrefix + '_pending', JSON.stringify(list));
+        } catch (e) {}
+    }
 
     function flushSavePending() {
         if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
         saveDebounceTimer = null;
         var list = [];
         for (var id in savePending) { list.push(savePending[id]); }
-        savePending = {};
-        if (list.length === 0) return;
+        if (list.length === 0) {
+            try { localStorage.removeItem(storagePrefix + '_pending'); } catch (e) {}
+            showOfflineBanner(false);
+            return;
+        }
+        var payload = list.map(function (p) { return { question_id: p.questionId, answer: p.answer }; });
         var h = { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' };
+        if (!navigator.onLine) {
+            persistPendingToStorage();
+            showOfflineBanner(true);
+            return;
+        }
+        var done = function () {
+            for (var i = 0; i < list.length; i++) delete savePending[list[i].questionId];
+            try { localStorage.removeItem(storagePrefix + '_pending'); } catch (e) {}
+            showOfflineBanner(false);
+        };
+        var fail = function () {
+            persistPendingToStorage();
+            showOfflineBanner(true);
+        };
         if (saveAnswersBatchUrl && list.length > 0) {
-            fetch(saveAnswersBatchUrl, {
-                method: 'POST',
-                headers: h,
-                body: JSON.stringify({
-                    answers: list.map(function (p) { return { question_id: p.questionId, answer: p.answer }; }),
-                }),
-            }).catch(function () {});
+            fetch(saveAnswersBatchUrl, { method: 'POST', headers: h, body: JSON.stringify({ answers: payload }) })
+                .then(function (r) { if (r.ok) done(); else fail(); })
+                .catch(fail);
         } else {
+            var settled = 0, anyFail = false;
             list.forEach(function (p) {
-                fetch(saveAnswerUrl, {
-                    method: 'POST',
-                    headers: h,
-                    body: JSON.stringify({ question_id: p.questionId, answer: p.answer }),
-                }).catch(function () {});
+                fetch(saveAnswerUrl, { method: 'POST', headers: h, body: JSON.stringify({ question_id: p.questionId, answer: p.answer }) })
+                    .then(function (r) {
+                        if (r.ok) delete savePending[p.questionId];
+                        else anyFail = true;
+                        settled++;
+                        if (settled === list.length) { if (anyFail) fail(); else done(); }
+                    })
+                    .catch(function () { anyFail = true; settled++; if (settled === list.length) fail(); });
             });
         }
     }
@@ -142,6 +186,19 @@
         savePending[questionId] = { questionId: questionId, answer: answer };
         if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
         saveDebounceTimer = setTimeout(flushSavePending, SAVE_DEBOUNCE_MS);
+    }
+
+    function loadPendingFromStorageAndFlush() {
+        try {
+            var raw = localStorage.getItem(storagePrefix + '_pending');
+            if (!raw) return;
+            var list = JSON.parse(raw);
+            if (!Array.isArray(list) || list.length === 0) return;
+            list.forEach(function (p) {
+                if (p && p.questionId != null) savePending[p.questionId] = { questionId: p.questionId, answer: p.answer || '' };
+            });
+            flushSavePending();
+        } catch (e) {}
     }
 
     function showNeutralPageThenRedirect(redirectUrl) {
@@ -168,6 +225,10 @@
         }
     }
 
+    /**
+     * Record proctoring violation. Only auto-submit when the server explicitly returns auto_submitted
+     * (i.e. user broke proctoring rules). Never auto-submit on network failure or when offline.
+     */
     function recordViolation(type, metadata) {
         var body = { type: type };
         if (metadata) body.metadata = typeof metadata === 'string' ? metadata : JSON.stringify(metadata);
@@ -180,22 +241,35 @@
             },
             body: JSON.stringify(body),
         })
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (!r.ok) return null;
+                var ct = r.headers.get('content-type') || '';
+                if (ct.indexOf('application/json') === -1) return null;
+                return r.json();
+            })
             .then(function (data) {
-                if (data && data.auto_submitted && data.redirect) {
+                if (!data) return;
+                if (data.auto_submitted && data.redirect) {
                     showNeutralPageThenRedirect(data.redirect);
-                } else if (data && data.auto_submitted) {
+                } else if (data.auto_submitted) {
                     showNeutralPageThenRedirect(null);
-                } else if (data && data.show_major_warning) {
+                } else if (data.show_major_warning) {
                     var el = document.getElementById('blur-warning');
                     if (el) el.classList.remove('hidden');
                 }
             })
-            .catch(function () {});
+            .catch(function () {
+                /* Network failure or parse error: do not auto-submit. Only server-confirmed rule violations trigger auto-submit. */
+            });
     }
 
-    /** Redirect to final photo page (separate screen). Photo required before submission. */
+    /** Redirect to final photo page (separate screen). Photo required before submission. Do not redirect when offline. */
     function goToFinalPhoto() {
+        if (!navigator.onLine) {
+            showOfflineBanner(true);
+            if (offlineBanner) offlineBanner.textContent = 'Offline. Connect to the internet, then click Finish quiz again.';
+            return;
+        }
         if (window.QuizSnapQuiz) window.QuizSnapQuiz.navigatingToFinalPhoto = true;
         flushSavePending();
         if (finalPhotoUrl) {
@@ -230,15 +304,19 @@
         }
     }
 
+    window.addEventListener('pagehide', function () { isUnloading = true; });
+    window.addEventListener('beforeunload', function (e) {
+        isUnloading = true;
+        if (window.QuizSnapQuiz && window.QuizSnapQuiz.navigatingToFinalPhoto) return;
+        flushSavePending();
+        e.preventDefault();
+        e.returnValue = '';
+    });
+    window.addEventListener('online', loadPendingFromStorageAndFlush);
+    if (document.readyState === 'complete') loadPendingFromStorageAndFlush();
+    else window.addEventListener('load', loadPendingFromStorageAndFlush);
+
     if (quizForm) {
-        window.addEventListener('beforeunload', function (e) {
-            if (window.QuizSnapQuiz && window.QuizSnapQuiz.navigatingToFinalPhoto) {
-                return;
-            }
-            flushSavePending();
-            e.preventDefault();
-            e.returnValue = '';
-        });
         quizForm.querySelectorAll('input[type="radio"], textarea').forEach(function (el) {
             const questionId = el.dataset.questionId || (el.name && el.name.replace('q_', ''));
             const getVal = function () {
@@ -257,21 +335,26 @@
         });
     }
 
-    function onBlurOrTabSwitch() {
-        blurCount++;
+    function recordBlurAfterDelay() {
+        if (isUnloading || remainingSeconds <= 0) return;
         recordViolation('blur');
     }
 
-    window.addEventListener('blur', onBlurOrTabSwitch);
-    window.addEventListener('focus', sendHeartbeat);
-
     document.addEventListener('visibilitychange', function () {
         if (document.hidden) {
-            onBlurOrTabSwitch();
+            if (isUnloading) return;
+            if (blurRecordTimer) clearTimeout(blurRecordTimer);
+            blurRecordTimer = setTimeout(function () {
+                blurRecordTimer = null;
+                if (!document.hidden || isUnloading) return;
+                recordBlurAfterDelay();
+            }, BLUR_RECORD_DELAY_MS);
         } else {
+            if (blurRecordTimer) { clearTimeout(blurRecordTimer); blurRecordTimer = null; }
             sendHeartbeat();
         }
     });
+    window.addEventListener('focus', sendHeartbeat);
 
     function sendHeartbeat() {
         if (!heartbeatUrl) return;

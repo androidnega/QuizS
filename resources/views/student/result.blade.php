@@ -37,7 +37,7 @@
             @if($wasAutoSubmitted)
             {{-- Auto-submitted: well-wrapped score with clear notice --}}
             <div class="mb-6 rounded-2xl border-2 border-warning-300 bg-warning-50 p-6 sm:p-8">
-                <p class="text-center text-sm font-semibold text-warning-800 mb-4">Your quiz was auto-submitted due to tab switching. Your score is below.</p>
+                <p class="text-center text-sm font-semibold text-warning-800 mb-4">Your quiz was auto-submitted due to tab switching. Your score is below😜.</p>
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 max-w-sm mx-auto">
                     <div class="flex flex-col items-center gap-4 text-center">
                         <div class="w-20 h-20 rounded-full flex items-center justify-center

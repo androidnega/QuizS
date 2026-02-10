@@ -7,7 +7,7 @@
 <div class="min-h-[100dvh] min-h-screen px-4 py-6 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
     <div class="max-w-md mx-auto w-full">
         <h1 class="text-lg font-bold text-gray-800 mb-1">Identity capture</h1>
-        <p class="text-gray-600 text-xs mb-4">Align your face in the frame, then capture.</p>
+        <p class="text-gray-600 text-xs mb-4">Camera must be active to continue. Align your face in the frame, then capture.</p>
 
         <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
             <p class="text-xs text-primary-600 font-medium mb-2">Align face in frame</p>

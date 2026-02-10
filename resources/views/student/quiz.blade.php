@@ -4,12 +4,7 @@
 @section('body_class', 'bg-offwhite')
 
 @push('styles')
-<style>
-    .quiz-timer-green { color: #059669; }
-    .quiz-timer-blue { color: #2563eb; }
-    .quiz-timer-red { color: #dc2626; }
-    .quiz-side-num.quiz-side-answered { border-color: #22c55e; background-color: #f0fdf4; color: #15803d; }
-</style>
+<style>.quiz-timer-green{color:#059669}.quiz-timer-blue{color:#2563eb}.quiz-timer-red{color:#dc2626}.quiz-side-num.quiz-side-answered{border-color:#22c55e;background-color:#f0fdf4;color:#15803d}</style>
 @endpush
 
 @section('content')
@@ -153,6 +148,7 @@ window.QuizSnapQuiz = {
     finalPhotoUrl: "{{ route('student.final-photo.capture') }}",
     timeSyncUrl: "{{ route('student.quiz.time-sync') }}",
     csrfToken: "{{ csrf_token() }}",
+    storagePrefix: "quizsnap_answers_{{ $session->id ?? 0 }}",
     durationSeconds: {{ $durationSeconds }},
     remainingSeconds: {{ $remainingSeconds }},
     totalPages: {{ $totalPages }},

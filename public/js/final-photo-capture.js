@@ -53,6 +53,10 @@
         if (captureBtnText) captureBtnText.textContent = text;
     }
 
+    function isVideoReady() {
+        return video && video.videoWidth > 0 && video.videoHeight > 0 && stream;
+    }
+
     function startCamera() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             showError('Camera not supported in this browser.');
@@ -61,19 +65,36 @@
         if (captureBtn) captureBtn.disabled = true;
         setButtonLabel('Starting camera...');
         if (cameraLoading) cameraLoading.style.display = 'flex';
+        if (cameraOffPlaceholder) cameraOffPlaceholder.style.display = 'none';
         hideError();
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } })
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
             .then(function (s) {
                 stream = s;
-                if (video) video.srcObject = s;
-                cameraStarted = true;
-                if (cameraLoading) cameraLoading.style.display = 'none';
-                if (cameraOffPlaceholder) cameraOffPlaceholder.style.display = 'none';
-                if (captureBtn) updateCaptureButtonState();
+                if (video) {
+                    video.srcObject = s;
+                    function onReady() {
+                        cameraStarted = true;
+                        if (cameraLoading) cameraLoading.style.display = 'none';
+                        if (cameraOffPlaceholder) cameraOffPlaceholder.style.display = 'none';
+                        if (captureBtn) updateCaptureButtonState();
+                    }
+                    if (video.videoWidth > 0 && video.videoHeight > 0) {
+                        onReady();
+                    } else {
+                        video.addEventListener('loadedmetadata', onReady, { once: true });
+                        video.addEventListener('loadeddata', onReady, { once: true });
+                        video.addEventListener('canplay', onReady, { once: true });
+                        setTimeout(onReady, 2000);
+                    }
+                } else {
+                    cameraStarted = true;
+                    if (cameraLoading) cameraLoading.style.display = 'none';
+                    if (captureBtn) updateCaptureButtonState();
+                }
             })
             .catch(function (err) {
-                showError('Camera access denied or error: ' + (err.message || 'Unknown'));
-                setButtonLabel('Start camera');
+                showError('Camera access denied or not available. Allow camera access and try again, or use a different browser.');
+                setButtonLabel('Try again');
                 if (captureBtn) captureBtn.disabled = false;
                 if (cameraLoading) cameraLoading.style.display = 'none';
                 if (cameraOffPlaceholder) cameraOffPlaceholder.style.display = 'flex';
@@ -104,8 +125,12 @@
             showError('Please confirm your face is visible in the frame, then capture.');
             return;
         }
-        if (!video || !canvas || !stream) {
-            showError('Camera not ready.');
+        if (!video || !canvas || !stream || video.videoWidth <= 0 || video.videoHeight <= 0) {
+            showError('Camera is still starting. Please wait a moment, then try again.');
+            return;
+        }
+        if (!navigator.onLine) {
+            showError('You\'re offline. Connect to the internet and try again.');
             return;
         }
         setBusy(true);
@@ -126,7 +151,12 @@
             },
             body: JSON.stringify({ face_image: dataUrl }),
         })
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (!r.ok && r.headers.get('content-type') && r.headers.get('content-type').indexOf('json') === -1) {
+                    throw new Error('Server error. Please try again.');
+                }
+                return r.json();
+            })
             .then(function (data) {
                 if (!data.success) {
                     showError(data.message || 'Failed to save photo.');
@@ -149,17 +179,17 @@
             .then(function (data) {
                 if (data && data.redirect) {
                     window.location.href = data.redirect;
-                } else if (data && !data.success && data.message) {
-                    showError(data.message || 'Failed to submit.');
+                } else if (data && data.success) {
+                    window.location.href = config.resultUrl || '/quiz/complete';
+                } else {
+                    showError((data && data.message) ? data.message : 'Could not complete. Please try again.');
                     setButtonLabel('Start camera');
                     setBusy(false);
                     if (cameraOffPlaceholder) cameraOffPlaceholder.style.display = 'flex';
-                } else if (data && data.success) {
-                    window.location.href = config.resultUrl || '/quiz/complete';
                 }
             })
             .catch(function () {
-                showError('Network error. Please try again.');
+                showError(navigator.onLine ? 'Network error. Please try again.' : 'You\'re offline. Connect and try again.');
                 setButtonLabel('Start camera');
                 setBusy(false);
                 if (cameraOffPlaceholder) cameraOffPlaceholder.style.display = 'flex';
