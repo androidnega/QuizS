@@ -2,7 +2,7 @@
  * Final photo capture: same UI/behavior as first proctoring capture.
  * Camera does NOT auto-open: user must tap "Start camera", then tap "Capture photo".
  * No fullscreen auto-launch without controls.
- * Capture -> POST post-face -> POST finalize -> redirect to result.
+ * Capture -> POST post-face -> POST finalize -> redirect to quiz complete (log in to see results).
  */
 (function () {
     const video = document.getElementById('camera-video');
@@ -155,7 +155,7 @@
                     setBusy(false);
                     if (cameraOffPlaceholder) cameraOffPlaceholder.style.display = 'flex';
                 } else if (data && data.success) {
-                    window.location.href = config.resultUrl || '/quiz/result';
+                    window.location.href = config.resultUrl || '/quiz/complete';
                 }
             })
             .catch(function () {

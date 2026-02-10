@@ -10,6 +10,7 @@ use App\Models\Question;
 use App\Models\QuizSession;
 use App\Models\QuizViolation;
 use App\Models\Result;
+use App\Models\Student;
 use App\Services\AiQuestionService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -28,7 +29,7 @@ class StudentQuizController extends Controller
         }
         $session = QuizSession::with('quiz.course')->where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
-            return redirect()->to($this->resultUrlWithToken($token));
+            return redirect()->to($this->quizCompleteUrl());
         }
         if ($session->start_time !== null) {
             return redirect()->route('student.quiz.show');
@@ -52,7 +53,7 @@ class StudentQuizController extends Controller
         }
         $session = QuizSession::with(['quiz', 'quiz.questions'])->where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
-            return redirect()->to($this->resultUrlWithToken($token));
+            return redirect()->to($this->quizCompleteUrl());
         }
         if ($session->start_time === null) {
             $session->update(['start_time' => now()]);
@@ -256,7 +257,7 @@ class StudentQuizController extends Controller
             $response['show_major_warning'] = $majorCount === 1;
         }
         if ($autoSubmitted) {
-            $response['redirect'] = $this->resultUrlWithToken($session->session_token);
+            $response['redirect'] = $this->quizCompleteUrl();
         }
         return response()->json($response);
     }
@@ -293,7 +294,7 @@ class StudentQuizController extends Controller
         }
         $session = QuizSession::with('quiz')->where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
-            return response()->json(['success' => true, 'redirect' => $this->resultUrlWithToken($session->session_token)]);
+            return response()->json(['success' => true, 'redirect' => $this->quizCompleteUrl()]);
         }
         if ($session->ip_address !== $request->ip()) {
             return response()->json(['success' => false], 403);
@@ -307,12 +308,28 @@ class StudentQuizController extends Controller
         $this->finalizeQuiz($session);
         return response()->json([
             'success' => true,
-            'redirect' => $this->resultUrlWithToken($session->session_token),
+            'redirect' => $this->quizCompleteUrl(),
         ]);
     }
 
     /**
-     * Result page URL with session token so student can open in new tab or return later and still see results.
+     * Quiz complete page: "Log in to see your results". Shown after normal submit or auto-submit.
+     */
+    public function quizComplete(): View
+    {
+        return view('student.quiz-complete');
+    }
+
+    /**
+     * URL to show after quiz submit/auto-submit (no marks or review; student must log in).
+     */
+    private function quizCompleteUrl(): string
+    {
+        return route('student.quiz.complete');
+    }
+
+    /**
+     * Result page URL with session token (for logged-in owner only; otherwise redirect to login prompt).
      */
     private function resultUrlWithToken(string $sessionToken): string
     {
@@ -364,8 +381,8 @@ class StudentQuizController extends Controller
     }
 
     /**
-     * Result page. Session token from session or from query (?token=) so link works in new tab or after session expiry.
-     * For wrong answers without explanation_wrong, generates a short AI reason and saves to answer.
+     * Result page. Marks and review are shown only when the visitor is logged in as the student who took the quiz.
+     * Otherwise show "log in to see results". Session token from session or query (?token=).
      */
     public function result(Request $request): View|\Illuminate\Http\RedirectResponse
     {
@@ -377,7 +394,15 @@ class StudentQuizController extends Controller
         if (!$session) {
             return redirect()->route('student.landing')->with('error', 'No quiz result found. Please complete a quiz first.');
         }
-        // Persist token in session when loaded from URL so reload and in-page links work without query
+
+        $studentId = session('student_id');
+        $student = $studentId ? Student::find($studentId) : null;
+        $isOwner = $student && strtoupper(trim((string) $student->index_number)) === strtoupper(trim((string) $session->student_index));
+
+        if (!$isOwner) {
+            return view('student.quiz-complete');
+        }
+
         if (!session('quiz_session_token')) {
             session(['quiz_session_token' => $token]);
         }

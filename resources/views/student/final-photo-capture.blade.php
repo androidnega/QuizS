@@ -74,7 +74,7 @@
 window.QuizSnapFinalPhoto = {
     postFaceUrl: "{{ route('student.post-face.store') }}",
     finalizeUrl: "{{ route('student.quiz.finalize') }}",
-    resultUrl: "{{ route('student.result') }}",
+    resultUrl: "{{ route('student.quiz.complete') }}",
     csrfToken: "{{ csrf_token() }}"
 };
 </script>

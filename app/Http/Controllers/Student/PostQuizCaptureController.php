@@ -29,7 +29,7 @@ class PostQuizCaptureController extends Controller
             return redirect()->route('student.landing')->with('error', 'Session invalid.');
         }
         if ($session->ended_at) {
-            return redirect()->to(route('student.result') . '?token=' . urlencode($session->session_token));
+            return redirect()->route('student.quiz.complete');
         }
         if ($session->ip_address !== $request->ip()) {
             return redirect()->route('student.landing')->with('error', 'Session invalid.');

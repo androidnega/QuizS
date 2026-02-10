@@ -7,7 +7,7 @@
 <div class="space-y-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-900">My quizzes</h1>
-        <p class="text-gray-600 mt-1">Past quizzes from the last 21 days. Open one to see questions and what you got right or wrong.</p>
+        <p class="text-gray-600 mt-1">All your past quizzes. Marks are kept forever; question review is available for 21 days after each quiz.</p>
     </div>
 
     @if($sessions->isNotEmpty())

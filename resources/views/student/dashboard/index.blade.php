@@ -7,7 +7,7 @@
 <div class="space-y-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-900">Welcome, {{ $student->display_name }}</h1>
-        <p class="text-gray-600 mt-1">Your quiz history from the last 21 days. Open a quiz to see questions and what you got right or wrong.</p>
+        <p class="text-gray-600 mt-1">Your quiz history. Marks are kept forever; open a quiz to see your score and, for the last 21 days, questions and what you got right or wrong.</p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

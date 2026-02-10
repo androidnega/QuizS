@@ -84,6 +84,7 @@ Route::post('/quiz/save-answers', [StudentQuizController::class, 'saveAnswersBat
 Route::post('/quiz/violation', [StudentQuizController::class, 'recordViolation'])->name('student.quiz.violation');
 Route::post('/quiz/heartbeat', [StudentQuizController::class, 'heartbeat'])->name('student.quiz.heartbeat');
 Route::post('/quiz/finalize', [StudentQuizController::class, 'finalize'])->name('student.quiz.finalize');
+Route::get('/quiz/complete', [StudentQuizController::class, 'quizComplete'])->name('student.quiz.complete');
 Route::get('/quiz/result', [StudentQuizController::class, 'result'])->name('student.result');
 
 Route::get('/quiz/final-photo', [PostQuizCaptureController::class, 'show'])->name('student.final-photo.capture')->middleware('rules.accepted');

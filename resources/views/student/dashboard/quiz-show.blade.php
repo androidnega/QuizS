@@ -11,7 +11,7 @@
 
     <div>
         <h1 class="text-2xl font-bold text-gray-900">{{ $session->quiz->title ?? 'Quiz' }}</h1>
-        <p class="text-gray-600 mt-1">Taken {{ $session->created_at->format('M j, Y g:i A') }} · Available for 21 days</p>
+        <p class="text-gray-600 mt-1">Taken {{ $session->created_at->format('M j, Y g:i A') }}@if(isset($showFullReview) && $showFullReview) · Question review available for 21 days@endif</p>
     </div>
 
     @if($session->result && $session->quiz->canShowScore())
@@ -35,10 +35,10 @@
     </div>
     @endif
 
-    @if($session->quiz->canShowFullReview() && $session->answers->isNotEmpty())
+    @if(isset($showFullReview) && $showFullReview && $session->quiz->canShowFullReview() && $session->answers->isNotEmpty())
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8">
         <h2 class="text-sm font-semibold text-gray-900 mb-3">Questions & answers</h2>
-        <p class="text-xs text-gray-500 mb-4">What you answered and the correct answers.</p>
+        <p class="text-xs text-gray-500 mb-4">What you answered and the correct answers. This review is available for 21 days.</p>
         <div class="space-y-4">
             @foreach($session->answers as $idx => $answer)
                 @if($answer->question)
@@ -75,6 +75,10 @@
                 @endif
             @endforeach
         </div>
+    </div>
+    @elseif(isset($showFullReview) && !$showFullReview)
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <p class="text-sm text-gray-600">Detailed review (questions and answers) is no longer available. It is kept for 21 days to keep the system clean. Your score above is kept forever.</p>
     </div>
     @elseif($session->quiz->canShowScore() && !$session->quiz->canShowFullReview())
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">

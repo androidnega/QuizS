@@ -30,10 +30,8 @@ class StudentDashboardController extends Controller
         $student->load(['classGroupStudents.classGroup']);
         $classGroups = $student->classGroupStudents->map(fn ($s) => $s->classGroup)->filter()->unique('id')->values();
 
-        $since = now()->subDays(21);
-        $sessionsCount = QuizSession::where('student_index', $student->index_number)->where('created_at', '>=', $since)->count();
+        $sessionsCount = QuizSession::where('student_index', $student->index_number)->count();
         $recentSessions = QuizSession::where('student_index', $student->index_number)
-            ->where('created_at', '>=', $since)
             ->with(['quiz', 'result'])
             ->orderByDesc('created_at')
             ->limit(5)
@@ -48,14 +46,12 @@ class StudentDashboardController extends Controller
     }
 
     /**
-     * List quizzes (sessions) this student has taken (last 21 days).
+     * List all quizzes (sessions) this student has taken. Marks are kept forever.
      */
     public function quizzes(): View
     {
         $student = $this->student();
-        $since = now()->subDays(21);
         $sessions = QuizSession::where('student_index', $student->index_number)
-            ->where('created_at', '>=', $since)
             ->with(['quiz', 'result'])
             ->orderByDesc('created_at')
             ->paginate(15);
@@ -86,15 +82,13 @@ class StudentDashboardController extends Controller
     }
 
     /**
-     * Show one past quiz: questions, your answers, right/wrong (last 21 days only).
+     * Show one past quiz. Marks (score) always shown. Full Q&A review only for last 21 days.
      */
     public function showQuiz(Request $request, $session): View|RedirectResponse
     {
         $student = $this->student();
-        $since = now()->subDays(21);
         $quizSession = QuizSession::where('id', $session)
             ->where('student_index', $student->index_number)
-            ->where('created_at', '>=', $since)
             ->with(['quiz', 'result', 'answers.question'])
             ->firstOrFail();
 
@@ -102,9 +96,13 @@ class StudentDashboardController extends Controller
             return redirect()->route('dashboard.my-quizzes')->with('info', 'Results are not available for this quiz.');
         }
 
+        $reviewAvailableWithinDays = 21;
+        $showFullReview = $quizSession->created_at->gte(now()->subDays($reviewAvailableWithinDays));
+
         return view('student.dashboard.quiz-show', [
             'student' => $student,
             'session' => $quizSession,
+            'showFullReview' => $showFullReview,
         ]);
     }
 }
