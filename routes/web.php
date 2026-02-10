@@ -33,7 +33,9 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
             return redirect()->route('student.link-expired');
         }
     }
-    return view('student.landing');
+    $studentId = session('student_id');
+    $student = $studentId ? \App\Models\Student::find($studentId) : null;
+    return view('student.landing', compact('student'));
 })->name('student.landing');
 
 Route::post('/student/validate-token', [TokenValidationController::class, 'validateToken'])->name('student.validate-token');
