@@ -4,6 +4,7 @@ use App\Http\Controllers\Student\QuizRulesController;
 use App\Http\Controllers\Student\StudentLoginController;
 use App\Http\Controllers\Student\TokenValidationController;
 use App\Models\Quiz;
+use App\Models\QuizSession;
 use App\Http\Controllers\Student\ProctoringCaptureController;
 use App\Http\Controllers\Student\StudentQuizController;
 use App\Http\Controllers\Student\PostQuizCaptureController;
@@ -44,7 +45,40 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
     
     $studentId = session('student_id');
     $student = $studentId ? \App\Models\Student::find($studentId) : null;
-    return view('student.landing', compact('student'));
+    
+    // Check for active quizzes if student is logged in
+    $activeQuiz = null;
+    if ($student) {
+        $student->load(['classGroupStudents.classGroup']);
+        $classGroups = $student->classGroupStudents->map(fn ($s) => $s->classGroup)->filter()->unique('id')->values();
+        $classGroupIds = $classGroups->pluck('id')->filter()->values()->all();
+        
+        if (!empty($classGroupIds)) {
+            $candidates = Quiz::whereIn('class_group_id', $classGroupIds)
+                ->where('is_published', true)
+                ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNull('ends_at')->orWhere('ends_at', '>', now());
+                })
+                ->with('course')
+                ->get();
+            $ready = $candidates->filter(fn (Quiz $q) => $q->hasEnoughApprovedQuestions() && $q->isActive());
+            $activeQuiz = $ready->first();
+            
+            // Only show if student hasn't completed it yet
+            if ($activeQuiz) {
+                $hasCompleted = QuizSession::where('quiz_id', $activeQuiz->id)
+                    ->where('student_index', $student->index_number)
+                    ->whereNotNull('ended_at')
+                    ->exists();
+                if ($hasCompleted) {
+                    $activeQuiz = null;
+                }
+            }
+        }
+    }
+    
+    return view('student.landing', compact('student', 'activeQuiz'));
 })->name('student.landing');
 
 Route::post('/student/validate-token', [TokenValidationController::class, 'validateToken'])->name('student.validate-token');
