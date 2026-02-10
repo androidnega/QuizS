@@ -21,6 +21,17 @@ class StudentLoginController extends Controller
      */
     public function showLoginForm(Request $request): View|RedirectResponse
     {
+        // Prevent login if already authenticated
+        if (session('student_id')) {
+            return redirect()->route('dashboard')
+                ->with('info', 'You are already logged in. Please logout first to login with a different account.');
+        }
+        
+        if (session('admin_authenticated', false)) {
+            return redirect()->route('dashboard')
+                ->with('info', 'You are already logged in as staff. Please logout first to take a quiz.');
+        }
+        
         $quizId = session('quiz_id_for_login');
         if (!$quizId) {
             return redirect()->route('student.landing')
@@ -38,6 +49,21 @@ class StudentLoginController extends Controller
      */
     public function verifyIndex(Request $request): JsonResponse
     {
+        // Prevent login if already authenticated
+        if (session('student_id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are already logged in. Please logout first to login with a different account.',
+            ], 422);
+        }
+        
+        if (session('admin_authenticated', false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are already logged in as staff. Please logout first to take a quiz.',
+            ], 422);
+        }
+        
         $request->validate(['index_number' => 'required|string']);
         $indexNumber = strtoupper(trim($request->index_number));
         $quizId = session('quiz_id_for_login');

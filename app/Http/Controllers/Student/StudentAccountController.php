@@ -22,9 +22,18 @@ class StudentAccountController extends Controller
      */
     public function showLoginForm(): View|RedirectResponse
     {
+        // Prevent login if student is already logged in
         if (session('student_id')) {
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard')
+                ->with('info', 'You are already logged in.');
         }
+        
+        // Prevent login if admin/examiner is already logged in
+        if (session('admin_authenticated', false)) {
+            return redirect()->route('dashboard')
+                ->with('info', 'You are already logged in as staff. Please logout first to login as a student.');
+        }
+        
         return view('student.account-login');
     }
 
@@ -34,6 +43,21 @@ class StudentAccountController extends Controller
      */
     public function verifyIndex(Request $request): JsonResponse
     {
+        // Prevent login if already authenticated
+        if (session('student_id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are already logged in. Please logout first to login with a different account.',
+            ], 422);
+        }
+        
+        if (session('admin_authenticated', false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are already logged in as staff. Please logout first to login as a student.',
+            ], 422);
+        }
+        
         $request->validate(['index_number' => 'required|string|max:100']);
         $indexNumber = strtoupper(trim($request->index_number));
 
@@ -157,6 +181,21 @@ class StudentAccountController extends Controller
      */
     public function verifyOtp(Request $request): JsonResponse
     {
+        // Prevent login if already authenticated
+        if (session('student_id')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are already logged in. Please logout first to login with a different account.',
+            ], 422);
+        }
+        
+        if (session('admin_authenticated', false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are already logged in as staff. Please logout first to login as a student.',
+            ], 422);
+        }
+        
         $request->validate([
             'index_number' => 'required|string|max:100',
             'code' => 'required|string|size:6',

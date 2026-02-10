@@ -33,6 +33,15 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
             return redirect()->route('student.link-expired');
         }
     }
+    
+    // If lecturer/examiner is logged in, redirect to dashboard
+    if (session('admin_authenticated', false) && session('admin_user_id')) {
+        $user = \App\Models\User::find(session('admin_user_id'));
+        if ($user && $user->isStaff()) {
+            return redirect()->route('dashboard');
+        }
+    }
+    
     $studentId = session('student_id');
     $student = $studentId ? \App\Models\Student::find($studentId) : null;
     return view('student.landing', compact('student'));

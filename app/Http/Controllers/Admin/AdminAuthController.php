@@ -16,11 +16,19 @@ class AdminAuthController extends Controller
      */
     public function showLoginForm(): View|RedirectResponse
     {
+        // Prevent login if already authenticated as admin/examiner
         if (session('admin_authenticated', false)) {
             $role = session('admin_role');
             $dashboard = route('dashboard');
             return redirect()->intended($dashboard);
         }
+        
+        // Prevent login if student is already logged in
+        if (session('student_id')) {
+            return redirect()->route('dashboard')
+                ->with('info', 'You are already logged in as a student. Please logout first to login as staff.');
+        }
+        
         return view('admin.login');
     }
 
@@ -29,6 +37,18 @@ class AdminAuthController extends Controller
      */
     public function login(Request $request): RedirectResponse
     {
+        // Prevent login if already authenticated as admin/examiner
+        if (session('admin_authenticated', false)) {
+            return redirect()->route('dashboard')
+                ->with('info', 'You are already logged in.');
+        }
+        
+        // Prevent login if student is already logged in
+        if (session('student_id')) {
+            return redirect()->route('dashboard')
+                ->with('info', 'You are already logged in as a student. Please logout first to login as staff.');
+        }
+        
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
