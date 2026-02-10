@@ -13,12 +13,14 @@
                 </svg>
                 <span class="text-gray-900 font-medium">User management</span>
             </div>
+            @if(isset($isSuperAdmin) && $isSuperAdmin)
             <button type="button" onclick="openCreateUserModal()" class="btn btn-primary">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 Add user
             </button>
+            @endif
         </div>
 
         <div class="card overflow-hidden">
@@ -107,17 +109,15 @@
             <div id="modal_course_field">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Assigned courses (for Examiner)</label>
                 <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">
-                    @php
-                        $courses = \App\Models\Course::where('is_archived', false)->orderBy('name')->get();
-                    @endphp
-                    @foreach($courses as $c)
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" name="course_ids[]" value="{{ $c->id }}" {{ in_array($c->id, old('course_ids', [])) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-                            <span class="text-sm">{{ $c->code ?? $c->name }} — {{ $c->name }}</span>
-                        </label>
-                    @endforeach
-                    @if($courses->isEmpty())
-                        <p class="text-sm text-gray-500">No courses yet. Create courses first.</p>
+                    @if(isset($courses) && $courses->isNotEmpty())
+                        @foreach($courses as $c)
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" name="course_ids[]" value="{{ $c->id }}" {{ in_array($c->id, old('course_ids', [])) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                <span class="text-sm">{{ $c->code ?? $c->name }} — {{ $c->name }}</span>
+                            </label>
+                        @endforeach
+                    @else
+                        <p class="text-sm text-gray-500">No courses available. {{ isset($isSuperAdmin) && $isSuperAdmin ? 'Create courses first.' : 'Contact the administrator to assign courses.' }}</p>
                     @endif
                 </div>
                 @error('course_ids')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
