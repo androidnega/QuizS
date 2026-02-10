@@ -54,26 +54,20 @@
                     </span>
                     <span style="color: #3b82f6;">Quiz</span><span style="color: #fbbf24;">Snap</span>
                 </a>
-                <div class="flex items-center gap-6">
-                    <a href="{{ route('about-system') }}" class="text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors no-underline">
+                <nav class="flex items-center gap-6">
+                    <a href="{{ route('about-system') }}" class="text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors no-underline" style="text-decoration: none;">
                         About System
                     </a>
                     @if(isset($student) && $student)
-                        <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors no-underline">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
+                        <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-white bg-blue-600 px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors" style="display: inline-block; text-decoration: none;">
                             Dashboard
                         </a>
                     @else
-                        <a href="{{ route('student.account.login.form') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors no-underline">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                            </svg>
+                        <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-white bg-blue-600 px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors" style="display: inline-block; text-decoration: none;">
                             Student Login
                         </a>
                     @endif
-                </div>
+                </nav>
             </div>
         </div>
     </header>
