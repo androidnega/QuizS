@@ -85,22 +85,40 @@ class QuizRulesController extends Controller
                         ->exists();
                     
                     if ($inClassGroup) {
-                        // Check IP hasn't been used for this quiz
-                        $ip = $request->ip();
-                        if (QuizSession::where('quiz_id', $quiz->id)->where('ip_address', $ip)->exists()) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => 'This IP address has already been used for this quiz. Access denied.',
-                            ], 422);
+                        // Check if this student_index has already completed this quiz
+                        // Allow retake if student was removed and re-added (no active session)
+                        $existingSession = QuizSession::where('quiz_id', $quiz->id)
+                            ->whereRaw('UPPER(TRIM(student_index)) = ?', [strtoupper($student->index_number)])
+                            ->whereNotNull('ended_at')
+                            ->exists();
+                        
+                        if ($existingSession) {
+                            // Check IP hasn't been used for this quiz by a different student
+                            $ip = $request->ip();
+                            $ipUsedByOther = QuizSession::where('quiz_id', $quiz->id)
+                                ->where('ip_address', $ip)
+                                ->whereRaw('UPPER(TRIM(student_index)) != ?', [strtoupper($student->index_number)])
+                                ->exists();
+                            
+                            if ($ipUsedByOther) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'This IP address has already been used for this quiz by another student. Access denied.',
+                                ], 422);
+                            }
                         }
                         
-                        // Record acceptance
-                        QuizAcceptance::create([
-                            'quiz_id' => $quiz->id,
-                            'index_number' => $student->index_number,
-                            'ip_address' => $ip,
-                            'accepted_at' => now(),
-                        ]);
+                        // Record acceptance (will overwrite if exists)
+                        QuizAcceptance::updateOrCreate(
+                            [
+                                'quiz_id' => $quiz->id,
+                                'index_number' => $student->index_number,
+                            ],
+                            [
+                                'ip_address' => $request->ip(),
+                                'accepted_at' => now(),
+                            ]
+                        );
                         
                         // Set quiz session data and redirect to proctoring
                         session([

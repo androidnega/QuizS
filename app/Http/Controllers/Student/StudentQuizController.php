@@ -354,23 +354,42 @@ class StudentQuizController extends Controller
         $correctAnswersSnapshot = $session->assigned_correct_answers ?? [];
         $total = count($lockedIds);
         $correct = 0;
+        
         if ($total > 0) {
             $answersByQuestion = $session->answers()->whereIn('question_id', $lockedIds)->pluck('student_answer', 'question_id')->toArray();
+            
             foreach ($lockedIds as $qid) {
+                // Try both integer and string keys
                 $correctAnswer = $correctAnswersSnapshot[$qid] ?? $correctAnswersSnapshot[(string) $qid] ?? null;
+                
                 if ($correctAnswer === null) {
+                    // Skip if no correct answer found for this question
                     continue;
                 }
-                $studentAnswer = $answersByQuestion[$qid] ?? '';
-                if (trim((string) $studentAnswer) === trim((string) $correctAnswer)) {
+                
+                $studentAnswer = $answersByQuestion[$qid] ?? $answersByQuestion[(string) $qid] ?? '';
+                
+                // Normalize both answers: trim whitespace, convert to string, uppercase for comparison
+                $normalizedStudent = strtoupper(trim((string) $studentAnswer));
+                $normalizedCorrect = strtoupper(trim((string) $correctAnswer));
+                
+                // Only count as correct if they match exactly after normalization
+                if ($normalizedStudent === $normalizedCorrect && $normalizedStudent !== '') {
                     $correct++;
                 }
             }
         }
+        
         $violationsCount = $session->violations()->count();
+        
+        // Ensure score doesn't exceed 100% and correct count doesn't exceed total
+        $correct = min($correct, $total);
+        $score = $total > 0 ? round(100 * $correct / $total, 2) : 0;
+        $score = min($score, 100.00); // Cap at 100%
+        
         Result::create([
             'quiz_session_id' => $session->id,
-            'score' => $total > 0 ? round(100 * $correct / $total, 2) : 0,
+            'score' => $score,
             'total_questions' => $total,
             'correct_count' => $correct,
             'violations_count' => $violationsCount,

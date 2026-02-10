@@ -230,14 +230,54 @@ class ClassGroupController extends Controller
             'index_number' => 'required|string|max:64',
             'student_name' => 'nullable|string|max:255',
         ]);
+        
+        $indexNumber = trim($request->index_number);
+        $providedName = $request->filled('student_name') ? trim($request->student_name) : null;
+        
+        // Try to get name from quiz results if not provided
+        $nameFromResults = null;
+        if (!$providedName) {
+            // Check if this student has any quiz results with their name
+            $studentAccount = \App\Models\Student::where('index_number', $indexNumber)->first();
+            if ($studentAccount && $studentAccount->student_name) {
+                $nameFromResults = $studentAccount->student_name;
+            } else {
+                // Check quiz sessions for this index across all quizzes
+                $session = \App\Models\QuizSession::whereRaw('UPPER(TRIM(student_index)) = ?', [strtoupper($indexNumber)])
+                    ->whereHas('quiz', function($q) use ($classGroup) {
+                        $q->where('class_group_id', $classGroup->id);
+                    })
+                    ->with('quiz')
+                    ->orderByDesc('created_at')
+                    ->first();
+                
+                if ($session) {
+                    // Try to get name from student account linked to this session
+                    $account = \App\Models\Student::where('index_number', $indexNumber)->first();
+                    if ($account && $account->student_name) {
+                        $nameFromResults = $account->student_name;
+                    }
+                }
+            }
+        }
+        
+        // Use provided name, or name from results, or null
+        $finalName = $providedName ?? $nameFromResults;
+        
         ClassGroupStudent::updateOrCreate(
             [
                 'class_group_id' => $classGroup->id,
-                'index_number' => trim($request->index_number),
+                'index_number' => $indexNumber,
             ],
-            ['student_name' => $request->filled('student_name') ? trim($request->student_name) : null]
+            ['student_name' => $finalName]
         );
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index added.');
+        
+        $message = 'Student index added.';
+        if ($nameFromResults && !$providedName) {
+            $message .= ' Name retrieved from previous quiz results.';
+        }
+        
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', $message);
     }
 
     /** Show details page for one student in the class group. */
@@ -420,8 +460,26 @@ class ClassGroupController extends Controller
         if ($student->class_group_id !== $classGroup->id) {
             abort(404);
         }
+        
+        $indexNumber = $student->index_number;
+        
+        // Delete quiz acceptances for this student in this class group's quizzes
+        $quizIds = $classGroup->quizzes()->pluck('id');
+        if ($quizIds->isNotEmpty()) {
+            \App\Models\QuizAcceptance::whereIn('quiz_id', $quizIds)
+                ->whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper($indexNumber)])
+                ->delete();
+        }
+        
+        // Delete quiz sessions for this student in this class group's quizzes (allow retake)
+        if ($quizIds->isNotEmpty()) {
+            \App\Models\QuizSession::whereIn('quiz_id', $quizIds)
+                ->whereRaw('UPPER(TRIM(student_index)) = ?', [strtoupper($indexNumber)])
+                ->delete();
+        }
+        
         $student->delete();
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index removed.');
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index removed. They can retake quizzes when added back.');
     }
 
     /** Remove phone number from a student. */

@@ -34,8 +34,16 @@ class ProctoringCaptureController extends Controller
             return redirect()->route('student.landing')->with('error', 'Quiz is not active.');
         }
         $ip = $request->ip();
-        if (QuizSession::where('quiz_id', $quiz->id)->where('ip_address', $ip)->exists()) {
-            return redirect()->route('student.landing')->with('error', 'This IP has already been used for this quiz.');
+        $studentIndex = strtoupper(trim((string) $indexNumber));
+        
+        // Check if IP was used by a different student for this quiz
+        $ipUsedByOther = QuizSession::where('quiz_id', $quiz->id)
+            ->where('ip_address', $ip)
+            ->whereRaw('UPPER(TRIM(student_index)) != ?', [$studentIndex])
+            ->exists();
+        
+        if ($ipUsedByOther) {
+            return redirect()->route('student.landing')->with('error', 'This IP has already been used for this quiz by another student.');
         }
         return view('student.proctoring-capture', [
             'quiz' => $quiz,
@@ -58,8 +66,16 @@ class ProctoringCaptureController extends Controller
             return response()->json(['success' => false, 'message' => 'Quiz is not active.'], 403);
         }
         $ip = $request->ip();
-        if (QuizSession::where('quiz_id', $quiz->id)->where('ip_address', $ip)->exists()) {
-            return response()->json(['success' => false, 'message' => 'IP already used for this quiz.'], 403);
+        $studentIndex = strtoupper(trim((string) $request->index_number));
+        
+        // Check if IP was used by a different student for this quiz
+        $ipUsedByOther = QuizSession::where('quiz_id', $quiz->id)
+            ->where('ip_address', $ip)
+            ->whereRaw('UPPER(TRIM(student_index)) != ?', [$studentIndex])
+            ->exists();
+        
+        if ($ipUsedByOther) {
+            return response()->json(['success' => false, 'message' => 'IP already used for this quiz by another student.'], 403);
         }
 
         $studentIndex = strtoupper(trim((string) $request->index_number));
