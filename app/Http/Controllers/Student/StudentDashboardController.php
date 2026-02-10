@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Quiz;
 use App\Models\QuizSession;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +38,21 @@ class StudentDashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $classGroupIds = $classGroups->pluck('id')->filter()->values()->all();
+        $scheduledQuiz = null;
+        if (!empty($classGroupIds)) {
+            $candidates = Quiz::whereIn('class_group_id', $classGroupIds)
+                ->where('is_published', true)
+                ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNull('ends_at')->orWhere('ends_at', '>', now());
+                })
+                ->with('course')
+                ->get();
+            $ready = $candidates->filter(fn (Quiz $q) => $q->hasEnoughApprovedQuestions() && (($q->starts_at && $q->starts_at->isFuture()) || $q->isActive()));
+            $scheduledQuiz = $ready->sortBy(fn (Quiz $q) => $q->starts_at && $q->starts_at->isFuture() ? $q->starts_at->timestamp : PHP_INT_MAX)->first();
+        }
+
         $hour = (int) now()->format('G');
         $greeting = ($hour >= 5 && $hour < 12) ? 'Good morning' : (($hour >= 12 && $hour < 17) ? 'Good afternoon' : 'Good evening');
 
@@ -45,6 +61,7 @@ class StudentDashboardController extends Controller
             'classGroups' => $classGroups,
             'sessionsCount' => $sessionsCount,
             'recentSessions' => $recentSessions,
+            'scheduledQuiz' => $scheduledQuiz,
             'greeting' => $greeting,
         ]);
     }
