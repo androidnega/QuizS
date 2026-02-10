@@ -225,7 +225,8 @@ class UserManagementController extends Controller
     }
 
     /**
-     * Verify admin password and show/reset examiner password.
+     * Verify admin password and generate/reset examiner password.
+     * Generates a temporary password that can be viewed once.
      */
     public function viewPassword(Request $request, User $user): RedirectResponse|View
     {
@@ -239,6 +240,7 @@ class UserManagementController extends Controller
         
         $request->validate([
             'admin_password' => 'required|string',
+            'action' => 'nullable|in:generate,reset',
             'new_password' => 'nullable|string|min:8',
             'new_password_confirmation' => 'nullable|required_with:new_password|same:new_password',
         ]);
@@ -250,7 +252,21 @@ class UserManagementController extends Controller
                 ->with('error', 'Incorrect admin password. Please try again.');
         }
         
-        // If new password is provided, reset it
+        // Generate a random password
+        if ($request->input('action') === 'generate') {
+            $temporaryPassword = $this->generateTemporaryPassword();
+            $user->password = Hash::make($temporaryPassword);
+            $user->save();
+            
+            return view('admin.users.view-password', [
+                'user' => $user,
+                'password_verified' => true,
+                'temporary_password' => $temporaryPassword,
+                'message' => 'A new temporary password has been generated. Copy it now - it will not be shown again!',
+            ]);
+        }
+        
+        // Reset with custom password
         if ($request->filled('new_password')) {
             $user->password = Hash::make($request->new_password);
             $user->save();
@@ -259,11 +275,35 @@ class UserManagementController extends Controller
                 ->with('success', "Password for {$user->username} has been reset successfully.");
         }
         
-        // Show that password is set (but can't show actual password since it's hashed)
+        // Show password reset form
         return view('admin.users.view-password', [
             'user' => $user,
             'password_verified' => true,
-            'message' => 'Password is set. You cannot view the original password, but you can reset it below.',
+            'message' => 'Password is set. You cannot view the original password (it\'s encrypted), but you can generate a new temporary password or set a custom one below.',
         ]);
+    }
+
+    /**
+     * Generate a secure temporary password.
+     */
+    private function generateTemporaryPassword(int $length = 12): string
+    {
+        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+        $password = '';
+        $max = strlen($chars) - 1;
+        
+        // Ensure at least one lowercase, one uppercase, one number, one special char
+        $password .= 'abcdefghijklmnopqrstuvwxyz'[random_int(0, 25)];
+        $password .= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[random_int(0, 25)];
+        $password .= '0123456789'[random_int(0, 9)];
+        $password .= '!@#$%^&*'[random_int(0, 7)];
+        
+        // Fill the rest randomly
+        for ($i = strlen($password); $i < $length; $i++) {
+            $password .= $chars[random_int(0, $max)];
+        }
+        
+        // Shuffle to randomize position
+        return str_shuffle($password);
     }
 }
