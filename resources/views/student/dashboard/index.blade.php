@@ -62,6 +62,63 @@
         @endif
     </div>
 
+    @if(isset($lastQuiz) && $lastQuiz && $lastQuiz->quiz && $lastQuiz->result)
+        @php
+            $score = round($lastQuiz->result->score, 0);
+            $correctCount = $lastQuiz->result->correct_count;
+            $totalQuestions = $lastQuiz->result->total_questions;
+            $scoreBg = 'bg-blue-50';
+            $scoreText = 'text-blue-800';
+            $label = 'Good';
+            if ($score >= 80) {
+                $scoreBg = 'bg-green-50';
+                $scoreText = 'text-green-800';
+                $label = 'Excellent';
+            } elseif ($score >= 60) {
+                $scoreBg = 'bg-blue-50';
+                $scoreText = 'text-blue-800';
+                $label = 'Good';
+            } elseif ($score >= 40) {
+                $scoreBg = 'bg-yellow-50';
+                $scoreText = 'text-yellow-800';
+                $label = 'Average';
+            } else {
+                $scoreBg = 'bg-red-50';
+                $scoreText = 'text-red-800';
+                $label = 'Keep trying';
+            }
+        @endphp
+        <div class="rounded-lg border border-blue-200 {{ $scoreBg }} p-5">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex-1">
+                    <h2 class="text-base font-semibold text-gray-900 mb-1">Last Quiz Result</h2>
+                    <p class="text-sm font-medium text-gray-700">{{ $lastQuiz->quiz->title ?? 'Quiz' }}</p>
+                    @if($lastQuiz->quiz->course)
+                    <p class="text-xs text-gray-600 mt-0.5">{{ $lastQuiz->quiz->course->name }}</p>
+                    @endif
+                    <p class="text-xs text-gray-500 mt-1">Taken {{ $lastQuiz->created_at ? $lastQuiz->created_at->format('M j, Y g:i A') : 'Date not available' }}</p>
+                </div>
+                <div class="text-right ml-4">
+                    <div class="inline-flex flex-col items-center {{ $scoreBg }} rounded-lg px-4 py-2 border border-blue-200">
+                        <span class="text-2xl font-bold tabular-nums {{ $scoreText }}">{{ $score }}%</span>
+                        <span class="text-xs font-medium {{ $scoreText }} mt-0.5">{{ $label }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-blue-200">
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-700"><span class="font-semibold">{{ $correctCount }}</span> / <span class="font-semibold">{{ $totalQuestions }}</span> correct</span>
+                </div>
+                <a href="{{ route('dashboard.my-quizzes.show', ['sessionId' => $lastQuiz->id]) }}" class="text-sm font-medium text-blue-700 hover:text-blue-900 flex items-center gap-1">
+                    View Details
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    @endif
+
     @if(isset($classGroups) && $classGroups->isNotEmpty())
     <section class="rounded-lg border border-gray-200 bg-white p-4">
         <h2 class="text-sm font-semibold text-gray-800 mb-3">My Groups</h2>

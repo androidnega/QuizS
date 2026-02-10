@@ -37,6 +37,13 @@ class StudentDashboardController extends Controller
             ->orderByDesc('created_at')
             ->limit(5)
             ->get();
+        
+        // Get the last completed quiz with result
+        $lastQuiz = QuizSession::where('student_index', $student->index_number)
+            ->whereHas('result')
+            ->with(['quiz.course', 'result'])
+            ->orderByDesc('created_at')
+            ->first();
 
         $classGroupIds = $classGroups->pluck('id')->filter()->values()->all();
         $scheduledQuiz = null;
@@ -73,6 +80,7 @@ class StudentDashboardController extends Controller
             'recentSessions' => $recentSessions,
             'scheduledQuiz' => $scheduledQuiz,
             'scheduledQuizSession' => $scheduledQuizSession,
+            'lastQuiz' => $lastQuiz,
             'greeting' => $greeting,
         ]);
     }
