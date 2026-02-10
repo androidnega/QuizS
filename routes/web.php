@@ -150,6 +150,7 @@ Route::middleware('admin.auth')->group(function () {
         Route::post('/class-groups/{classGroup}/students/upload', [ClassGroupController::class, 'uploadStudents'])->name('class-groups.students.upload');
         Route::put('/class-groups/{classGroup}/students/{student}', [ClassGroupController::class, 'updateStudent'])->name('class-groups.students.update');
         Route::delete('/class-groups/{classGroup}/students/{student}', [ClassGroupController::class, 'destroyStudent'])->name('class-groups.students.destroy');
+        Route::delete('/class-groups/{classGroup}/students/{student}/phone', [ClassGroupController::class, 'removeStudentPhone'])->name('class-groups.students.remove-phone');
 
         // Quizzes — examiner only
         Route::middleware('examiner.only')->group(function () {

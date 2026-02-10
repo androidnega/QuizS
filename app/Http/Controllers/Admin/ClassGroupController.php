@@ -359,4 +359,23 @@ class ClassGroupController extends Controller
         $student->delete();
         return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index removed.');
     }
+
+    /** Remove phone number from a student. */
+    public function removeStudentPhone(ClassGroup $classGroup, ClassGroupStudent $student): RedirectResponse
+    {
+        $this->authorize('update', $classGroup);
+        if ($student->class_group_id !== $classGroup->id) {
+            abort(404);
+        }
+        
+        // Find the Student record by index_number and remove phone
+        $studentAccount = \App\Models\Student::where('index_number', $student->index_number)->first();
+        if ($studentAccount) {
+            $studentAccount->phone_contact = null;
+            $studentAccount->save();
+            return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Phone number removed. Student will be asked for a new number on next login.');
+        }
+        
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('error', 'No phone number found for this student.');
+    }
 }

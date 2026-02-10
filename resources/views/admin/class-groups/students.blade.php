@@ -105,6 +105,13 @@
                                             <i class="fas fa-eye"></i> View
                                         </button>
                                         <a href="{{ route('dashboard.class-groups.students.edit', [$classGroup, $s]) }}" class="inline-flex items-center gap-1 text-primary-600 hover:text-primary-800 text-sm" title="Edit"><i class="fas fa-pen"></i> Edit</a>
+                                        @if($phone)
+                                        <form action="{{ route('dashboard.class-groups.students.remove-phone', [$classGroup, $s]) }}" method="post" class="inline" onsubmit="return confirm('Remove phone number? Student will be asked for a new phone on next login.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center gap-1 text-orange-600 hover:text-orange-800 text-sm bg-transparent border-0 p-0 cursor-pointer" title="Remove phone"><i class="fas fa-phone-slash"></i> Remove phone</button>
+                                        </form>
+                                        @endif
                                         <form action="{{ route('dashboard.class-groups.students.destroy', [$classGroup, $s]) }}" method="post" class="inline" onsubmit="return confirm('Remove this index from the group?');">
                                             @csrf
                                             @method('DELETE')

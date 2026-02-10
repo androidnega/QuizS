@@ -6,15 +6,15 @@
 @section('content')
 <div class="min-h-screen flex flex-col">
     <header class="shrink-0 bg-white border-b border-gray-200">
-        <div class="mx-auto flex h-14 max-w-4xl items-center justify-between gap-4 px-4">
-            <a href="{{ route('dashboard') }}" class="font-bold text-gray-900 no-underline flex items-center gap-2 shrink-0" title="Dashboard">
-                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white text-sm">Q</span>
-                <span class="hidden sm:inline">QuizSnap</span>
+        <div class="mx-auto flex h-12 max-w-4xl items-center justify-between gap-3 px-4">
+            <a href="{{ route('dashboard') }}" class="font-bold text-gray-900 no-underline flex items-center gap-1.5 shrink-0" title="Dashboard">
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white text-xs font-bold">Q</span>
+                <span class="hidden sm:inline text-sm">QuizSnap</span>
             </a>
 
-            <nav class="flex items-center gap-1 sm:gap-2 flex-1 justify-center min-w-0" aria-label="Dashboard navigation">
-                <a href="{{ route('dashboard') }}" class="px-3 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('dashboard') && !request()->routeIs('dashboard.my-*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">Dashboard</a>
-                <a href="{{ route('dashboard.my-quizzes') }}" class="px-3 py-2 rounded-lg text-sm font-medium {{ request()->routeIs('dashboard.my-quizzes*') ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">My quizzes</a>
+            <nav class="flex items-center gap-1 flex-1 justify-center min-w-0" aria-label="Dashboard navigation">
+                <a href="{{ route('dashboard') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium {{ request()->routeIs('dashboard') && !request()->routeIs('dashboard.my-*') ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-100' }}">Dashboard</a>
+                <a href="{{ route('dashboard.my-quizzes') }}" class="px-2.5 py-1.5 rounded-md text-xs font-medium {{ request()->routeIs('dashboard.my-quizzes*') ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-gray-100' }}">My quizzes</a>
             </nav>
 
             @if(isset($student) && $student)
@@ -50,7 +50,7 @@
             @endif
         </div>
     </header>
-    <main class="flex-1 mx-auto w-full max-w-4xl px-4 py-6">
+    <main class="flex-1 mx-auto w-full max-w-4xl px-4 py-4">
         @yield('dashboard_content')
     </main>
 </div>

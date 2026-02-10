@@ -4,27 +4,27 @@
 @php $dashboardTitle = 'Dashboard'; @endphp
 
 @section('dashboard_content')
-<div class="space-y-6">
+<div class="space-y-4">
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">{{ $greeting ?? 'Hello' }}, {{ $student->first_name }}</h1>
-        <p class="text-gray-600 mt-1">Your quiz history. Marks are kept forever; open a quiz to see your score and, for the last 21 days, questions and answers.</p>
+        <h1 class="text-xl font-bold text-gray-900">{{ $greeting ?? 'Hello' }}, {{ $student->first_name }}</h1>
+        <p class="text-sm text-gray-600 mt-1">Your quiz history and scheduled quizzes.</p>
     </div>
 
-    <div class="flex flex-row flex-wrap gap-4">
-        <a href="{{ route('dashboard.my-quizzes') }}" class="flex-1 min-w-[200px] rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-primary-200 transition-all block">
-            <p class="text-sm font-medium text-gray-500">Quizzes taken</p>
-            <p class="mt-1 text-3xl font-bold tabular-nums text-gray-900">{{ $sessionsCount }}</p>
-            <span class="mt-2 inline-block text-sm font-medium text-primary-600">View all →</span>
+    <div class="flex flex-row flex-wrap gap-3">
+        <a href="{{ route('dashboard.my-quizzes') }}" class="flex-1 min-w-[180px] rounded-lg border border-yellow-300 bg-yellow-100 p-4 block">
+            <p class="text-xs font-medium text-yellow-800">Quizzes taken</p>
+            <p class="mt-1 text-2xl font-bold tabular-nums text-gray-900">{{ $sessionsCount }}</p>
+            <span class="mt-2 inline-block text-xs font-medium text-yellow-700">View all →</span>
         </a>
-        <a href="{{ route('dashboard.my-profile') }}" class="flex-1 min-w-[200px] rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-primary-200 transition-all block">
-            <p class="text-sm font-medium text-gray-500">Index number</p>
-            <p class="mt-1 text-lg font-mono font-semibold text-gray-900">{{ $student->index_number }}</p>
-            <span class="mt-2 inline-block text-sm font-medium text-primary-600">Edit profile →</span>
+        <a href="{{ route('dashboard.my-profile') }}" class="flex-1 min-w-[180px] rounded-lg border border-blue-300 bg-blue-100 p-4 block">
+            <p class="text-xs font-medium text-blue-800">Index number</p>
+            <p class="mt-1 text-base font-mono font-semibold text-gray-900">{{ $student->index_number }}</p>
+            <span class="mt-2 inline-block text-xs font-medium text-blue-700">Edit profile →</span>
         </a>
         @if(isset($scheduledQuiz) && $scheduledQuiz)
-        <div class="flex-1 min-w-[200px] rounded-xl border-2 border-primary-200 bg-primary-50/50 p-5 shadow-sm">
-            <p class="text-sm font-medium text-primary-700">Quiz</p>
-            <p class="mt-1 text-lg font-semibold text-gray-900">{{ $scheduledQuiz->title }}</p>
+        <div class="flex-1 min-w-[180px] rounded-lg border-2 border-blue-400 bg-blue-50 p-4">
+            <p class="text-xs font-medium text-blue-800">Scheduled quiz</p>
+            <p class="mt-1 text-base font-semibold text-gray-900">{{ $scheduledQuiz->title }}</p>
             @if($scheduledQuiz->course)
             <p class="text-xs text-gray-600 mt-0.5">{{ $scheduledQuiz->course->name }}</p>
             @endif
@@ -32,62 +32,34 @@
             @if($scheduledQuiz->starts_at && $scheduledQuiz->starts_at->isFuture())
             <p class="text-xs text-gray-600 mt-2">Starts {{ $scheduledQuiz->starts_at->format('M j, g:i A') }}</p>
             <div class="mt-2 flex items-center gap-2">
-                <span id="quiz-countdown-{{ $scheduledQuiz->id }}" class="text-lg font-bold tabular-nums text-primary-700">--:--:--</span>
-                <a href="{{ route('student.quiz-will-start', ['token' => $scheduledQuiz->link_token]) }}" class="text-sm font-medium text-primary-600 hover:underline">Countdown →</a>
+                <span id="quiz-countdown-{{ $scheduledQuiz->id }}" class="text-base font-bold tabular-nums text-blue-700">--:--:--</span>
+                <a href="{{ route('student.quiz-will-start', ['token' => $scheduledQuiz->link_token]) }}" class="text-xs font-medium text-blue-600">View countdown</a>
             </div>
             @else
-            <a href="{{ route('student.rules.show.quiz', ['token' => $scheduledQuiz->link_token]) }}" class="mt-3 inline-flex items-center justify-center w-full rounded-lg bg-primary-600 text-white py-2.5 px-4 text-sm font-semibold hover:bg-primary-700 transition-colors">
+            <a href="{{ route('student.rules.show.quiz', ['token' => $scheduledQuiz->link_token]) }}" class="mt-3 inline-flex items-center justify-center w-full rounded-lg bg-blue-600 text-white py-2 px-4 text-sm font-semibold">
                 Start quiz →
             </a>
             @endif
         </div>
         @else
-        <a href="{{ route('student.landing') }}" class="flex-1 min-w-[200px] rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-primary-200 transition-all block">
-            <p class="text-sm font-medium text-gray-500">Start a quiz</p>
-            <p class="mt-1 text-lg font-semibold text-gray-900">Enter token</p>
-            <span class="mt-2 inline-block text-sm font-medium text-primary-600">Go →</span>
+        <a href="{{ route('student.landing') }}" class="flex-1 min-w-[180px] rounded-lg border border-gray-300 bg-gray-100 p-4 block">
+            <p class="text-xs font-medium text-gray-700">Start a quiz</p>
+            <p class="mt-1 text-base font-semibold text-gray-900">Enter token</p>
+            <span class="mt-2 inline-block text-xs font-medium text-gray-600">Go →</span>
         </a>
         @endif
     </div>
 
     @if(isset($classGroups) && $classGroups->isNotEmpty())
-    <section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h2 class="text-sm font-semibold text-gray-800 mb-2">My groups</h2>
-        <p class="text-xs text-gray-500 mb-3">Class groups you belong to.</p>
+    <section class="rounded-lg border border-gray-200 bg-white p-3">
+        <h2 class="text-xs font-semibold text-gray-800 mb-2">My groups</h2>
         <ul class="flex flex-wrap gap-2">
             @foreach($classGroups as $group)
-            <li class="inline-flex items-center rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-800">{{ $group->name }}</li>
+            <li class="inline-flex items-center rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800">{{ $group->name }}</li>
             @endforeach
         </ul>
     </section>
     @endif
-
-    <section>
-        <div class="flex items-center justify-between mb-3">
-            <h2 class="text-sm font-semibold text-gray-800">Recent quizzes</h2>
-            <a href="{{ route('dashboard.my-quizzes') }}" class="text-sm font-medium text-primary-600 hover:text-primary-700">See all</a>
-        </div>
-    @if($recentSessions->isNotEmpty())
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            @foreach($recentSessions as $s)
-            <a href="{{ route('dashboard.my-quizzes.show', $s) }}" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:border-primary-200 hover:shadow transition-all block">
-                <p class="font-medium text-gray-900 truncate">{{ $s->quiz->title ?? 'Quiz' }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">{{ $s->created_at->format('M j, Y g:i A') }}</p>
-                @if($s->result)
-                <p class="mt-2 text-sm font-semibold text-gray-800">{{ number_format($s->result->score, 1) }}%</p>
-                @else
-                <p class="mt-2 text-sm text-gray-500">—</p>
-                @endif
-            </a>
-            @endforeach
-        </div>
-    @else
-        <div class="rounded-xl border border-gray-200 bg-white p-8 text-center">
-            <p class="text-gray-600">You haven't taken any quizzes yet.</p>
-            <a href="{{ route('student.landing') }}" class="mt-3 inline-block text-primary-600 font-medium hover:underline">Start a quiz →</a>
-        </div>
-    @endif
-    </section>
 </div>
 
 @if(isset($scheduledQuiz) && $scheduledQuiz && $scheduledQuiz->starts_at && $scheduledQuiz->starts_at->isFuture())
