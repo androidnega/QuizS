@@ -45,18 +45,14 @@
                     <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all no-underline">
                         Dashboard
                     </a>
-                @else
-                    <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-all no-underline">
-                        Student Login
-                    </a>
                 @endif
             </div>
         </div>
     </header>
 
     <main class="flex flex-1 flex-col items-center justify-center px-6 py-20">
-        <div class="w-full max-w-4xl text-center">
-            <div class="mb-12">
+        <div class="w-full max-w-5xl text-center">
+            <div class="mb-16">
                 <h1 class="text-5xl sm:text-6xl font-bold text-slate-900 mb-6 tracking-tight">
                     Welcome to QuizSnap
                 </h1>
@@ -65,57 +61,37 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-16">
-                <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-7 h-7 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div class="bg-white rounded-2xl p-10 border border-slate-200 shadow-sm hover:shadow-lg transition-all">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-slate-900 mb-2">Secure</h3>
-                    <p class="text-sm text-slate-600">Proctored environment with advanced security measures</p>
+                    <h3 class="text-xl font-semibold text-slate-900 mb-3">Secure</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">Proctored environment with advanced security measures</p>
                 </div>
                 
-                <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <div class="bg-white rounded-2xl p-10 border border-slate-200 shadow-sm hover:shadow-lg transition-all">
+                    <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-slate-900 mb-2">Fast</h3>
-                    <p class="text-sm text-slate-600">Instant access and seamless experience</p>
+                    <h3 class="text-xl font-semibold text-slate-900 mb-3">Fast</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">Instant access and seamless experience</p>
                 </div>
                 
-                <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="w-14 h-14 bg-cyan-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-7 h-7 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <div class="bg-white rounded-2xl p-10 border border-slate-200 shadow-sm hover:shadow-lg transition-all">
+                    <div class="w-16 h-16 bg-cyan-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-slate-900 mb-2">Reliable</h3>
-                    <p class="text-sm text-slate-600">Desktop optimized for consistent performance</p>
+                    <h3 class="text-xl font-semibold text-slate-900 mb-3">Reliable</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">Desktop optimized for consistent performance</p>
                 </div>
             </div>
-
-            @if(isset($student) && $student)
-                <div class="mt-8">
-                    <a href="{{ route('dashboard') }}" class="inline-flex items-center px-8 py-4 bg-blue-600 text-white text-base font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl">
-                        Go to Dashboard
-                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                        </svg>
-                    </a>
-                </div>
-            @else
-                <div class="mt-8">
-                    <a href="{{ route('student.account.login.form') }}" class="inline-flex items-center px-8 py-4 bg-blue-600 text-white text-base font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl">
-                        Student Login
-                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                        </svg>
-                    </a>
-                </div>
-            @endif
         </div>
     </main>
 
