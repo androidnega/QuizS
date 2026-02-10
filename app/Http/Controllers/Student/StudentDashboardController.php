@@ -30,8 +30,10 @@ class StudentDashboardController extends Controller
         $student->load(['classGroupStudents.classGroup']);
         $classGroups = $student->classGroupStudents->map(fn ($s) => $s->classGroup)->filter()->unique('id')->values();
 
-        $sessionsCount = QuizSession::where('student_index', $student->index_number)->count();
+        $since = now()->subDays(21);
+        $sessionsCount = QuizSession::where('student_index', $student->index_number)->where('created_at', '>=', $since)->count();
         $recentSessions = QuizSession::where('student_index', $student->index_number)
+            ->where('created_at', '>=', $since)
             ->with(['quiz', 'result'])
             ->orderByDesc('created_at')
             ->limit(5)
@@ -46,12 +48,14 @@ class StudentDashboardController extends Controller
     }
 
     /**
-     * List quizzes (sessions) this student has taken.
+     * List quizzes (sessions) this student has taken (last 21 days).
      */
     public function quizzes(): View
     {
         $student = $this->student();
+        $since = now()->subDays(21);
         $sessions = QuizSession::where('student_index', $student->index_number)
+            ->where('created_at', '>=', $since)
             ->with(['quiz', 'result'])
             ->orderByDesc('created_at')
             ->paginate(15);
@@ -78,6 +82,29 @@ class StudentDashboardController extends Controller
         ]);
         $student->student_name = $request->filled('student_name') ? trim($request->student_name) : null;
         $student->save();
-        return redirect()->route('student.dashboard.profile')->with('success', 'Profile updated.');
+        return redirect()->route('dashboard.my-profile')->with('success', 'Profile updated.');
+    }
+
+    /**
+     * Show one past quiz: questions, your answers, right/wrong (last 21 days only).
+     */
+    public function showQuiz(Request $request, $session): View|RedirectResponse
+    {
+        $student = $this->student();
+        $since = now()->subDays(21);
+        $quizSession = QuizSession::where('id', $session)
+            ->where('student_index', $student->index_number)
+            ->where('created_at', '>=', $since)
+            ->with(['quiz', 'result', 'answers.question'])
+            ->firstOrFail();
+
+        if (!$quizSession->quiz->canShowScore()) {
+            return redirect()->route('dashboard.my-quizzes')->with('info', 'Results are not available for this quiz.');
+        }
+
+        return view('student.dashboard.quiz-show', [
+            'student' => $student,
+            'session' => $quizSession,
+        ]);
     }
 }

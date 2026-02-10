@@ -23,7 +23,7 @@ class StudentAccountController extends Controller
     public function showLoginForm(): View|RedirectResponse
     {
         if (session('student_id')) {
-            return redirect()->route('student.dashboard.index');
+            return redirect()->route('dashboard');
         }
         return view('student.account-login');
     }
@@ -176,9 +176,15 @@ class StudentAccountController extends Controller
             'student_index' => $student->index_number,
         ]);
 
+        $redirect = route('dashboard');
+        if (session()->has('quiz_id')) {
+            $redirect = route('student.proctoring.capture');
+            session()->forget('quiz_id');
+        }
+
         return response()->json([
             'success' => true,
-            'redirect' => route('student.dashboard.index'),
+            'redirect' => $redirect,
         ]);
     }
 

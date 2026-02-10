@@ -96,12 +96,18 @@ Route::post('/student/account/send-otp', [\App\Http\Controllers\Student\StudentA
 Route::post('/student/account/verify-otp', [\App\Http\Controllers\Student\StudentAccountController::class, 'verifyOtp'])->name('student.account.verify-otp');
 Route::post('/student/account/logout', [\App\Http\Controllers\Student\StudentAccountController::class, 'logout'])->name('student.account.logout');
 
-// Student dashboard: /student/dashboard and /student/dashboard/{slug}
-Route::middleware('student.auth')->prefix('student/dashboard')->name('student.dashboard.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Student\StudentDashboardController::class, 'index'])->name('index');
-    Route::get('/quizzes', [\App\Http\Controllers\Student\StudentDashboardController::class, 'quizzes'])->name('quizzes');
-    Route::get('/profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'profile'])->name('profile');
-    Route::put('/profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'updateProfile'])->name('profile.update');
+// Legacy redirects: old student dashboard URLs → unified /dashboard
+Route::get('/student/dashboard', fn () => redirect()->route('dashboard', [], 301))->name('student.dashboard.index.legacy');
+Route::get('/student/dashboard/quizzes', fn () => redirect()->route('dashboard.my-quizzes', [], 301));
+Route::get('/student/dashboard/profile', fn () => redirect()->route('dashboard.my-profile', [], 301));
+
+// Unified dashboard: /dashboard (student or staff); student-only routes under /dashboard
+Route::get('/dashboard', [\App\Http\Controllers\DashboardGatewayController::class, '__invoke'])->middleware('dashboard.auth')->name('dashboard');
+Route::middleware(['dashboard.auth', 'student.auth'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    Route::get('/my-quizzes', [\App\Http\Controllers\Student\StudentDashboardController::class, 'quizzes'])->name('my-quizzes');
+    Route::get('/my-quizzes/{session}', [\App\Http\Controllers\Student\StudentDashboardController::class, 'showQuiz'])->name('my-quizzes.show');
+    Route::get('/my-profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'profile'])->name('my-profile');
+    Route::put('/my-profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'updateProfile'])->name('my-profile.update');
 });
 
 // Staff login
@@ -112,10 +118,10 @@ Route::post('/password/forgot', [\App\Http\Controllers\Admin\StaffPasswordResetC
 Route::get('/password/reset/{token}', [\App\Http\Controllers\Admin\StaffPasswordResetController::class, 'showResetForm'])->name('password.reset.form');
 Route::post('/password/reset', [\App\Http\Controllers\Admin\StaffPasswordResetController::class, 'reset'])->name('password.reset');
 
-// Unified dashboard: all staff pages under /dashboard (admin + examiner)
+// Staff dashboard and all staff pages under /dashboard (admin + examiner)
 Route::middleware('admin.auth')->group(function () {
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    // GET /dashboard is handled by DashboardGatewayController (unified)
 
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         // Profile — both roles

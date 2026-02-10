@@ -11,7 +11,7 @@
     </div>
 
     <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm max-w-md">
-        <form action="{{ route('student.dashboard.profile.update') }}" method="post" class="space-y-4">
+        <form action="{{ route('dashboard.my-profile.update') }}" method="post" class="space-y-4">
             @csrf
             @method('PUT')
             <div>

@@ -11,6 +11,10 @@ class EnsureStudentAuthenticated
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if (session('admin_authenticated')) {
+            return redirect()->route('dashboard');
+        }
+
         $studentId = session('student_id');
         if (!$studentId) {
             return redirect()->guest(route('student.account.login.form'))
