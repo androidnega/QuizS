@@ -16,7 +16,7 @@
             @foreach($sessions as $s)
             <li class="px-4 py-4 flex flex-wrap items-center justify-between gap-3">
                 <div class="min-w-0">
-                    <a href="{{ route('dashboard.my-quizzes.show', $s) }}" class="font-medium text-gray-900 truncate block hover:text-primary-600">{{ $s->quiz->title ?? 'Quiz' }}</a>
+                    <a href="{{ route('dashboard.my-quizzes.show', ['session' => $s->id]) }}" class="font-medium text-gray-900 truncate block hover:text-primary-600">{{ $s->quiz->title ?? 'Quiz' }}</a>
                     <p class="text-sm text-gray-500">{{ $s->created_at->format('M j, Y g:i A') }}</p>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
@@ -27,7 +27,7 @@
                     <span class="text-sm text-gray-500">
                         {{ $s->result->correct_count }}/{{ $s->result->total_questions }} correct
                     </span>
-                    <a href="{{ route('dashboard.my-quizzes.show', $s) }}" class="text-sm font-medium text-primary-600 hover:underline">Review</a>
+                    <a href="{{ route('dashboard.my-quizzes.show', ['session' => $s->id]) }}" class="text-sm font-medium text-primary-600 hover:underline">Review</a>
                     @else
                     <span class="text-sm text-gray-500">No result</span>
                     @endif
