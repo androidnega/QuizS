@@ -150,10 +150,14 @@
         var id = e.target && e.target.id;
         var q = (e.target.value || '').trim();
         if (id === 'sessions-search-index') {
-            var qUpper = q.toUpperCase();
+            var qUpper = q.toUpperCase().trim();
             container.querySelectorAll('.sessions-row').forEach(function(row) {
-                var index = (row.getAttribute('data-student-index') || '').toUpperCase();
-                row.style.display = !qUpper || index.indexOf(qUpper) !== -1 ? '' : 'none';
+                var index = (row.getAttribute('data-student-index') || '').toUpperCase().trim();
+                // Use includes for more flexible matching, handle special chars
+                var normalizedQuery = qUpper.replace(/[^A-Z0-9]/g, '');
+                var normalizedIndex = index.replace(/[^A-Z0-9]/g, '');
+                var matches = !qUpper || index.indexOf(qUpper) !== -1 || normalizedIndex.indexOf(normalizedQuery) !== -1;
+                row.style.display = matches ? '' : 'none';
             });
         } else if (id === 'questions-search' || id === 'pool-search') {
             var qLower = q.toLowerCase();

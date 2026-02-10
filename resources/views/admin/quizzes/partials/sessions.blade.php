@@ -55,7 +55,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100" id="sessions-table-body">
                         @foreach($sessionsPaginator as $session)
-                            <tr class="hover:bg-gray-50 transition-colors sessions-row" data-student-index="{{ strtoupper($session->student_index ?? '') }}">
+                            <tr class="hover:bg-gray-50 transition-colors sessions-row" data-student-index="{{ strtoupper(trim($session->student_index ?? '')) }}">
                                 <td class="px-3 py-1.5 whitespace-nowrap">
                                     <span class="text-xs font-medium text-gray-900">{{ $session->student_index }}</span>
                                 </td>
@@ -84,9 +84,6 @@
                         @endforeach
                     </tbody>
                 </table>
-            </div>
-            <div class="px-4 py-2.5 border-t border-gray-200 bg-gray-50">
-                {{ $sessionsPaginator->links() }}
             </div>
         @endif
     </div>
