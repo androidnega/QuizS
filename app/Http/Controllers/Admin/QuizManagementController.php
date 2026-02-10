@@ -205,9 +205,19 @@ class QuizManagementController extends Controller
         $unapprovedPoolsTotal = $unapprovedPoolsQuery->count();
         $unapprovedPools = $unapprovedPoolsQuery->paginate(50, ['*'], 'pool_page')->withQueryString();
 
-        // Approved questions for Overview tab: paginated (50 per page)
+        // Approved questions for Overview tab: paginated (50 per page), with optional search
         $approvedQuestionsQuery = $quiz->questions()->orderBy('id');
-        $approvedQuestionsTotal = $approvedQuestionsQuery->count();
+        $questionsSearch = trim($request->get('questions_search', ''));
+        if ($questionsSearch !== '') {
+            $approvedQuestionsQuery->where(function ($q) use ($questionsSearch) {
+                $q->where('text', 'like', '%' . $questionsSearch . '%')
+                  ->orWhere('topic', 'like', '%' . $questionsSearch . '%')
+                  ->orWhere('type', 'like', '%' . $questionsSearch . '%')
+                  ->orWhere('source', 'like', '%' . $questionsSearch . '%');
+            });
+        }
+        $approvedQuestionsTotal = $quiz->questions()->count(); // Total without filter
+        $approvedQuestionsFiltered = $approvedQuestionsQuery->count(); // Filtered count
         $approvedQuestions = $approvedQuestionsQuery->paginate(50, ['*'], 'questions_page')->withQueryString();
 
         // Completed sessions for Sessions tab: paginated, with result and violations count
@@ -229,7 +239,7 @@ class QuizManagementController extends Controller
             'students_with_violations' => $completedSessions->filter(fn ($s) => $s->violations->count() > 0)->count(),
         ];
 
-        $data = compact('quiz', 'unapprovedPools', 'unapprovedPoolsTotal', 'approvedQuestions', 'approvedQuestionsTotal', 'sessionsPaginator', 'sessionsStats');
+        $data = compact('quiz', 'unapprovedPools', 'unapprovedPoolsTotal', 'approvedQuestions', 'approvedQuestionsTotal', 'approvedQuestionsFiltered', 'questionsSearch', 'sessionsPaginator', 'sessionsStats');
 
         // Live tab/pagination: return only the tab HTML fragment for AJAX requests
         if ($request->ajax()) {

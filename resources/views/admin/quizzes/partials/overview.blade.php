@@ -192,8 +192,22 @@
             </div>
         </div>
         <div class="mb-4 pb-4 border-b border-gray-200">
-            <label for="questions-search" class="block text-sm font-medium text-gray-700 mb-2">Search questions</label>
-            <input type="text" id="questions-search" placeholder="Type to filter by question text, topic, type…" class="input w-full max-w-md text-sm py-2 px-3" autocomplete="off">
+            <form method="get" action="{{ route('dashboard.quizzes.show', $quiz) }}" id="questions-search-form" class="flex items-end gap-3">
+                <input type="hidden" name="tab" value="overview">
+                <div class="flex-1 max-w-md">
+                    <label for="questions-search" class="block text-sm font-medium text-gray-700 mb-2">Search questions (across all pages)</label>
+                    <input type="text" name="questions_search" id="questions-search" value="{{ $questionsSearch ?? '' }}" placeholder="Type to search by question text, topic, type…" class="input w-full text-sm py-2 px-3" autocomplete="off">
+                </div>
+                <button type="submit" class="btn btn-primary text-sm">Search</button>
+                @if($questionsSearch ?? '')
+                    <a href="{{ route('dashboard.quizzes.show', ['quiz' => $quiz, 'tab' => 'overview']) }}" class="btn btn-secondary text-sm">Clear</a>
+                @endif
+            </form>
+            @if(($questionsSearch ?? '') !== '')
+                <p class="text-sm text-gray-600 mt-2">
+                    Showing {{ $approvedQuestionsFiltered }} of {{ $approvedQuestionsTotal }} questions matching "<strong>{{ $questionsSearch }}</strong>"
+                </p>
+            @endif
         </div>
         @if($approvedQuestions->isEmpty())
             <div class="text-center py-12">
@@ -216,26 +230,20 @@
                         <div class="flex items-start gap-3 mb-3">
                             <span class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-semibold text-sm">{{ ($approvedQuestions->currentPage() - 1) * $approvedQuestions->perPage() + $idx + 1 }}</span>
                             <div class="flex-1 min-w-0">
-                                <p class="text-gray-900 mb-3">{{ $q->text }}</p>
+                                <p class="text-gray-900 mb-2">{{ $q->text }}</p>
                                 @if($q->options && is_array($q->options))
-                                    <div class="mb-3 space-y-1.5">
-                                        @foreach($q->options as $opt)
-                                            @php
-                                                $optKey = $opt['key'] ?? '';
-                                                $optText = $opt['text'] ?? '';
-                                                $isCorrect = $optKey === $q->correct_answer;
-                                            @endphp
-                                            <div class="flex items-start gap-2 text-sm {{ $isCorrect ? 'font-medium text-success-700 bg-success-50 -mx-2 px-2 py-1.5 rounded' : 'text-gray-700' }}">
-                                                <span class="font-semibold flex-shrink-0">{{ $optKey }}.</span>
-                                                <span class="flex-1">{{ $optText }}</span>
-                                                @if($isCorrect)
-                                                    <span class="flex-shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-success-700">
-                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                                                        Correct
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        @endforeach
+                                    @php
+                                        $correctOption = collect($q->options)->firstWhere('key', $q->correct_answer);
+                                        $correctText = $correctOption['text'] ?? 'N/A';
+                                    @endphp
+                                    <div class="mb-3 inline-flex items-start gap-2 text-sm font-medium text-success-700 bg-success-50 px-3 py-2 rounded-lg">
+                                        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <div>
+                                            <span class="block text-xs font-semibold text-success-600 mb-0.5">Correct Answer:</span>
+                                            <span class="text-success-900">{{ $q->correct_answer }}. {{ $correctText }}</span>
+                                        </div>
                                     </div>
                                 @endif
                                 <div class="flex items-center gap-3 text-xs flex-wrap">
