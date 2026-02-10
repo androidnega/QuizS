@@ -15,7 +15,13 @@
 
         <div class="card p-6">
             <h1 class="text-2xl font-bold text-gray-900 mb-6">Add course</h1>
-            <p class="text-sm text-gray-600 mb-4">Course code and title are institutional data. Assign examiners who can create quizzes for this course.</p>
+            <p class="text-sm text-gray-600 mb-4">
+                @if(isset($isSuperAdmin) && $isSuperAdmin)
+                    Course code and title are institutional data. Assign examiners who can create quizzes for this course.
+                @else
+                    Create a new course. You will be automatically assigned as an examiner for this course.
+                @endif
+            </p>
 
             <form action="{{ route('dashboard.courses.store') }}" method="post" class="space-y-4">
                 @csrf
@@ -29,6 +35,7 @@
                     <input type="text" name="name" id="name" value="{{ old('name') }}" required maxlength="255" placeholder="e.g. Introduction to Programming" class="input w-full">
                     @error('name')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
+                @if(isset($isSuperAdmin) && $isSuperAdmin)
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Assign examiners</label>
                     <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">
@@ -43,6 +50,11 @@
                     </div>
                     @error('examiner_ids')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
+                @else
+                <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    <p class="text-sm text-gray-600">You will be automatically assigned as an examiner for this course.</p>
+                </div>
+                @endif
                 <div class="flex gap-3 pt-2">
                     <button type="submit" class="btn btn-primary">Create course</button>
                     <a href="{{ route('dashboard.courses.index') }}" class="btn btn-secondary">Cancel</a>

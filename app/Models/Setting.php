@@ -90,6 +90,9 @@ class Setting extends Model
     /** Admin: lock examiners from creating new class groups (1 = locked). */
     public const KEY_LOCK_EXAMINER_CREATE_GROUP = 'lock_examiner_create_group';
 
+    /** Admin: allow examiners to create courses (1 = allowed). */
+    public const KEY_ALLOW_EXAMINER_CREATE_COURSE = 'allow_examiner_create_course';
+
     /** Admin: disable strict per-IP/per-device quiz session restrictions (1 = disabled). */
     public const KEY_DISABLE_IP_DEVICE_RESTRICTIONS = 'disable_ip_device_restrictions';
 

@@ -70,6 +70,14 @@
 
                         <div class="mt-4">
                             <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="allow_examiner_create_course" value="1" {{ old('allow_examiner_create_course', $allow_examiner_create_course ?? false) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                <span class="text-sm text-gray-700">Allow examiners to create courses</span>
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">When enabled, examiners can create and manage courses. By default, only Super Admin can create courses.</p>
+                        </div>
+
+                        <div class="mt-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" name="disable_ip_device_restrictions" value="1" {{ old('disable_ip_device_restrictions', $disable_ip_device_restrictions ?? false) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
                                 <span class="text-sm text-gray-700">Allow shared networks/PCs for quiz access (disable IP/computer uniqueness restriction)</span>
                             </label>

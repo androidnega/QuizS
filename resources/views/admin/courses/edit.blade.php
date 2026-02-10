@@ -29,6 +29,7 @@
                     <input type="text" name="name" id="name" value="{{ old('name', $course->name) }}" required maxlength="255" class="input w-full">
                     @error('name')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
+                @if(isset($isSuperAdmin) && $isSuperAdmin)
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Assign examiners</label>
                     <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">
@@ -42,6 +43,11 @@
                         @endforelse
                     </div>
                 </div>
+                @else
+                <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    <p class="text-sm text-gray-600">You are assigned as an examiner for this course.</p>
+                </div>
+                @endif
                 <div class="flex gap-3 pt-2">
                     <button type="submit" class="btn btn-primary">Save</button>
                     <a href="{{ route('dashboard.courses.index') }}" class="btn btn-secondary">Cancel</a>

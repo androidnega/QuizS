@@ -64,11 +64,13 @@
                                             <button type="submit" class="text-gray-600 hover:text-gray-900">Archive</button>
                                         </form>
                                     @endif
+                                    @if(isset($isSuperAdmin) && $isSuperAdmin)
                                     <form action="{{ route('dashboard.courses.destroy', $c) }}" method="post" class="inline" onsubmit="return confirm('Permanently delete course \'{{ addslashes($c->name) }}\'? This cannot be undone.');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-danger-600 hover:text-danger-900" title="Delete course">Delete</button>
                                     </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

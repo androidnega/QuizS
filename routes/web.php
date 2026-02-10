@@ -197,10 +197,8 @@ Route::middleware('admin.auth')->group(function () {
             Route::delete('/quizzes/{quiz}', [QuizManagementController::class, 'destroy'])->name('quizzes.destroy');
         });
 
-        // Super Admin only: courses, users, settings, system reset
-        Route::middleware('admin.role')->group(function () {
-            Route::get('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'index'])->name('system.reset.index');
-            Route::post('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'reset'])->name('system.reset');
+        // Courses: Super Admin always, Examiner when setting allows
+        Route::middleware('course.creation')->group(function () {
             Route::get('/courses', [\App\Http\Controllers\Admin\CourseController::class, 'index'])->name('courses.index');
             Route::get('/courses/create', [\App\Http\Controllers\Admin\CourseController::class, 'create'])->name('courses.create');
             Route::post('/courses', [\App\Http\Controllers\Admin\CourseController::class, 'store'])->name('courses.store');
@@ -209,6 +207,12 @@ Route::middleware('admin.auth')->group(function () {
             Route::post('/courses/{course}/archive', [\App\Http\Controllers\Admin\CourseController::class, 'archive'])->name('courses.archive');
             Route::post('/courses/{course}/unarchive', [\App\Http\Controllers\Admin\CourseController::class, 'unarchive'])->name('courses.unarchive');
             Route::delete('/courses/{course}', [\App\Http\Controllers\Admin\CourseController::class, 'destroy'])->name('courses.destroy');
+        });
+
+        // Super Admin only: users, settings, system reset
+        Route::middleware('admin.role')->group(function () {
+            Route::get('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'index'])->name('system.reset.index');
+            Route::post('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'reset'])->name('system.reset');
             Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
             Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
             if (! app()->environment('production')) {
