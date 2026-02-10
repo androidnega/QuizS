@@ -94,6 +94,19 @@ class StudentLoginController extends Controller
             ]);
         }
 
+        // Check if there's an existing valid OTP (within 24 hours)
+        $cached = Cache::get('student_otp:' . $indexNumber);
+        if ($cached && isset($cached['code'])) {
+            // OTP already exists and is valid, no need to send new SMS
+            return response()->json([
+                'success' => true,
+                'step' => 'otp',
+                'index_number' => $student->index_number,
+                'message' => 'Use your existing code sent within the last 24 hours, or request a new one below.',
+            ]);
+        }
+
+        // No valid OTP, generate and send new one
         $code = (string) random_int(100000, 999999);
         Cache::put('student_otp:' . $indexNumber, ['code' => $code, 'phone' => $student->phone_contact], 86400);
         $message = 'Your QuizSnap code is: ' . $code . '. Use it to continue the quiz and as login for 24 hours. Do not share.';
@@ -110,7 +123,7 @@ class StudentLoginController extends Controller
             'success' => true,
             'step' => 'otp',
             'index_number' => $student->index_number,
-            'message' => 'A code has been sent to your registered number. Enter it below. This code is also your login for the next 24 hours.',
+            'message' => 'A code has been sent to your registered number. This code is valid for 24 hours.',
         ]);
     }
 }

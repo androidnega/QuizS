@@ -59,6 +59,19 @@ class StudentAccountController extends Controller
             ]);
         }
 
+        // Check if there's an existing valid OTP (within 24 hours)
+        $cached = Cache::get(self::OTP_CACHE_PREFIX . $indexNumber);
+        if ($cached && isset($cached['code'])) {
+            // OTP already exists and is valid, no need to send new SMS
+            return response()->json([
+                'success' => true,
+                'step' => 'otp',
+                'index_number' => $student->index_number,
+                'message' => 'Use your existing code sent within the last 24 hours, or request a new one below.',
+                'has_name' => !empty($student->student_name),
+            ]);
+        }
+
         // Has phone: generate OTP and send
         $code = (string) random_int(100000, 999999);
         Cache::put(self::OTP_CACHE_PREFIX . $indexNumber, [
@@ -80,7 +93,8 @@ class StudentAccountController extends Controller
             'success' => true,
             'step' => 'otp',
             'index_number' => $student->index_number,
-            'message' => 'A code has been sent to your registered number.',
+            'message' => 'A code has been sent to your registered number. This code is valid for 24 hours.',
+            'has_name' => !empty($student->student_name),
         ]);
     }
 
@@ -105,6 +119,13 @@ class StudentAccountController extends Controller
         $student = Student::where('index_number', $indexNumber)->first();
         if (!$student) {
             return response()->json(['success' => false, 'message' => 'Invalid session. Start again.'], 422);
+        }
+
+        // Check if there's an existing valid OTP for this index
+        $existingCached = Cache::get(self::OTP_CACHE_PREFIX . $indexNumber);
+        if ($existingCached && isset($existingCached['code']) && ($existingCached['phone'] ?? '') === $phone) {
+            // Same phone number and OTP still valid, regenerate OTP to refresh
+            Cache::forget(self::OTP_CACHE_PREFIX . $indexNumber);
         }
 
         $code = (string) random_int(100000, 999999);
@@ -169,7 +190,8 @@ class StudentAccountController extends Controller
         }
         $student->save();
 
-        Cache::forget(self::OTP_CACHE_PREFIX . $indexNumber);
+        // Don't delete OTP - keep it valid for 24 hours for reuse
+        // Cache::forget(self::OTP_CACHE_PREFIX . $indexNumber);
 
         session([
             'student_id' => $student->id,
