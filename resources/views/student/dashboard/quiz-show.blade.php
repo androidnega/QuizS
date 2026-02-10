@@ -14,7 +14,7 @@
         <p class="text-gray-600 mt-1">Taken {{ $session->created_at->format('M j, Y g:i A') }}@if(isset($showFullReview) && $showFullReview) · Question review available for 21 days@endif</p>
     </div>
 
-    @if($session->result && $session->quiz->canShowScore())
+    @if(isset($session->result) && $session->result && isset($session->quiz) && $session->quiz->canShowScore())
     @php
         $score = round($session->result->score, 0);
         $correctCount = $session->result->correct_count;
@@ -40,15 +40,15 @@
     </div>
     @endif
 
-    @if($session->pre_face_image || $session->post_face_image)
+    @if(!empty($session->pre_face_image) || !empty($session->post_face_image))
     <div class="rounded-xl border-2 border-gray-200 bg-white p-6 shadow-sm">
         <h2 class="text-lg font-bold text-gray-900 mb-4">Face verification photos</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @if($session->pre_face_image)
+            @if(!empty($session->pre_face_image))
             <div class="space-y-2">
                 <p class="text-sm font-medium text-gray-700">Before quiz</p>
                 @php
-                    $preFaceUrl = str_starts_with($session->pre_face_image, 'http') 
+                    $preFaceUrl = (str_starts_with($session->pre_face_image, 'http') || str_starts_with($session->pre_face_image, 'https'))
                         ? $session->pre_face_image 
                         : asset('storage/' . $session->pre_face_image);
                 @endphp
@@ -57,52 +57,54 @@
             </div>
             @endif
 
-            @if($session->post_face_image)
+            @if(!empty($session->post_face_image))
             <div class="space-y-2">
                 <p class="text-sm font-medium text-gray-700">After quiz</p>
                 @php
-                    $postFaceUrl = str_starts_with($session->post_face_image, 'http') 
+                    $postFaceUrl = (str_starts_with($session->post_face_image, 'http') || str_starts_with($session->post_face_image, 'https'))
                         ? $session->post_face_image 
                         : asset('storage/' . $session->post_face_image);
                 @endphp
                 <img src="{{ $postFaceUrl }}" alt="After quiz photo" class="w-full h-auto rounded-lg border border-gray-200">
-                <p class="text-xs text-gray-500">Captured {{ $session->post_face_captured_at ? $session->post_face_captured_at->format('M j, Y g:i A') : 'after submission' }}</p>
+                <p class="text-xs text-gray-500">Captured {{ !empty($session->post_face_captured_at) ? $session->post_face_captured_at->format('M j, Y g:i A') : 'after submission' }}</p>
             </div>
             @endif
         </div>
     </div>
     @endif
 
-    @if(isset($showFullReview) && $showFullReview && $session->quiz->canShowFullReview() && $session->answers->isNotEmpty())
+    @if(isset($showFullReview) && $showFullReview && isset($session->quiz) && $session->quiz->canShowFullReview() && isset($session->answers) && $session->answers->isNotEmpty())
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8">
         <h2 class="text-sm font-semibold text-gray-900 mb-3">Questions & answers</h2>
         <p class="text-xs text-gray-500 mb-4">What you answered and the correct answers. This review is available for 21 days.</p>
         <div class="space-y-4">
             @foreach($session->answers as $idx => $answer)
-                @if($answer->question)
+                @if(isset($answer->question) && $answer->question)
                     @php
-                        $sessionCorrect = $session->assigned_correct_answers[$answer->question_id] ?? $session->assigned_correct_answers[(string)$answer->question_id] ?? $answer->question->correct_answer;
-                        $correct = trim((string)$answer->student_answer) === trim((string)$sessionCorrect);
+                        $sessionCorrect = $session->assigned_correct_answers[$answer->question_id] ?? $session->assigned_correct_answers[(string)$answer->question_id] ?? ($answer->question->correct_answer ?? '');
+                        $studentAnswerValue = $answer->student_answer ?? '';
+                        $correct = trim((string)$studentAnswerValue) === trim((string)$sessionCorrect);
                         $shuffledOpts = $session->shuffled_question_options[$answer->question_id] ?? $session->shuffled_question_options[(string)$answer->question_id] ?? null;
                         $yourText = null;
                         $correctText = null;
                         
                         // Try shuffled options first
-                        if (is_array($shuffledOpts)) {
+                        if (is_array($shuffledOpts) && !empty($shuffledOpts)) {
                             foreach ($shuffledOpts as $o) {
                                 $k = $o['key'] ?? $o;
                                 $t = $o['text'] ?? $o;
-                                if ((string)$k === trim((string)$answer->student_answer)) $yourText = $t;
+                                if ((string)$k === trim((string)$studentAnswerValue)) $yourText = $t;
                                 if ((string)$k === trim((string)$sessionCorrect)) $correctText = $t;
                             }
                         }
                         
                         // Fallback to question's original options if shuffled not available
-                        if (($yourText === null || $correctText === null) && is_array($answer->question->options)) {
+                        if (($yourText === null || $correctText === null) && isset($answer->question->options) && is_array($answer->question->options)) {
                             foreach ($answer->question->options as $opt) {
+                                if (!is_array($opt)) continue;
                                 $optKey = $opt['key'] ?? '';
                                 $optText = $opt['text'] ?? '';
-                                if ($yourText === null && (string)$optKey === trim((string)$answer->student_answer)) {
+                                if ($yourText === null && (string)$optKey === trim((string)$studentAnswerValue)) {
                                     $yourText = $optText;
                                 }
                                 if ($correctText === null && (string)$optKey === trim((string)$sessionCorrect)) {
@@ -110,12 +112,14 @@
                                 }
                             }
                         }
+                        
+                        $questionText = $answer->question->text ?? 'Question not available';
                     @endphp
                     <div class="border rounded-lg p-3 {{ $correct ? 'bg-success-50/50 border-success-200' : 'bg-danger-50/50 border-danger-200' }}">
-                        <p class="text-sm font-medium text-gray-900 mb-1">{{ $idx + 1 }}. {{ $answer->question->text }}</p>
+                        <p class="text-sm font-medium text-gray-900 mb-1">{{ $idx + 1 }}. {{ $questionText }}</p>
                         <div class="flex flex-wrap gap-2 text-xs mt-2">
-                            <span class="text-gray-600">Your answer: <strong>{{ $yourText !== null ? $answer->student_answer . '. ' . $yourText : ($answer->student_answer ?: '—') }}</strong></span>
-                            <span class="text-success-700">Correct: <strong>{{ $correctText !== null ? $sessionCorrect . '. ' . $correctText : $sessionCorrect }}</strong></span>
+                            <span class="text-gray-600">Your answer: <strong>{{ $yourText !== null ? $studentAnswerValue . '. ' . $yourText : ($studentAnswerValue ?: '—') }}</strong></span>
+                            <span class="text-success-700">Correct: <strong>{{ $correctText !== null ? $sessionCorrect . '. ' . $correctText : ($sessionCorrect ?: '—') }}</strong></span>
                         </div>
                         @if(!$correct)
                             @php $whyWrong = $answer->question->explanation_wrong ?? $answer->explanation_wrong ?? null; @endphp
@@ -138,13 +142,13 @@
     </div>
     @endif
 
-    @if($session->quiz->canShowScore() && !$session->quiz->canShowFullReview())
+    @if(isset($session->quiz) && $session->quiz->canShowScore() && !$session->quiz->canShowFullReview())
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p class="text-sm text-gray-600">Answer review is not shown for this quiz.</p>
     </div>
     @endif
 
-    @if($session->quiz->canShowFullReview() && isset($showFullReview) && $showFullReview && $session->answers->isEmpty())
+    @if(isset($session->quiz) && $session->quiz->canShowFullReview() && isset($showFullReview) && $showFullReview && isset($session->answers) && $session->answers->isEmpty())
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p class="text-sm text-gray-600">No answers recorded for this quiz session.</p>
     </div>
