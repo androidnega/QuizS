@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Quiz;
 use App\Models\QuizSession;
+use App\Models\Setting;
 use App\Services\CloudinaryService;
 use App\Services\QuestionAssignmentService;
 use Illuminate\Http\Request;
@@ -36,14 +37,16 @@ class ProctoringCaptureController extends Controller
         $ip = $request->ip();
         $studentIndex = strtoupper(trim((string) $indexNumber));
         
-        // Check if IP was used by a different student for this quiz
-        $ipUsedByOther = QuizSession::where('quiz_id', $quiz->id)
-            ->where('ip_address', $ip)
-            ->whereRaw('UPPER(TRIM(student_index)) != ?', [$studentIndex])
-            ->exists();
-        
-        if ($ipUsedByOther) {
-            return redirect()->route('student.landing')->with('error', 'This IP has already been used for this quiz by another student.');
+        if ($this->isIpDeviceRestrictionEnabled()) {
+            // Check if IP was used by a different student for this quiz
+            $ipUsedByOther = QuizSession::where('quiz_id', $quiz->id)
+                ->where('ip_address', $ip)
+                ->whereRaw('UPPER(TRIM(student_index)) != ?', [$studentIndex])
+                ->exists();
+
+            if ($ipUsedByOther) {
+                return redirect()->route('student.landing')->with('error', 'This IP has already been used for this quiz by another student.');
+            }
         }
         return view('student.proctoring-capture', [
             'quiz' => $quiz,
@@ -68,14 +71,16 @@ class ProctoringCaptureController extends Controller
         $ip = $request->ip();
         $studentIndex = strtoupper(trim((string) $request->index_number));
         
-        // Check if IP was used by a different student for this quiz
-        $ipUsedByOther = QuizSession::where('quiz_id', $quiz->id)
-            ->where('ip_address', $ip)
-            ->whereRaw('UPPER(TRIM(student_index)) != ?', [$studentIndex])
-            ->exists();
-        
-        if ($ipUsedByOther) {
-            return response()->json(['success' => false, 'message' => 'IP already used for this quiz by another student.'], 403);
+        if ($this->isIpDeviceRestrictionEnabled()) {
+            // Check if IP was used by a different student for this quiz
+            $ipUsedByOther = QuizSession::where('quiz_id', $quiz->id)
+                ->where('ip_address', $ip)
+                ->whereRaw('UPPER(TRIM(student_index)) != ?', [$studentIndex])
+                ->exists();
+
+            if ($ipUsedByOther) {
+                return response()->json(['success' => false, 'message' => 'IP already used for this quiz by another student.'], 403);
+            }
         }
 
         $studentIndex = strtoupper(trim((string) $request->index_number));
@@ -127,5 +132,10 @@ class ProctoringCaptureController extends Controller
             'success' => true,
             'redirect' => route('student.quiz.ready'),
         ]);
+    }
+
+    private function isIpDeviceRestrictionEnabled(): bool
+    {
+        return Setting::getValue(Setting::KEY_DISABLE_IP_DEVICE_RESTRICTIONS, '0') !== '1';
     }
 }

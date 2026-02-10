@@ -7,6 +7,7 @@ use App\Models\ClassGroupStudent;
 use App\Models\Quiz;
 use App\Models\QuizAcceptance;
 use App\Models\QuizSession;
+use App\Models\Setting;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -26,7 +27,7 @@ class QuizRulesController extends Controller
         $quiz = null;
         if ($token) {
             $quiz = Quiz::with('course')->where('link_token', $token)->first();
-            if (!$quiz || !$quiz->is_published || !$quiz->hasEnoughApprovedQuestions()) {
+            if (!$quiz || (!$quiz->is_published && !$quiz->is_active) || !$quiz->hasEnoughApprovedQuestions()) {
                 return view('student.link-expired');
             }
             if ($quiz->ends_at && $quiz->ends_at->isPast()) {
@@ -47,7 +48,7 @@ class QuizRulesController extends Controller
     {
         $token = $request->route('token');
         $quiz = Quiz::with('course')->where('link_token', $token)->first();
-        if (!$quiz || !$quiz->is_published || !$quiz->hasEnoughApprovedQuestions()) {
+        if (!$quiz || (!$quiz->is_published && !$quiz->is_active) || !$quiz->hasEnoughApprovedQuestions()) {
             return view('student.link-expired');
         }
         if ($quiz->ends_at && $quiz->ends_at->isPast()) {
@@ -92,7 +93,7 @@ class QuizRulesController extends Controller
                             ->whereNotNull('ended_at')
                             ->exists();
                         
-                        if ($existingSession) {
+                        if ($existingSession && $this->isIpDeviceRestrictionEnabled()) {
                             // Check IP hasn't been used for this quiz by a different student
                             $ip = $request->ip();
                             $ipUsedByOther = QuizSession::where('quiz_id', $quiz->id)
@@ -159,5 +160,10 @@ class QuizRulesController extends Controller
             'success' => true,
             'redirect' => route('student.login.form'),
         ]);
+    }
+
+    private function isIpDeviceRestrictionEnabled(): bool
+    {
+        return Setting::getValue(Setting::KEY_DISABLE_IP_DEVICE_RESTRICTIONS, '0') !== '1';
     }
 }

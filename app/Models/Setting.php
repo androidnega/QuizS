@@ -90,6 +90,9 @@ class Setting extends Model
     /** Admin: lock examiners from creating new class groups (1 = locked). */
     public const KEY_LOCK_EXAMINER_CREATE_GROUP = 'lock_examiner_create_group';
 
+    /** Admin: disable strict per-IP/per-device quiz session restrictions (1 = disabled). */
+    public const KEY_DISABLE_IP_DEVICE_RESTRICTIONS = 'disable_ip_device_restrictions';
+
     /** OTP (Arkesel): API key and optional sender ID for SMS OTP. */
     public const KEY_OTP_ARKESEL_API_KEY = 'otp_arkesel_api_key';
     public const KEY_OTP_ARKESEL_SENDER_ID = 'otp_arkesel_sender_id';

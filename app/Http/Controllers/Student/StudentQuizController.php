@@ -10,6 +10,7 @@ use App\Models\Question;
 use App\Models\QuizSession;
 use App\Models\QuizViolation;
 use App\Models\Result;
+use App\Models\Setting;
 use App\Models\Student;
 use App\Services\AiQuestionService;
 use Illuminate\Http\Request;
@@ -58,7 +59,7 @@ class StudentQuizController extends Controller
         if ($session->start_time === null) {
             $session->update(['start_time' => now()]);
         }
-        if ($session->ip_address !== $request->ip()) {
+        if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
             QuizViolation::create([
                 'quiz_session_id' => $session->id,
                 'type' => 'multiple_ip',
@@ -154,7 +155,7 @@ class StudentQuizController extends Controller
         if ($session->ended_at) {
             return response()->json(['success' => false, 'message' => 'Quiz ended.'], 403);
         }
-        if ($session->ip_address !== $request->ip()) {
+        if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
             return response()->json(['success' => false], 403);
         }
         Answer::updateOrCreate(
@@ -188,7 +189,7 @@ class StudentQuizController extends Controller
         if ($session->ended_at) {
             return response()->json(['success' => false, 'message' => 'Quiz ended.'], 403);
         }
-        if ($session->ip_address !== $request->ip()) {
+        if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
             return response()->json(['success' => false], 403);
         }
         foreach ($request->answers as $item) {
@@ -296,7 +297,7 @@ class StudentQuizController extends Controller
         if ($session->ended_at) {
             return response()->json(['success' => true, 'redirect' => $this->quizCompleteUrl()]);
         }
-        if ($session->ip_address !== $request->ip()) {
+        if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
             return response()->json(['success' => false], 403);
         }
         if (!$session->post_face_image && !$session->post_face_skipped_reason) {
@@ -397,6 +398,11 @@ class StudentQuizController extends Controller
         ]);
         broadcast(new DataUpdated('dashboard'))->toOthers();
         SendQuizResultReadyNotification::dispatch($session->id);
+    }
+
+    private function isIpDeviceRestrictionEnabled(): bool
+    {
+        return Setting::getValue(Setting::KEY_DISABLE_IP_DEVICE_RESTRICTIONS, '0') !== '1';
     }
 
     /**

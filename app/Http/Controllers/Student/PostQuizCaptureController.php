@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\QuizSession;
+use App\Models\Setting;
 use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -31,7 +32,7 @@ class PostQuizCaptureController extends Controller
         if ($session->ended_at) {
             return redirect()->route('student.quiz.complete');
         }
-        if ($session->ip_address !== $request->ip()) {
+        if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
             return redirect()->route('student.landing')->with('error', 'Session invalid.');
         }
         return view('student.final-photo-capture', [
@@ -53,7 +54,7 @@ class PostQuizCaptureController extends Controller
         if ($session->ended_at) {
             return response()->json(['success' => true]);
         }
-        if ($session->ip_address !== $request->ip()) {
+        if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
             return response()->json(['success' => false], 403);
         }
         $imagePath = null;
@@ -83,5 +84,10 @@ class PostQuizCaptureController extends Controller
             }
         }
         return response()->json(['success' => true]);
+    }
+
+    private function isIpDeviceRestrictionEnabled(): bool
+    {
+        return Setting::getValue(Setting::KEY_DISABLE_IP_DEVICE_RESTRICTIONS, '0') !== '1';
     }
 }

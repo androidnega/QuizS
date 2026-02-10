@@ -31,7 +31,7 @@ class TokenValidationController extends Controller
                 'message' => 'This token is not valid. Please check and try again.',
             ]);
         }
-        if (!$quiz->is_published || !$quiz->hasEnoughApprovedQuestions()) {
+        if ((!$quiz->is_published && !$quiz->is_active) || !$quiz->hasEnoughApprovedQuestions()) {
             return response()->json([
                 'valid' => false,
                 'message' => 'This quiz is not available yet.',

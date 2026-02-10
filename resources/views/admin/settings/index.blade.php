@@ -67,6 +67,14 @@
                             <span class="text-sm text-gray-700">Lock examiners from creating new class groups</span>
                         </label>
                         <p class="text-xs text-gray-500 mt-1">When on, only Super Admin can create class groups. Examiners can still view and edit existing groups.</p>
+
+                        <div class="mt-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="disable_ip_device_restrictions" value="1" {{ old('disable_ip_device_restrictions', $disable_ip_device_restrictions ?? false) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                                <span class="text-sm text-gray-700">Allow shared networks/PCs for quiz access (disable IP/computer uniqueness restriction)</span>
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">When enabled, students can take the same quiz from the same network or reused computers. This also disables session IP mismatch blocking during the quiz.</p>
+                        </div>
                     </div>
                     @endif
                 </div>

@@ -21,7 +21,7 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
         $token = trim($token);
         if (preg_match('#^[a-zA-Z0-9_-]{8,64}$#', $token)) {
             $quiz = Quiz::where('link_token', $token)->first();
-            if ($quiz && $quiz->is_published && $quiz->hasEnoughApprovedQuestions()) {
+            if ($quiz && ($quiz->is_published || $quiz->is_active) && $quiz->hasEnoughApprovedQuestions()) {
                 if ($quiz->ends_at && $quiz->ends_at->isPast()) {
                     return redirect()->route('student.link-expired');
                 }
@@ -61,7 +61,7 @@ Route::post('/student/start-quiz', function (\Illuminate\Http\Request $request) 
         return redirect()->route('student.link-expired');
     }
     $quiz = Quiz::where('link_token', $token)->first();
-    if (!$quiz || !$quiz->is_published || !$quiz->hasEnoughApprovedQuestions()) {
+    if (!$quiz || (!$quiz->is_published && !$quiz->is_active) || !$quiz->hasEnoughApprovedQuestions()) {
         return redirect()->route('student.link-expired');
     }
     if ($quiz->ends_at && $quiz->ends_at->isPast()) {

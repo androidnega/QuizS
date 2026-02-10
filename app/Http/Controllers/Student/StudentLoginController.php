@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ClassGroupStudent;
 use App\Models\Quiz;
 use App\Models\QuizSession;
+use App\Models\Setting;
 use App\Models\Student;
 use App\Services\ArkeselService;
 use Illuminate\Http\Request;
@@ -92,12 +93,14 @@ class StudentLoginController extends Controller
             ], 422);
         }
 
-        $ip = $request->ip();
-        if (QuizSession::where('quiz_id', $quiz->id)->where('ip_address', $ip)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This IP address has already been used for this quiz. Access denied.',
-            ], 422);
+        if ($this->isIpDeviceRestrictionEnabled()) {
+            $ip = $request->ip();
+            if (QuizSession::where('quiz_id', $quiz->id)->where('ip_address', $ip)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This IP address has already been used for this quiz. Access denied.',
+                ], 422);
+            }
         }
 
         session([
@@ -151,5 +154,10 @@ class StudentLoginController extends Controller
             'index_number' => $student->index_number,
             'message' => 'A code has been sent to your registered number. This code is valid for 24 hours.',
         ]);
+    }
+
+    private function isIpDeviceRestrictionEnabled(): bool
+    {
+        return Setting::getValue(Setting::KEY_DISABLE_IP_DEVICE_RESTRICTIONS, '0') !== '1';
     }
 }
