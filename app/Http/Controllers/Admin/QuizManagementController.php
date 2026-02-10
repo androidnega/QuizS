@@ -20,7 +20,6 @@ use App\Events\DataUpdated;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\StreamedResponse;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
@@ -802,89 +801,97 @@ class QuizManagementController extends Controller
 
     /**
      * Export quiz results (scores) as CSV. Restricted by course assignment via authorizeQuiz.
+     * Buffered response with Content-Length to avoid ERR_INCOMPLETE_CHUNKED_ENCODING.
      */
-    public function exportScores(Quiz $quiz): StreamedResponse
+    public function exportScores(Quiz $quiz): Response
     {
         $this->authorize('view', $quiz);
 
         $filename = 'quiz-scores-' . \Illuminate\Support\Str::slug($quiz->title) . '-' . now()->format('Y-m-d-His') . '.csv';
 
-        return new StreamedResponse(function () use ($quiz) {
-            $stream = fopen('php://output', 'w');
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, [
+            'Student Index',
+            'Score %',
+            'Total Questions',
+            'Correct Count',
+            'Violations Count',
+            'Submitted At',
+        ]);
+
+        $sessions = $quiz->sessions()
+            ->with('result')
+            ->whereNotNull('ended_at')
+            ->orderBy('student_index')
+            ->get();
+
+        foreach ($sessions as $session) {
+            $result = $session->result;
             fputcsv($stream, [
-                'Student Index',
-                'Score %',
-                'Total Questions',
-                'Correct Count',
-                'Violations Count',
-                'Submitted At',
+                $session->student_index,
+                $result ? (string) $result->score : '',
+                $result ? (string) $result->total_questions : '',
+                $result ? (string) $result->correct_count : '',
+                $result ? (string) $result->violations_count : '',
+                $result && $result->submitted_at ? $result->submitted_at->toIso8601String() : '',
             ]);
+        }
+        rewind($stream);
+        $body = stream_get_contents($stream);
+        fclose($stream);
 
-            $sessions = $quiz->sessions()
-                ->with('result')
-                ->whereNotNull('ended_at')
-                ->orderBy('student_index')
-                ->get();
-
-            foreach ($sessions as $session) {
-                $result = $session->result;
-                fputcsv($stream, [
-                    $session->student_index,
-                    $result ? (string) $result->score : '',
-                    $result ? (string) $result->total_questions : '',
-                    $result ? (string) $result->correct_count : '',
-                    $result ? (string) $result->violations_count : '',
-                    $result && $result->submitted_at ? $result->submitted_at->toIso8601String() : '',
-                ]);
-            }
-            fclose($stream);
-        }, 200, [
+        return new Response($body, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Length' => (string) strlen($body),
         ]);
     }
 
     /**
      * Export quiz violations as CSV. Restricted by course assignment via authorizeQuiz.
+     * Buffered response with Content-Length to avoid ERR_INCOMPLETE_CHUNKED_ENCODING.
      */
-    public function exportViolations(Quiz $quiz): StreamedResponse
+    public function exportViolations(Quiz $quiz): Response
     {
         $this->authorize('view', $quiz);
 
         $filename = 'quiz-violations-' . \Illuminate\Support\Str::slug($quiz->title) . '-' . now()->format('Y-m-d-His') . '.csv';
 
-        return new StreamedResponse(function () use ($quiz) {
-            $stream = fopen('php://output', 'w');
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, [
+            'Student Index',
+            'Session ID',
+            'Type',
+            'Severity',
+            'Occurred At',
+            'Metadata',
+        ]);
+
+        $violations = \App\Models\QuizViolation::query()
+            ->whereHas('quizSession', fn ($q) => $q->where('quiz_id', $quiz->id))
+            ->with('quizSession:id,student_index')
+            ->orderBy('occurred_at')
+            ->get();
+
+        foreach ($violations as $v) {
+            $session = $v->quizSession;
             fputcsv($stream, [
-                'Student Index',
-                'Session ID',
-                'Type',
-                'Severity',
-                'Occurred At',
-                'Metadata',
+                $session ? $session->student_index : '',
+                (string) $v->quiz_session_id,
+                $v->type ?? '',
+                $v->severity ?? 'warning',
+                $v->occurred_at ? $v->occurred_at->toIso8601String() : '',
+                $v->metadata ? (is_string($v->metadata) ? $v->metadata : json_encode($v->metadata)) : '',
             ]);
+        }
+        rewind($stream);
+        $body = stream_get_contents($stream);
+        fclose($stream);
 
-            $violations = \App\Models\QuizViolation::query()
-                ->whereHas('quizSession', fn ($q) => $q->where('quiz_id', $quiz->id))
-                ->with('quizSession:id,student_index')
-                ->orderBy('occurred_at')
-                ->get();
-
-            foreach ($violations as $v) {
-                $session = $v->quizSession;
-                fputcsv($stream, [
-                    $session ? $session->student_index : '',
-                    (string) $v->quiz_session_id,
-                    $v->type ?? '',
-                    $v->severity ?? 'warning',
-                    $v->occurred_at ? $v->occurred_at->toIso8601String() : '',
-                    $v->metadata ? (is_string($v->metadata) ? $v->metadata : json_encode($v->metadata)) : '',
-                ]);
-            }
-            fclose($stream);
-        }, 200, [
+        return new Response($body, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Length' => (string) strlen($body),
         ]);
     }
 }

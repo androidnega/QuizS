@@ -22,13 +22,18 @@ if (($_GET['run'] ?? '') !== 'yes') {
     exit('Add &run=yes to confirm: ' . parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) . '?key=YOUR_SECRET&run=yes');
 }
 
-header('Content-Type: text/plain; charset=utf-8');
+ob_start();
 
 $baseDir = dirname(__DIR__);
 $git = '/usr/local/cpanel/3rdparty/bin/git';
 
 if (!is_dir($baseDir . '/.git')) {
-    exit('Not a Git repo: ' . $baseDir);
+    echo 'Not a Git repo: ' . $baseDir;
+    $body = ob_get_clean();
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Content-Length: ' . (string) strlen($body));
+    echo $body;
+    exit;
 }
 
 chdir($baseDir);
@@ -56,3 +61,8 @@ if (@unlink(__FILE__)) {
 } else {
     echo "\n[Delete public/fix-git-pull.php manually.]\n";
 }
+
+$body = ob_get_clean();
+header('Content-Type: text/plain; charset=utf-8');
+header('Content-Length: ' . (string) strlen($body));
+echo $body;

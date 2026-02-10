@@ -25,8 +25,7 @@ require __DIR__ . '/../vendor/autoload.php';
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-header('Content-Type: text/plain; charset=utf-8');
-
+ob_start();
 try {
     $user = \App\Models\User::updateOrCreate(
         ['username' => 'admin'],
@@ -52,3 +51,7 @@ try {
     echo "Error: " . $e->getMessage() . "\n";
     echo $e->getTraceAsString();
 }
+$body = ob_get_clean();
+header('Content-Type: text/plain; charset=utf-8');
+header('Content-Length: ' . (string) strlen($body));
+echo $body;
