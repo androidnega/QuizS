@@ -16,10 +16,20 @@ class ArkeselService
 {
     private const BASE_URL = 'https://sms.arkesel.com';
 
-    public static function hasApiKey(): bool
+    /** Get API key: database (Settings) first, then .env (ARKESEL_API_KEY / OTP_ARKESEL_API_KEY) for cPanel/live. */
+    private static function getApiKey(): string
     {
         $key = Setting::getValue(Setting::KEY_OTP_ARKESEL_API_KEY, '');
-        return is_string($key) && trim($key) !== '';
+        if (is_string($key) && trim($key) !== '') {
+            return trim($key);
+        }
+        $key = config('services.arkesel.api_key');
+        return is_string($key) ? trim($key) : '';
+    }
+
+    public static function hasApiKey(): bool
+    {
+        return self::getApiKey() !== '';
     }
 
     /**
@@ -27,7 +37,7 @@ class ArkeselService
      */
     public static function checkBalance(): array
     {
-        $apiKey = Setting::getValue(Setting::KEY_OTP_ARKESEL_API_KEY, '');
+        $apiKey = self::getApiKey();
         if ($apiKey === '') {
             return ['success' => false, 'message' => 'Arkesel API key is not configured.'];
         }
@@ -67,7 +77,7 @@ class ArkeselService
      */
     public static function sendSms(string $recipient, string $message, ?string $senderId = null): array
     {
-        $apiKey = Setting::getValue(Setting::KEY_OTP_ARKESEL_API_KEY, '');
+        $apiKey = self::getApiKey();
         if ($apiKey === '') {
             return ['success' => false, 'message' => 'Arkesel API key is not configured.'];
         }

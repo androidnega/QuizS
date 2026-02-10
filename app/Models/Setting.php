@@ -34,7 +34,8 @@ class Setting extends Model
             try {
                 return Crypt::decryptString($value);
             } catch (DecryptException $e) {
-                return $value;
+                \Illuminate\Support\Facades\Log::warning('Setting decryption failed (wrong APP_KEY?). Key: ' . $key);
+                return $default;
             }
         }
         return $value;
