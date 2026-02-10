@@ -63,15 +63,30 @@
     </div>
 
     @if(isset($classGroups) && $classGroups->isNotEmpty())
-    <section class="rounded-lg border border-gray-200 bg-white p-3">
-        <h2 class="text-xs font-semibold text-gray-800 mb-2">My groups</h2>
+    <section class="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 class="text-sm font-semibold text-gray-800 mb-3">My Groups</h2>
         <ul class="flex flex-wrap gap-2">
             @foreach($classGroups as $group)
-            <li class="inline-flex items-center rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-800">{{ $group->name }}</li>
+            <li class="inline-flex items-center rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-800">{{ $group->name }}</li>
             @endforeach
         </ul>
     </section>
     @endif
+
+    <section class="rounded-lg border border-gray-200 bg-white p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Course Materials</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @for($week = 1; $week <= 12; $week++)
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-base font-semibold text-gray-900">Week {{ $week }}</h3>
+                    <span class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-700">Coming Soon</span>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">Course files and notes will be available here.</p>
+            </div>
+            @endfor
+        </div>
+    </section>
 </div>
 
 @if(isset($scheduledQuiz) && $scheduledQuiz && $scheduledQuiz->starts_at && $scheduledQuiz->starts_at->isFuture())
