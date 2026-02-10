@@ -81,11 +81,15 @@
             @endforeach
         </div>
     </div>
-    @elseif(isset($showFullReview) && !$showFullReview)
+    @endif
+
+    @if(isset($showFullReview) && !$showFullReview)
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p class="text-sm text-gray-600">Detailed review (questions and answers) is no longer available. It is kept for 21 days to keep the system clean. Your score above is kept forever.</p>
     </div>
-    @elseif($session->quiz->canShowScore() && !$session->quiz->canShowFullReview())
+    @endif
+
+    @if($session->quiz->canShowScore() && !$session->quiz->canShowFullReview() && (!isset($showFullReview) || $showFullReview))
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <p class="text-sm text-gray-600">Answer review is not shown for this quiz.</p>
     </div>
