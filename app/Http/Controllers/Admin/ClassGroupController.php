@@ -234,50 +234,19 @@ class ClassGroupController extends Controller
         $indexNumber = trim($request->index_number);
         $providedName = $request->filled('student_name') ? trim($request->student_name) : null;
         
-        // Try to get name from quiz results if not provided
-        $nameFromResults = null;
-        if (!$providedName) {
-            // Check if this student has any quiz results with their name
-            $studentAccount = \App\Models\Student::where('index_number', $indexNumber)->first();
-            if ($studentAccount && $studentAccount->student_name) {
-                $nameFromResults = $studentAccount->student_name;
-            } else {
-                // Check quiz sessions for this index across all quizzes
-                $session = \App\Models\QuizSession::whereRaw('UPPER(TRIM(student_index)) = ?', [strtoupper($indexNumber)])
-                    ->whereHas('quiz', function($q) use ($classGroup) {
-                        $q->where('class_group_id', $classGroup->id);
-                    })
-                    ->with('quiz')
-                    ->orderByDesc('created_at')
-                    ->first();
-                
-                if ($session) {
-                    // Try to get name from student account linked to this session
-                    $account = \App\Models\Student::where('index_number', $indexNumber)->first();
-                    if ($account && $account->student_name) {
-                        $nameFromResults = $account->student_name;
-                    }
-                }
-            }
-        }
-        
-        // Use provided name, or name from results, or null
-        $finalName = $providedName ?? $nameFromResults;
+        // Student is treated as completely new - no data retrieval from previous records
+        // They will go through full onboarding (phone, name, etc.)
         
         ClassGroupStudent::updateOrCreate(
             [
                 'class_group_id' => $classGroup->id,
                 'index_number' => $indexNumber,
             ],
-            ['student_name' => $finalName]
+            ['student_name' => $providedName]
         );
         
-        $message = 'Student index added.';
-        if ($nameFromResults && !$providedName) {
-            $message .= ' Name retrieved from previous quiz results.';
-        }
-        
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', $message);
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)
+            ->with('success', 'Student added as new user. They will go through the onboarding process.');
     }
 
     /** Show details page for one student in the class group. */
@@ -423,19 +392,25 @@ class ClassGroupController extends Controller
         if ($mode === 'replace') {
             $rowsDeleted = $classGroup->students()->count();
             
-            // Delete quiz acceptances and sessions for removed students
-            $quizIds = $classGroup->quizzes()->pluck('id');
-            if ($quizIds->isNotEmpty()) {
-                $removedIndices = $classGroup->students()->pluck('index_number');
-                foreach ($removedIndices as $removedIndex) {
-                    \App\Models\QuizAcceptance::whereIn('quiz_id', $quizIds)
-                        ->whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper($removedIndex)])
-                        ->delete();
-                    
-                    \App\Models\QuizSession::whereIn('quiz_id', $quizIds)
-                        ->whereRaw('UPPER(TRIM(student_index)) = ?', [strtoupper($removedIndex)])
-                        ->delete();
-                }
+            // Delete ALL data for removed students (complete reset)
+            $removedIndices = $classGroup->students()->pluck('index_number');
+            foreach ($removedIndices as $removedIndex) {
+                $indexUpper = strtoupper(trim($removedIndex));
+                
+                // Delete ALL quiz sessions (cascades to answers, results, violations)
+                \App\Models\QuizSession::whereRaw('UPPER(TRIM(student_index)) = ?', [$indexUpper])->delete();
+                
+                // Delete ALL quiz acceptances
+                \App\Models\QuizAcceptance::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
+                
+                // Delete student accounts
+                \App\Models\Student::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
+                
+                // Clear cached OTP data (using both formats)
+                \Illuminate\Support\Facades\Cache::forget('student_otp:' . $removedIndex);
+                \Illuminate\Support\Facades\Cache::forget('student_otp:' . $indexUpper);
+                \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\Student\StudentAccountController::OTP_CACHE_PREFIX . $removedIndex);
+                \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\Student\StudentAccountController::OTP_CACHE_PREFIX . $indexUpper);
             }
             
             $classGroup->students()->delete();
@@ -444,21 +419,13 @@ class ClassGroupController extends Controller
         foreach ($byIndex as $index => $name) {
             $indexTrimmed = trim($index);
             
-            // If name not provided, try to get from quiz results
-            $nameFromResults = null;
-            if (empty($name)) {
-                $studentAccount = \App\Models\Student::where('index_number', $indexTrimmed)->first();
-                if ($studentAccount && $studentAccount->student_name) {
-                    $nameFromResults = $studentAccount->student_name;
-                }
-            }
-            
-            $finalName = $name ?: $nameFromResults;
+            // Students are treated as completely new - no data retrieval
+            // They will go through full onboarding
             
             $existing = ClassGroupStudent::where('class_group_id', $classGroup->id)->where('index_number', $indexTrimmed)->first();
             ClassGroupStudent::updateOrCreate(
                 ['class_group_id' => $classGroup->id, 'index_number' => $indexTrimmed],
-                ['student_name' => $finalName]
+                ['student_name' => $name ? trim($name) : null]
             );
             if ($existing) {
                 $rowsUpdated++;
@@ -492,24 +459,29 @@ class ClassGroupController extends Controller
         }
         
         $indexNumber = $student->index_number;
+        $indexUpper = strtoupper(trim($indexNumber));
         
-        // Delete quiz acceptances for this student in this class group's quizzes
-        $quizIds = $classGroup->quizzes()->pluck('id');
-        if ($quizIds->isNotEmpty()) {
-            \App\Models\QuizAcceptance::whereIn('quiz_id', $quizIds)
-                ->whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper($indexNumber)])
-                ->delete();
-        }
+        // Delete ALL quiz sessions for this student (across all quizzes)
+        // This will cascade delete: answers, results, violations
+        \App\Models\QuizSession::whereRaw('UPPER(TRIM(student_index)) = ?', [$indexUpper])->delete();
         
-        // Delete quiz sessions for this student in this class group's quizzes (allow retake)
-        if ($quizIds->isNotEmpty()) {
-            \App\Models\QuizSession::whereIn('quiz_id', $quizIds)
-                ->whereRaw('UPPER(TRIM(student_index)) = ?', [strtoupper($indexNumber)])
-                ->delete();
-        }
+        // Delete ALL quiz acceptances for this student (across all quizzes)
+        \App\Models\QuizAcceptance::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
         
+        // Delete student account (phone, name, etc.) - complete reset
+        \App\Models\Student::whereRaw('UPPER(TRIM(index_number)) = ?', [$indexUpper])->delete();
+        
+        // Clear any cached OTP data for this student (using both formats)
+        \Illuminate\Support\Facades\Cache::forget('student_otp:' . $indexNumber);
+        \Illuminate\Support\Facades\Cache::forget('student_otp:' . $indexUpper);
+        \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\Student\StudentAccountController::OTP_CACHE_PREFIX . $indexNumber);
+        \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\Student\StudentAccountController::OTP_CACHE_PREFIX . $indexUpper);
+        
+        // Delete class group student record
         $student->delete();
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Student index removed. They can retake quizzes when added back.');
+        
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)
+            ->with('success', 'Student completely removed. All data deleted. They will be treated as new when added back.');
     }
 
     /** Remove phone number from a student. */
