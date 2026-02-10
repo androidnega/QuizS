@@ -25,31 +25,33 @@
 @section('content')
 <div class="min-h-screen flex flex-col font-sans antialiased">
     <header class="shrink-0 bg-white/80 backdrop-blur-sm border-b border-slate-200/50 sticky top-0 z-50">
-        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-            <a href="{{ route('student.landing') }}" class="logo-text no-underline">
-                <span class="logo-mark" aria-hidden="true">
-                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                        <rect width="40" height="40" rx="10" fill="#3b82f6"/>
-                        <circle cx="20" cy="18" r="7" fill="#fbbf24"/>
-                        <circle cx="20" cy="18" r="3" fill="#3b82f6"/>
-                        <rect x="18" y="26" width="4" height="6" rx="1" fill="#fbbf24"/>
-                    </svg>
-                </span>
-                <span style="color: #3b82f6;">Quiz</span><span style="color: #fbbf24;">Snap</span>
-            </a>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('about-system') }}" class="text-sm font-medium text-slate-900 hover:text-slate-900 transition-all no-underline">
-                    About System
+        <div class="mx-auto max-w-7xl px-6">
+            <div class="flex h-16 items-center justify-between">
+                <a href="{{ route('student.landing') }}" class="logo-text no-underline">
+                    <span class="logo-mark" aria-hidden="true">
+                        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                            <rect width="40" height="40" rx="10" fill="#3b82f6"/>
+                            <circle cx="20" cy="18" r="7" fill="#fbbf24"/>
+                            <circle cx="20" cy="18" r="3" fill="#3b82f6"/>
+                            <rect x="18" y="26" width="4" height="6" rx="1" fill="#fbbf24"/>
+                        </svg>
+                    </span>
+                    <span style="color: #3b82f6;">Quiz</span><span style="color: #fbbf24;">Snap</span>
                 </a>
-                @if(isset($student) && $student)
-                    <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-white bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline">
-                        Dashboard
+                <div class="flex flex-col items-end gap-2">
+                    @if(isset($student) && $student)
+                        <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-white bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline shadow-sm">
+                            Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-white bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline shadow-sm">
+                            Student Login
+                        </a>
+                    @endif
+                    <a href="{{ route('about-system') }}" class="text-xs font-medium text-slate-600 hover:text-blue-600 transition-all no-underline">
+                        About System
                     </a>
-                @else
-                    <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-white bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline">
-                        Student Login
-                    </a>
-                @endif
+                </div>
             </div>
         </div>
     </header>
@@ -76,11 +78,18 @@
                 <div class="space-y-10">
                     <!-- Getting Started -->
                     <section>
-                        <h2 class="text-2xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-lg font-bold text-sm">1</span>
-                            Getting Started
-                        </h2>
-                        <div class="pl-10 space-y-3 text-slate-700">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-semibold text-slate-900 mb-2">Getting Started</h2>
+                                <p class="text-sm text-slate-500">Your first steps to taking a quiz</p>
+                            </div>
+                        </div>
+                        <div class="pl-20 space-y-3 text-slate-700">
                             <p><strong>Receive your token:</strong> Your lecturer or examiner will provide you with a unique quiz token (e.g., KTdie54-3Sx9).</p>
                             <p><strong>Enter the token:</strong> On the homepage, enter the token in the input field and click "Start Quiz".</p>
                             <p><strong>Login to your account:</strong> You can also log in to your student account to see all available quizzes on your dashboard.</p>
@@ -89,11 +98,18 @@
 
                     <!-- Verification Process -->
                     <section>
-                        <h2 class="text-2xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <span class="flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-600 rounded-lg font-bold text-sm">2</span>
-                            Verification Process
-                        </h2>
-                        <div class="pl-10 space-y-3 text-slate-700">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-semibold text-slate-900 mb-2">Verification Process</h2>
+                                <p class="text-sm text-slate-500">Secure identity verification steps</p>
+                            </div>
+                        </div>
+                        <div class="pl-20 space-y-3 text-slate-700">
                             <p><strong>Index number:</strong> Enter your student index number for verification.</p>
                             <p><strong>Phone verification:</strong> If it's your first time, you'll verify your phone number with an OTP.</p>
                             <p><strong>Pre-quiz photo:</strong> Take a clear photo of your face using your device camera. This helps verify your identity.</p>
@@ -102,11 +118,18 @@
 
                     <!-- Taking the Quiz -->
                     <section>
-                        <h2 class="text-2xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <span class="flex items-center justify-center w-8 h-8 bg-teal-100 text-teal-600 rounded-lg font-bold text-sm">3</span>
-                            Taking the Quiz
-                        </h2>
-                        <div class="pl-10 space-y-3 text-slate-700">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-semibold text-slate-900 mb-2">Taking the Quiz</h2>
+                                <p class="text-sm text-slate-500">Important guidelines during the quiz</p>
+                            </div>
+                        </div>
+                        <div class="pl-20 space-y-3 text-slate-700">
                             <p><strong>Timer:</strong> Once you start, a countdown timer begins. You must complete the quiz before time runs out.</p>
                             <p><strong>Answer questions:</strong> Questions are displayed one screen at a time. Select your answers carefully.</p>
                             <p><strong>Auto-save:</strong> Your answers are automatically saved as you progress.</p>
@@ -117,11 +140,18 @@
 
                     <!-- Proctoring & Security -->
                     <section>
-                        <h2 class="text-2xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <span class="flex items-center justify-center w-8 h-8 bg-orange-100 text-orange-600 rounded-lg font-bold text-sm">4</span>
-                            Proctoring & Security
-                        </h2>
-                        <div class="pl-10 space-y-3 text-slate-700">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-semibold text-slate-900 mb-2">Proctoring & Security</h2>
+                                <p class="text-sm text-slate-500">How we ensure exam integrity</p>
+                            </div>
+                        </div>
+                        <div class="pl-20 space-y-3 text-slate-700">
                             <p><strong>Face verification:</strong> Pre and post-quiz photos help verify that you completed the quiz.</p>
                             <p><strong>Tab monitoring:</strong> The system detects when you switch tabs or leave the quiz window.</p>
                             <p><strong>One device per session:</strong> You cannot take the same quiz from multiple devices simultaneously.</p>
@@ -131,11 +161,18 @@
 
                     <!-- Submitting & Results -->
                     <section>
-                        <h2 class="text-2xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <span class="flex items-center justify-center w-8 h-8 bg-green-100 text-green-600 rounded-lg font-bold text-sm">5</span>
-                            Submitting & Results
-                        </h2>
-                        <div class="pl-10 space-y-3 text-slate-700">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-semibold text-slate-900 mb-2">Submitting & Results</h2>
+                                <p class="text-sm text-slate-500">Complete and view your results</p>
+                            </div>
+                        </div>
+                        <div class="pl-20 space-y-3 text-slate-700">
                             <p><strong>Final photo:</strong> After completing all questions, take a final photo to submit your quiz.</p>
                             <p><strong>Instant results:</strong> Your score is calculated immediately after submission.</p>
                             <p><strong>Review answers:</strong> You can review your answers and see correct answers (if enabled by your lecturer).</p>
@@ -145,11 +182,18 @@
 
                     <!-- Technical Requirements -->
                     <section>
-                        <h2 class="text-2xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <span class="flex items-center justify-center w-8 h-8 bg-red-100 text-red-600 rounded-lg font-bold text-sm">6</span>
-                            Technical Requirements
-                        </h2>
-                        <div class="pl-10 space-y-3 text-slate-700">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-semibold text-slate-900 mb-2">Technical Requirements</h2>
+                                <p class="text-sm text-slate-500">What you need to get started</p>
+                            </div>
+                        </div>
+                        <div class="pl-20 space-y-3 text-slate-700">
                             <p><strong>Device:</strong> Desktop or laptop computer (mobile devices not supported).</p>
                             <p><strong>Browser:</strong> Modern browser with JavaScript enabled (Chrome, Firefox, Safari, Edge).</p>
                             <p><strong>Camera:</strong> Working webcam for face verification photos.</p>

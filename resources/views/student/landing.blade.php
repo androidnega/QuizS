@@ -98,31 +98,33 @@
 @section('content')
 <div class="home-page-wrap min-h-screen flex flex-col font-sans antialiased">
     <header class="shrink-0 bg-white/80 backdrop-blur-sm border-b border-slate-200/50 sticky top-0 z-50">
-        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-            <a href="{{ route('student.landing') }}" class="logo-text no-underline">
-                <span class="logo-mark" aria-hidden="true">
-                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
-                        <rect width="40" height="40" rx="10" fill="#3b82f6"/>
-                        <circle cx="20" cy="18" r="7" fill="#fbbf24"/>
-                        <circle cx="20" cy="18" r="3" fill="#3b82f6"/>
-                        <rect x="18" y="26" width="4" height="6" rx="1" fill="#fbbf24"/>
-                    </svg>
-                </span>
-                <span style="color: #3b82f6;">Quiz</span><span style="color: #fbbf24;">Snap</span>
-            </a>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('about-system') }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-all no-underline">
-                    About System
+        <div class="mx-auto max-w-7xl px-6">
+            <div class="flex h-16 items-center justify-between">
+                <a href="{{ route('student.landing') }}" class="logo-text no-underline">
+                    <span class="logo-mark" aria-hidden="true">
+                        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+                            <rect width="40" height="40" rx="10" fill="#3b82f6"/>
+                            <circle cx="20" cy="18" r="7" fill="#fbbf24"/>
+                            <circle cx="20" cy="18" r="3" fill="#3b82f6"/>
+                            <rect x="18" y="26" width="4" height="6" rx="1" fill="#fbbf24"/>
+                        </svg>
+                    </span>
+                    <span style="color: #3b82f6;">Quiz</span><span style="color: #fbbf24;">Snap</span>
                 </a>
-                @if(isset($student) && $student)
-                    <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-white bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline">
-                        Dashboard
+                <div class="flex flex-col items-end gap-2">
+                    @if(isset($student) && $student)
+                        <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-white bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline shadow-sm">
+                            Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-white bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline shadow-sm">
+                            Student Login
+                        </a>
+                    @endif
+                    <a href="{{ route('about-system') }}" class="text-xs font-medium text-slate-600 hover:text-blue-600 transition-all no-underline">
+                        About System
                     </a>
-                @else
-                    <a href="{{ route('student.account.login.form') }}" class="text-sm font-semibold text-white bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition-all no-underline">
-                        Student Login
-                    </a>
-                @endif
+                </div>
             </div>
         </div>
     </header>
