@@ -130,6 +130,10 @@
                 if (phoneInput) phoneInput.value = '';
             } else if (data.step === 'otp') {
                 document.getElementById('otp-step-message').textContent = data.message || 'Enter the 6-digit code sent to your phone.';
+                // Hide name field if student already has a name
+                if (data.has_name && nameInput) {
+                    nameInput.closest('div').style.display = 'none';
+                }
                 showStep('otp');
                 if (otpInput) { otpInput.value = ''; otpInput.focus(); }
             }
@@ -174,6 +178,10 @@
             }
             lastPhoneUsed = phone;
             document.getElementById('otp-step-message').textContent = data.message || 'Enter the 6-digit code sent to your number.';
+            // Hide name field if student already has a name
+            if (data.has_name && nameInput) {
+                nameInput.closest('div').style.display = 'none';
+            }
             showStep('otp');
             if (otpInput) { otpInput.value = ''; otpInput.focus(); }
             showError('otp-error', '');

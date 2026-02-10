@@ -140,6 +140,10 @@
             } else if (data.step === 'otp') {
                 var otpMsg = document.getElementById('otp-step-message');
                 if (otpMsg) otpMsg.textContent = data.message || 'Enter the 6-digit code sent to your phone.';
+                // Hide name field if student already has a name
+                if (data.has_name && nameInput) {
+                    nameInput.closest('div').style.display = 'none';
+                }
                 showStep('otp');
                 if (otpInput) { otpInput.value = ''; otpInput.focus(); }
             }
@@ -182,6 +186,10 @@
             lastPhoneUsed = phone;
             var otpMsg = document.getElementById('otp-step-message');
             if (otpMsg) otpMsg.textContent = data.message || 'Enter the 6-digit code sent to your number. Keep it for 24h login.';
+            // Hide name field if student already has a name
+            if (data.has_name && nameInput) {
+                nameInput.closest('div').style.display = 'none';
+            }
             showStep('otp');
             if (otpInput) { otpInput.value = ''; otpInput.focus(); }
             showError('otp-error', '');
