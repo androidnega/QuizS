@@ -209,104 +209,61 @@ class UserManagementController extends Controller
     }
 
     /**
-     * Show password prompt to view examiner dashboard as admin.
+     * Show password prompt to view/reset examiner password.
      */
-    public function showViewAsForm(User $user): View|RedirectResponse
+    public function showPasswordForm(User $user): View|RedirectResponse
     {
         $currentUser = $this->adminUser();
         $isSuperAdmin = $currentUser && $currentUser->isSuperAdmin();
         
-        // Only Super Admin can view as examiner
+        // Only Super Admin can view/reset passwords
         if (!$isSuperAdmin) {
-            abort(403, 'Only Super Administrators can view examiner dashboards.');
+            abort(403, 'Only Super Administrators can view user passwords.');
         }
         
-        // Only allow viewing examiners
-        if (!$user->isExaminer()) {
-            return redirect()->route('dashboard.users.index')
-                ->with('error', 'You can only view examiner dashboards.');
-        }
-        
-        return view('admin.users.view-as', compact('user'));
+        return view('admin.users.view-password', compact('user'));
     }
 
     /**
-     * Authenticate admin password and switch to examiner view.
+     * Verify admin password and show/reset examiner password.
      */
-    public function viewAs(Request $request, User $examiner): RedirectResponse
+    public function viewPassword(Request $request, User $user): RedirectResponse|View
     {
         $currentUser = $this->adminUser();
         $isSuperAdmin = $currentUser && $currentUser->isSuperAdmin();
         
-        // Only Super Admin can view as examiner
+        // Only Super Admin can view/reset passwords
         if (!$isSuperAdmin) {
-            abort(403, 'Only Super Administrators can view examiner dashboards.');
-        }
-        
-        // Only allow viewing examiners
-        if (!$examiner->isExaminer()) {
-            return redirect()->route('dashboard.users.index')
-                ->with('error', 'You can only view examiner dashboards.');
+            abort(403, 'Only Super Administrators can view user passwords.');
         }
         
         $request->validate([
-            'password' => 'required|string',
+            'admin_password' => 'required|string',
+            'new_password' => 'nullable|string|min:8',
+            'new_password_confirmation' => 'nullable|required_with:new_password|same:new_password',
         ]);
         
         // Verify admin's password
-        if (!Hash::check($request->password, $currentUser->password)) {
+        if (!Hash::check($request->admin_password, $currentUser->password)) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Incorrect password. Please try again.');
+                ->with('error', 'Incorrect admin password. Please try again.');
         }
         
-        // Store original admin session for restoration
-        session([
-            'impersonating_admin_id' => $currentUser->id,
-            'impersonating_admin_role' => $currentUser->role,
-        ]);
-        
-        // Set examiner session
-        session([
-            'admin_user_id' => $examiner->id,
-            'admin_role' => 'examiner',
-            'admin_authenticated' => true,
-        ]);
-        
-        return redirect()->route('dashboard')
-            ->with('success', "Now viewing as {$examiner->username}. Click 'Exit View' to return to admin dashboard.");
-    }
-
-    /**
-     * Exit impersonation and return to admin dashboard.
-     */
-    public function exitViewAs(): RedirectResponse
-    {
-        $originalAdminId = session('impersonating_admin_id');
-        $originalAdminRole = session('impersonating_admin_role');
-        
-        if (!$originalAdminId) {
-            return redirect()->route('dashboard')
-                ->with('error', 'Not currently viewing as another user.');
-        }
-        
-        // Restore original admin session
-        $originalAdmin = User::find($originalAdminId);
-        if ($originalAdmin && $originalAdmin->isSuperAdmin()) {
-            session([
-                'admin_user_id' => $originalAdmin->id,
-                'admin_role' => $originalAdminRole ?? 'super_admin',
-                'admin_authenticated' => true,
-            ]);
+        // If new password is provided, reset it
+        if ($request->filled('new_password')) {
+            $user->password = Hash::make($request->new_password);
+            $user->save();
             
-            // Clear impersonation flags
-            session()->forget(['impersonating_admin_id', 'impersonating_admin_role']);
-            
-            return redirect()->route('dashboard')
-                ->with('success', 'Returned to admin dashboard.');
+            return redirect()->route('dashboard.users.index')
+                ->with('success', "Password for {$user->username} has been reset successfully.");
         }
         
-        return redirect()->route('dashboard')
-            ->with('error', 'Unable to restore admin session.');
+        // Show that password is set (but can't show actual password since it's hashed)
+        return view('admin.users.view-password', [
+            'user' => $user,
+            'password_verified' => true,
+            'message' => 'Password is set. You cannot view the original password, but you can reset it below.',
+        ]);
     }
 }

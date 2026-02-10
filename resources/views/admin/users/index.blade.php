@@ -47,16 +47,17 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">••••••</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @if(isset($isSuperAdmin) && $isSuperAdmin)
+                                        <a href="{{ route('dashboard.users.view-password-form', $u) }}" class="text-primary-600 hover:text-primary-900" title="View/Reset password">
+                                            View Password
+                                        </a>
+                                    @else
+                                        ••••••
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <div class="flex items-center justify-end gap-3">
-                                        <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900">Edit</a>
-                                        @if(isset($isSuperAdmin) && $isSuperAdmin && $u->isExaminer())
-                                            <a href="{{ route('dashboard.users.view-as-form', $u) }}" class="text-success-600 hover:text-success-900" title="View as this examiner">
-                                                View Dashboard
-                                            </a>
-                                        @endif
-                                    </div>
+                                    <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900">Edit</a>
                                 </td>
                             </tr>
                         @empty

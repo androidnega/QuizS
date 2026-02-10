@@ -88,26 +88,6 @@
     </aside>
 
     <div class="examiner-main">
-        @if(session('impersonating_admin_id'))
-            <div class="bg-warning-50 border-b-2 border-warning-400 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <svg class="w-5 h-5 text-warning-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <div>
-                        <p class="text-sm font-semibold text-warning-900">Viewing as Examiner</p>
-                        <p class="text-xs text-warning-700">You are viewing the dashboard as {{ \App\Models\User::find(session('admin_user_id'))->username ?? 'examiner' }}</p>
-                    </div>
-                </div>
-                <form action="{{ route('dashboard.users.exit-view-as') }}" method="post" class="flex-shrink-0">
-                    @csrf
-                    <button type="submit" class="btn bg-warning-600 text-white hover:bg-warning-700 text-sm px-4 py-1.5">
-                        Exit View
-                    </button>
-                </form>
-            </div>
-        @endif
         <header class="flex h-14 flex-shrink-0 items-center border-b border-gray-200 bg-white z-10 min-w-0">
             <div class="examiner-page flex h-14 w-full items-center gap-3 px-4 md:px-6">
                 <button type="button" id="examiner-sidebar-menu-btn" class="h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-300" aria-label="Open menu" title="Open menu" style="display: none;">
