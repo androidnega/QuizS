@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(prepend: [
+            \App\Http\Middleware\CheckUpdateMode::class,
+        ]);
         $middleware->alias([
             'rules.accepted' => \App\Http\Middleware\EnsureRulesAccepted::class,
             'dashboard.auth' => \App\Http\Middleware\EnsureDashboardAuthenticated::class,

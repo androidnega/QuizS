@@ -220,6 +220,7 @@ Route::middleware('admin.auth')->group(function () {
 
         // Super Admin only: users, settings, system reset
         Route::middleware('admin.role')->group(function () {
+            Route::post('/settings/update-mode', [SettingsController::class, 'toggleUpdateMode'])->name('settings.update-mode');
             Route::get('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'index'])->name('system.reset.index');
             Route::post('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'reset'])->name('system.reset');
             Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

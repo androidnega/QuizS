@@ -9,6 +9,23 @@
         <p class="text-gray-600">Courses, users, class groups (view only), and system settings</p>
     </div>
 
+    {{-- Update mode: when on, only staff can log in; others see maintenance page --}}
+    <section class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 class="text-sm font-semibold text-amber-900">Update mode</h2>
+                <p class="text-xs text-amber-800 mt-0.5">When on, only Super Admins and Examiners can sign in at <code class="bg-amber-100 px-1 rounded">/login</code>. Everyone else sees a maintenance page.</p>
+            </div>
+            <form method="post" action="{{ route('dashboard.settings.update-mode') }}" class="flex items-center gap-3">
+                @csrf
+                <span class="text-sm font-medium {{ $update_mode ?? false ? 'text-amber-700' : 'text-gray-600' }}">{{ ($update_mode ?? false) ? 'On' : 'Off' }}</span>
+                <button type="submit" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 {{ ($update_mode ?? false) ? 'bg-amber-500' : 'bg-gray-200' }}" role="switch" aria-checked="{{ ($update_mode ?? false) ? 'true' : 'false' }}">
+                    <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ ($update_mode ?? false) ? 'translate-x-5' : 'translate-x-1' }}" style="margin-top: 2px;"></span>
+                </button>
+            </form>
+        </div>
+    </section>
+
     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
         <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
             <p class="text-sm font-medium text-gray-500">Staff users</p>

@@ -208,4 +208,15 @@ class SettingsController extends Controller
         $result = ArkeselService::checkBalance();
         return response()->json($result, $result['success'] ? 200 : 422);
     }
+
+    /**
+     * Toggle update/maintenance mode. When on, only staff can log in; others see maintenance page.
+     */
+    public function toggleUpdateMode(Request $request): RedirectResponse
+    {
+        $current = Setting::getValue(Setting::KEY_UPDATE_MODE, '0') === '1';
+        Setting::setValue(Setting::KEY_UPDATE_MODE, $current ? '0' : '1');
+        Cache::forget('setting:' . Setting::KEY_UPDATE_MODE);
+        return redirect()->route('dashboard')->with('success', $current ? 'Update mode turned off. Site is live.' : 'Update mode is on. Only staff can sign in.');
+    }
 }

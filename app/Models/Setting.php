@@ -96,6 +96,9 @@ class Setting extends Model
     /** Admin: disable strict per-IP/per-device quiz session restrictions (1 = disabled). */
     public const KEY_DISABLE_IP_DEVICE_RESTRICTIONS = 'disable_ip_device_restrictions';
 
+    /** Site in update/maintenance mode: only staff can log in and use the system; others see maintenance page. */
+    public const KEY_UPDATE_MODE = 'update_mode';
+
     /** OTP (Arkesel): API key and optional sender ID for SMS OTP. */
     public const KEY_OTP_ARKESEL_API_KEY = 'otp_arkesel_api_key';
     public const KEY_OTP_ARKESEL_SENDER_ID = 'otp_arkesel_sender_id';

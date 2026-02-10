@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\Quiz;
 use App\Models\QuizSession;
 use App\Models\Result;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\CloudinaryService;
 use Illuminate\View\View;
@@ -37,7 +38,8 @@ class AdminDashboardController extends Controller
             'sessions' => QuizSession::count(),
         ];
         $cloudinary_configured = CloudinaryService::isConfigured();
-        return view('admin.dashboard-admin', compact('overview', 'cloudinary_configured'));
+        $update_mode = Setting::getValue(Setting::KEY_UPDATE_MODE, '0') === '1';
+        return view('admin.dashboard-admin', compact('overview', 'cloudinary_configured', 'update_mode'));
     }
 
     /** Examiner dashboard: my class groups, my quizzes, recent sessions. */
