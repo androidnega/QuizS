@@ -10,8 +10,8 @@
     </div>
 
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">{{ $session->quiz->title ?? 'Quiz' }}</h1>
-        <p class="text-gray-600 mt-1">Taken {{ $session->created_at->format('M j, Y g:i A') }}@if(isset($showFullReview) && $showFullReview) · Question review available for 21 days@endif</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ isset($session->quiz->title) ? $session->quiz->title : 'Quiz' }}</h1>
+        <p class="text-gray-600 mt-1">Taken {{ $session->created_at ? $session->created_at->format('M j, Y g:i A') : 'Date not available' }}@if(isset($showFullReview) && $showFullReview) · Question review available for 21 days@endif</p>
     </div>
 
     @if(isset($session->result) && $session->result && isset($session->quiz) && $session->quiz->canShowScore())
