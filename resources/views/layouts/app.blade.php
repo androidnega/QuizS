@@ -74,42 +74,19 @@
     @yield('copy_restriction_modal')
     <!-- Main content (shown only when JS allowed and device/screen allowed) -->
     <div id="quizsnap-app" class="quizsnap-app quizsnap-app--hidden">
-    <!-- Flash Messages (single container so multiple messages stack; auto-hide only these) -->
-    @if(session('success') || session('error') || session('warning') || session('info'))
-        <div id="flash-container" class="fixed top-4 right-4 z-50 max-w-md flex flex-col gap-2 mt-[env(safe-area-inset-top)] mr-[env(safe-area-inset-right)]">
-            @if(session('success'))
-                <div class="alert alert-success flash-alert">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>{{ session('success') }}</span>
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="alert alert-error flash-alert">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>{{ session('error') }}</span>
-                </div>
-            @endif
-            @if(session('warning'))
-                <div class="alert alert-warning flash-alert">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>{{ session('warning') }}</span>
-                </div>
-            @endif
-            @if(session('info'))
-                <div class="alert bg-primary-50 border border-primary-200 text-primary-800 flash-alert">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>{{ session('info') }}</span>
-                </div>
-            @endif
-        </div>
+    {{-- Flash messages: one @if / @endif only to avoid PHP 8.4 parse error in compiled view --}}
+    @php
+        $hasFlash = session()->has('success') || session()->has('error') || session()->has('warning') || session()->has('info');
+    @endphp
+    @if($hasFlash)
+    <div id="flash-container" class="fixed top-4 right-4 z-50 max-w-md flex flex-col gap-2 mt-[env(safe-area-inset-top)] mr-[env(safe-area-inset-right)]">
+        @php
+            if (session('success')) { echo '<div class="alert alert-success flash-alert"><svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>'.e(session('success')).'</span></div>'; }
+            if (session('error')) { echo '<div class="alert alert-error flash-alert"><svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>'.e(session('error')).'</span></div>'; }
+            if (session('warning')) { echo '<div class="alert alert-warning flash-alert"><svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span>'.e(session('warning')).'</span></div>'; }
+            if (session('info')) { echo '<div class="alert bg-primary-50 border border-primary-200 text-primary-800 flash-alert"><svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg><span>'.e(session('info')).'</span></div>'; }
+        @endphp
+    </div>
     @endif
 
     {{-- Mobile notice: red exclamation and info when on phone (hidden on md and up) --}}
