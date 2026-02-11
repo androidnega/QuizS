@@ -24,47 +24,45 @@
         </div>
 
         <div class="card overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+            <div class="overflow-hidden">
+                <table class="w-full divide-y divide-gray-200 table-fixed">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institution</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned courses</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Password</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-28">Username</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Name</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Role</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-36">Institution</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-0">Courses</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase w-20">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($users as $u)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $u->username }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $u->name ?? '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $u->role === 'super_admin' ? 'bg-primary-100 text-primary-800' : 'bg-success-100 text-success-800' }}">
+                                <td class="px-3 py-2 text-sm font-medium text-gray-900 truncate" title="{{ $u->username }}">{{ $u->username }}</td>
+                                <td class="px-3 py-2 text-sm text-gray-600 truncate" title="{{ $u->name ?? '-' }}">{{ $u->name ?? '—' }}</td>
+                                <td class="px-3 py-2">
+                                    <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full {{ $u->role === 'super_admin' ? 'bg-primary-100 text-primary-800' : 'bg-success-100 text-success-800' }}">
                                         {{ $u->role === 'super_admin' ? 'Super Admin' : 'Examiner' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $u->institution?->name ?? '—' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    @if(isset($isSuperAdmin) && $isSuperAdmin)
-                                        <a href="{{ route('dashboard.users.view-password-form', $u) }}" class="text-primary-600 hover:text-primary-900" title="View/Reset password">
-                                            View Password
-                                        </a>
-                                    @else
-                                        ••••••
-                                    @endif
+                                <td class="px-3 py-2 text-sm text-gray-600 truncate" title="{{ $u->institution?->name ?? '—' }}">{{ $u->institution?->name ?? '—' }}</td>
+                                <td class="px-3 py-2 text-sm text-gray-600 min-w-0">
+                                    <span class="block truncate" title="{{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}">
+                                        {{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                <td class="px-3 py-2 text-right text-sm whitespace-nowrap">
+                                    @if(isset($isSuperAdmin) && $isSuperAdmin)
+                                        <a href="{{ route('dashboard.users.view-password-form', $u) }}" class="text-primary-600 hover:text-primary-900" title="Reset password">Reset</a>
+                                        <span class="text-gray-300">|</span>
+                                    @endif
                                     <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900">Edit</a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-gray-500">No staff users yet. Add an admin or examiner.</td>
+                                <td colspan="6" class="px-3 py-12 text-center text-gray-500">No staff users yet. Add an admin or examiner.</td>
                             </tr>
                         @endforelse
                     </tbody>
