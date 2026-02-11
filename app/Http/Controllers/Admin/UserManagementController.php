@@ -296,6 +296,67 @@ class UserManagementController extends Controller
     }
 
     /**
+     * Revoke user access: clear remember_token and sessions so they must log in again.
+     */
+    public function revoke(User $user): RedirectResponse
+    {
+        $currentUser = $this->adminUser();
+        $isSuperAdmin = $currentUser && $currentUser->isSuperAdmin();
+
+        if (!$isSuperAdmin) {
+            abort(403, 'Only Super Administrators can revoke user access.');
+        }
+
+        if (! in_array($user->role, [User::ROLE_SUPER_ADMIN, User::ROLE_EXAMINER], true)) {
+            return redirect()->route('dashboard.users.index')
+                ->with('error', 'Cannot revoke this user.');
+        }
+
+        $user->remember_token = null;
+        $user->save();
+
+        // Delete sessions for this user (Laravel database driver)
+        if (config('session.driver') === 'database' && Schema::hasColumn(config('session.table', 'sessions'), 'user_id')) {
+            \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $user->id)
+                ->delete();
+        }
+
+        return redirect()->route('dashboard.users.index')
+            ->with('success', "Access revoked for {$user->username}. They will need to log in again.");
+    }
+
+    /**
+     * Delete an examiner user. Cannot delete super admins or yourself.
+     */
+    public function destroy(User $user): RedirectResponse
+    {
+        $currentUser = $this->adminUser();
+        $isSuperAdmin = $currentUser && $currentUser->isSuperAdmin();
+
+        if (!$isSuperAdmin) {
+            abort(403, 'Only Super Administrators can delete users.');
+        }
+
+        if ($user->role === User::ROLE_SUPER_ADMIN) {
+            return redirect()->route('dashboard.users.index')
+                ->with('error', 'Cannot delete Super Admin accounts.');
+        }
+
+        if ($currentUser && $currentUser->id === $user->id) {
+            return redirect()->route('dashboard.users.index')
+                ->with('error', 'You cannot delete your own account.');
+        }
+
+        $username = $user->username;
+        $user->courses()->detach();
+        $user->delete();
+
+        return redirect()->route('dashboard.users.index')
+            ->with('success', "User {$username} has been deleted.");
+    }
+
+    /**
      * Generate a secure temporary password.
      */
     private function generateTemporaryPassword(int $length = 12): string

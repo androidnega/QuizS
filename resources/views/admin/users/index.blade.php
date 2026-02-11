@@ -4,9 +4,9 @@
 @section('dashboard_heading', 'Users')
 
 @section('dashboard_content')
-<div class="w-full space-y-6">
+<div class="w-full min-w-0 max-w-full space-y-6">
         <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
-            <div class="flex items-center gap-2 text-sm text-gray-600">
+            <div class="flex items-center gap-2 text-sm text-gray-600 shrink-0">
                 <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Dashboard</a>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -14,7 +14,7 @@
                 <span class="text-gray-900 font-medium">User management</span>
             </div>
             @if(isset($isSuperAdmin) && $isSuperAdmin)
-            <button type="button" onclick="openCreateUserModal()" class="btn btn-primary">
+            <button type="button" onclick="openCreateUserModal()" class="btn btn-primary shrink-0">
                 <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -23,41 +23,55 @@
             @endif
         </div>
 
-        <div class="card overflow-hidden">
-            <div class="overflow-hidden">
-                <table class="w-full divide-y divide-gray-200 table-fixed">
+        <div class="card overflow-hidden min-w-0">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[600px] divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-28">Username</th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Name</th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Role</th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-36">Institution</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-0">Courses</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase w-20">Actions</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[120px] max-w-[200px]">Courses</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase min-w-[180px]">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($users as $u)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-3 py-2 text-sm font-medium text-gray-900 truncate" title="{{ $u->username }}">{{ $u->username }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-600 truncate" title="{{ $u->name ?? '-' }}">{{ $u->name ?? '—' }}</td>
+                                <td class="px-3 py-2 text-sm font-medium text-gray-900 break-words" title="{{ $u->username }}">{{ $u->username }}</td>
+                                <td class="px-3 py-2 text-sm text-gray-600 break-words" title="{{ $u->name ?? '-' }}">{{ $u->name ?? '—' }}</td>
                                 <td class="px-3 py-2">
                                     <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full {{ $u->role === 'super_admin' ? 'bg-primary-100 text-primary-800' : 'bg-success-100 text-success-800' }}">
                                         {{ $u->role === 'super_admin' ? 'Super Admin' : 'Examiner' }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-sm text-gray-600 truncate" title="{{ $u->institution?->name ?? '—' }}">{{ $u->institution?->name ?? '—' }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-600 min-w-0">
-                                    <span class="block truncate" title="{{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}">
+                                <td class="px-3 py-2 text-sm text-gray-600 break-words" title="{{ $u->institution?->name ?? '—' }}">{{ $u->institution?->name ?? '—' }}</td>
+                                <td class="px-3 py-2 text-sm text-gray-600 min-w-[120px] max-w-[200px]">
+                                    <span class="block break-words">
                                         {{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-2 text-right text-sm whitespace-nowrap">
-                                    @if(isset($isSuperAdmin) && $isSuperAdmin)
-                                        <a href="{{ route('dashboard.users.view-password-form', $u) }}" class="text-primary-600 hover:text-primary-900" title="Reset password">Reset</a>
-                                        <span class="text-gray-300">|</span>
-                                    @endif
-                                    <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900">Edit</a>
+                                <td class="px-3 py-2 text-right text-sm">
+                                    <div class="flex flex-wrap justify-end gap-x-2 gap-y-1">
+                                        @if(isset($isSuperAdmin) && $isSuperAdmin)
+                                            <a href="{{ route('dashboard.users.view-password-form', $u) }}" class="text-primary-600 hover:text-primary-900 whitespace-nowrap" title="Reset password">Reset</a>
+                                            <form action="{{ route('dashboard.users.revoke', $u) }}" method="post" class="inline" onsubmit="return confirm('Revoke access? User will need to log in again.');">
+                                                @csrf
+                                                <button type="submit" class="text-amber-600 hover:text-amber-800 whitespace-nowrap">Revoke</button>
+                                            </form>
+                                            <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900 whitespace-nowrap">Edit</a>
+                                            @if($u->role === 'examiner')
+                                            <form action="{{ route('dashboard.users.destroy', $u) }}" method="post" class="inline" onsubmit="return confirm('Delete this user? This cannot be undone.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-danger-600 hover:text-danger-800 whitespace-nowrap">Delete</button>
+                                            </form>
+                                            @endif
+                                        @else
+                                            <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900 whitespace-nowrap">Edit</a>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
