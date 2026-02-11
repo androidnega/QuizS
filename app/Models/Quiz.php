@@ -70,18 +70,29 @@ class Quiz extends Model
         ];
     }
 
-    /** Quizzes whose window is still open (no ends_at or ends_at in future). */
+    /** Quizzes whose window is still open (no ends_at or ends_at in future), excluding unpublished ones with completed sessions. */
     public function scopeActive(Builder $q): Builder
     {
         return $q->where(function (Builder $b) {
             $b->whereNull('ends_at')->orWhere('ends_at', '>', now());
+        })->where(function (Builder $b) {
+            $b->where('is_published', true)
+                ->orWhereDoesntHave('sessions', fn (Builder $sq) => $sq->whereNotNull('ended_at'));
         });
     }
 
-    /** Quizzes whose window has ended (ends_at in the past). */
+    /** Quizzes whose window has ended: ends_at in the past, or unpublished with at least one completed session. */
     public function scopeEnded(Builder $q): Builder
     {
-        return $q->whereNotNull('ends_at')->where('ends_at', '<=', now());
+        $now = now();
+        return $q->where(function (Builder $b) use ($now) {
+            $b->where(function (Builder $b2) use ($now) {
+                $b2->whereNotNull('ends_at')->where('ends_at', '<=', $now);
+            })->orWhere(function (Builder $b2) {
+                $b2->where('is_published', false)
+                    ->whereHas('sessions', fn (Builder $sq) => $sq->whereNotNull('ended_at'));
+            });
+        });
     }
 
     public function classGroup(): BelongsTo
