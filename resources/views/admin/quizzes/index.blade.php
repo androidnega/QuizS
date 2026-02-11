@@ -13,6 +13,16 @@
         </a>
     </div>
 
+    {{-- Active / Ended tabs --}}
+    <div class="flex gap-1 border-b border-gray-200">
+        <a href="{{ route('dashboard.quizzes.index', ['tab' => 'active']) }}" class="px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors {{ ($tab ?? 'active') === 'active' ? 'bg-white border border-gray-200 border-b-0 -mb-px text-primary-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+            Active
+        </a>
+        <a href="{{ route('dashboard.quizzes.index', ['tab' => 'ended']) }}" class="px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors {{ ($tab ?? 'active') === 'ended' ? 'bg-white border border-gray-200 border-b-0 -mb-px text-primary-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+            Ended
+        </a>
+    </div>
+
     <div class="bg-white rounded-lg border border-gray-200 overflow-hidden w-full max-w-full">
         <div class="w-full overflow-x-auto">
             <table class="w-full max-w-full divide-y divide-gray-200 min-w-[640px]">
@@ -70,8 +80,12 @@
                     @empty
                         <tr>
                             <td colspan="7" class="px-6 py-12 text-center">
-                                <p class="text-gray-500 mb-4">No quizzes yet.</p>
-                                <a href="{{ route('dashboard.quizzes.create') }}" class="btn btn-primary inline-flex">Create Your First Quiz</a>
+                                @if(($tab ?? 'active') === 'ended')
+                                    <p class="text-gray-500 mb-4">No ended quizzes.</p>
+                                @else
+                                    <p class="text-gray-500 mb-4">No active quizzes yet.</p>
+                                    <a href="{{ route('dashboard.quizzes.create') }}" class="btn btn-primary inline-flex">Create Your First Quiz</a>
+                                @endif
                             </td>
                         </tr>
                     @endforelse

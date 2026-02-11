@@ -42,14 +42,22 @@ class QuizManagementController extends Controller
         return $user ? $user->classGroupIds() : [];
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $classGroupIds = $this->classGroupIds();
-        $quizzes = Quiz::with(['course', 'classGroup'])
+        $tab = $request->query('tab', 'active');
+        $query = Quiz::with(['course', 'classGroup'])
             ->whereIn('class_group_id', $classGroupIds)
-            ->orderByDesc('created_at')
-            ->paginate(15);
-        return view('admin.quizzes.index', compact('quizzes'));
+            ->orderByDesc('created_at');
+
+        if ($tab === 'ended') {
+            $query->ended();
+        } else {
+            $query->active();
+        }
+
+        $quizzes = $query->paginate(15)->withQueryString();
+        return view('admin.quizzes.index', compact('quizzes', 'tab'));
     }
 
     public function create(): View

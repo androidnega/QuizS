@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -67,6 +68,20 @@ class Quiz extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
         ];
+    }
+
+    /** Quizzes whose window is still open (no ends_at or ends_at in future). */
+    public function scopeActive(Builder $q): Builder
+    {
+        return $q->where(function (Builder $b) {
+            $b->whereNull('ends_at')->orWhere('ends_at', '>', now());
+        });
+    }
+
+    /** Quizzes whose window has ended (ends_at in the past). */
+    public function scopeEnded(Builder $q): Builder
+    {
+        return $q->whereNotNull('ends_at')->where('ends_at', '<=', now());
     }
 
     public function classGroup(): BelongsTo
