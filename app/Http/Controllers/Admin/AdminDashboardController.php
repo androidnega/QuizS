@@ -39,7 +39,9 @@ class AdminDashboardController extends Controller
         ];
         $cloudinary_configured = CloudinaryService::isConfigured();
         $update_mode = Setting::getValue(Setting::KEY_UPDATE_MODE, '0') === '1';
-        return view('admin.dashboard-admin', compact('overview', 'cloudinary_configured', 'update_mode'));
+        $update_started_at = $update_mode ? Setting::getValue(Setting::KEY_UPDATE_STARTED_AT) : null;
+        $update_estimated_end = $update_mode ? Setting::getValue(Setting::KEY_UPDATE_ESTIMATED_END) : null;
+        return view('admin.dashboard-admin', compact('overview', 'cloudinary_configured', 'update_mode', 'update_started_at', 'update_estimated_end'));
     }
 
     /** Examiner dashboard: my class groups, my quizzes, recent sessions. */

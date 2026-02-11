@@ -216,7 +216,27 @@ class SettingsController extends Controller
     {
         $current = Setting::getValue(Setting::KEY_UPDATE_MODE, '0') === '1';
         Setting::setValue(Setting::KEY_UPDATE_MODE, $current ? '0' : '1');
+        if ($current) {
+            Setting::setValue(Setting::KEY_UPDATE_STARTED_AT, null);
+            Setting::setValue(Setting::KEY_UPDATE_ESTIMATED_END, null);
+        } else {
+            Setting::setValue(Setting::KEY_UPDATE_STARTED_AT, now()->toIso8601String());
+        }
         Cache::forget('setting:' . Setting::KEY_UPDATE_MODE);
+        Cache::forget('setting:' . Setting::KEY_UPDATE_STARTED_AT);
+        Cache::forget('setting:' . Setting::KEY_UPDATE_ESTIMATED_END);
         return redirect()->route('dashboard')->with('success', $current ? 'Update mode turned off. Site is live.' : 'Update mode is on. Only staff can sign in.');
+    }
+
+    /**
+     * Set optional estimated end time for maintenance (shown on maintenance page).
+     */
+    public function setUpdateEstimatedEnd(Request $request): RedirectResponse
+    {
+        $request->validate(['estimated_end' => ['nullable', 'date']]);
+        $value = $request->input('estimated_end') ? \Carbon\Carbon::parse($request->input('estimated_end'))->toIso8601String() : null;
+        Setting::setValue(Setting::KEY_UPDATE_ESTIMATED_END, $value);
+        Cache::forget('setting:' . Setting::KEY_UPDATE_ESTIMATED_END);
+        return redirect()->route('dashboard')->with('success', $value ? 'Estimated end time saved.' : 'Estimated end time cleared.');
     }
 }

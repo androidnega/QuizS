@@ -233,6 +233,7 @@ Route::middleware('admin.auth')->group(function () {
             Route::get('/institutions/{institution}/edit', [\App\Http\Controllers\Admin\InstitutionController::class, 'edit'])->name('institutions.edit');
             Route::put('/institutions/{institution}', [\App\Http\Controllers\Admin\InstitutionController::class, 'update'])->name('institutions.update');
             Route::post('/settings/update-mode', [SettingsController::class, 'toggleUpdateMode'])->name('settings.update-mode');
+            Route::post('/settings/update-estimated-end', [SettingsController::class, 'setUpdateEstimatedEnd'])->name('settings.update-estimated-end');
             Route::get('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'index'])->name('system.reset.index');
             Route::post('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'reset'])->name('system.reset');
             Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

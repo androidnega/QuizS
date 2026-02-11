@@ -24,6 +24,19 @@
                 </button>
             </form>
         </div>
+        @if($update_mode ?? false)
+            <div class="mt-4 pt-4 border-t border-amber-200">
+                @if($update_started_at ?? null)
+                    <p class="text-xs text-amber-800 mb-2">Started: {{ \Carbon\Carbon::parse($update_started_at)->format('M j, Y g:i A') }}</p>
+                @endif
+                <form method="post" action="{{ route('dashboard.settings.update-estimated-end') }}" class="flex flex-wrap items-end gap-2">
+                    @csrf
+                    <label class="text-xs text-amber-800">Estimated end (optional):</label>
+                    <input type="datetime-local" name="estimated_end" value="{{ $update_estimated_end ? \Carbon\Carbon::parse($update_estimated_end)->format('Y-m-d\TH:i') : '' }}" class="text-sm rounded border border-amber-300 px-2 py-1" />
+                    <button type="submit" class="text-sm font-medium text-amber-900 hover:text-amber-700">Save</button>
+                </form>
+            </div>
+        @endif
     </section>
 
     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">

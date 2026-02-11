@@ -36,6 +36,11 @@ class CheckUpdateMode
             }
         }
 
-        return response()->view('maintenance', [], 503);
+        $startedAt = Setting::getValue(Setting::KEY_UPDATE_STARTED_AT);
+        $estimatedEnd = Setting::getValue(Setting::KEY_UPDATE_ESTIMATED_END);
+        return response()->view('maintenance', [
+            'update_started_at' => $startedAt ? \Carbon\Carbon::parse($startedAt) : null,
+            'update_estimated_end' => $estimatedEnd ? \Carbon\Carbon::parse($estimatedEnd) : null,
+        ], 503);
     }
 }

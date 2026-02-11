@@ -25,8 +25,14 @@
             </svg>
         </div>
         <h1>Site under update</h1>
-        <p>We're performing scheduled maintenance. Please try again shortly. Staff can sign in using the link below.</p>
-        <p><a href="{{ url('/login') }}">Staff sign in</a></p>
+        <p>We're performing scheduled maintenance. Please try again shortly.</p>
+        @if($update_started_at ?? null)
+            <p class="text-sm text-gray-600 mt-2">Started: {{ $update_started_at->format('M j, Y g:i A') }}</p>
+        @endif
+        @if($update_estimated_end ?? null)
+            <p class="text-sm text-gray-600">Expected end: {{ $update_estimated_end->format('M j, Y g:i A') }}</p>
+        @endif
+        <p class="mt-3"><a href="{{ url('/login') }}">Staff sign in</a></p>
     </div>
 </body>
 </html>

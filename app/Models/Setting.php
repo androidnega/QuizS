@@ -98,6 +98,10 @@ class Setting extends Model
 
     /** Site in update/maintenance mode: only staff can log in and use the system; others see maintenance page. */
     public const KEY_UPDATE_MODE = 'update_mode';
+    /** When update mode was turned on (ISO 8601 datetime). */
+    public const KEY_UPDATE_STARTED_AT = 'update_started_at';
+    /** Optional estimated end of maintenance (ISO 8601 datetime). */
+    public const KEY_UPDATE_ESTIMATED_END = 'update_estimated_end';
 
     /** OTP (Arkesel): API key and optional sender ID for SMS OTP. */
     public const KEY_OTP_ARKESEL_API_KEY = 'otp_arkesel_api_key';
