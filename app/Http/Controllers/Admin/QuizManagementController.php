@@ -46,7 +46,7 @@ class QuizManagementController extends Controller
     {
         $classGroupIds = $this->classGroupIds();
         $quizzes = Quiz::with(['course', 'classGroup'])
-            ->when(!empty($classGroupIds), fn ($q) => $q->whereIn('class_group_id', $classGroupIds))
+            ->whereIn('class_group_id', $classGroupIds)
             ->orderByDesc('created_at')
             ->paginate(15);
         return view('admin.quizzes.index', compact('quizzes'));
@@ -57,7 +57,7 @@ class QuizManagementController extends Controller
         $this->authorize('create', Quiz::class);
         $classGroupIds = $this->classGroupIds();
         $classGroups = ClassGroup::with('courses')
-            ->when(!empty($classGroupIds), fn ($q) => $q->whereIn('id', $classGroupIds))
+            ->whereIn('id', $classGroupIds)
             ->withCount('students')
             ->orderBy('name')
             ->get()

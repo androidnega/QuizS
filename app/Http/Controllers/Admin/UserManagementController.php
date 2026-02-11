@@ -37,7 +37,7 @@ class UserManagementController extends Controller
         // Get courses for the create modal (only courses examiner has access to)
         $courseIds = $user ? $user->assignedCourseIds() : [];
         $courses = Course::where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         
@@ -56,7 +56,7 @@ class UserManagementController extends Controller
         
         $courseIds = $user ? $user->assignedCourseIds() : [];
         $courses = Course::where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         return view('admin.users.create', compact('courses', 'isSuperAdmin'));
@@ -131,7 +131,7 @@ class UserManagementController extends Controller
         $user->load('courses');
         $courseIds = $currentUser ? $currentUser->assignedCourseIds() : [];
         $courses = Course::where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         return view('admin.users.edit', compact('user', 'courses', 'isSuperAdmin'));

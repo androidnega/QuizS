@@ -17,7 +17,14 @@ class QuizPolicy
 
     public function view(User $user, Quiz $quiz): bool
     {
-        return $user->isStaff();
+        if (! $user->isStaff()) {
+            return false;
+        }
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        $classGroup = $quiz->classGroup;
+        return $classGroup && (int) $classGroup->examiner_id === (int) $user->id;
     }
 
     public function create(User $user): bool
@@ -27,11 +34,25 @@ class QuizPolicy
 
     public function update(User $user, Quiz $quiz): bool
     {
-        return $user->isStaff();
+        if (! $user->isStaff()) {
+            return false;
+        }
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        $classGroup = $quiz->classGroup;
+        return $classGroup && (int) $classGroup->examiner_id === (int) $user->id;
     }
 
     public function delete(User $user, Quiz $quiz): bool
     {
-        return $user->isStaff();
+        if (! $user->isStaff()) {
+            return false;
+        }
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        $classGroup = $quiz->classGroup;
+        return $classGroup && (int) $classGroup->examiner_id === (int) $user->id;
     }
 }

@@ -47,13 +47,16 @@ class AdminDashboardController extends Controller
     {
         $user = $this->adminUser();
         $classGroupIds = $user ? $user->classGroupIds() : [];
-        $quizzes = Quiz::with(['course', 'classGroup'])->when(!empty($classGroupIds), fn ($q) => $q->whereIn('class_group_id', $classGroupIds))->orderByDesc('created_at')->paginate(10);
+        $quizzes = Quiz::with(['course', 'classGroup'])
+            ->whereIn('class_group_id', $classGroupIds)
+            ->orderByDesc('created_at')
+            ->paginate(10);
         $classGroups = !empty($classGroupIds)
             ? ClassGroup::withCount('students')->whereIn('id', $classGroupIds)->orderBy('name')->get()
             : collect();
         $quizIds = !empty($classGroupIds) ? Quiz::whereIn('class_group_id', $classGroupIds)->pluck('id') : collect();
         $stats = [
-            'quizzes' => Quiz::when(!empty($classGroupIds), fn ($q) => $q->whereIn('class_group_id', $classGroupIds))->count(),
+            'quizzes' => Quiz::whereIn('class_group_id', $classGroupIds)->count(),
             'sessions' => $quizIds->isEmpty() ? 0 : QuizSession::whereIn('quiz_id', $quizIds)->count(),
             'results' => $quizIds->isEmpty() ? 0 : Result::whereHas('quizSession', fn ($q) => $q->whereIn('quiz_id', $quizIds))->count(),
         ];

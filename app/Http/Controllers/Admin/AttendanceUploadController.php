@@ -27,7 +27,7 @@ class AttendanceUploadController extends Controller
         $courseIds = $user ? $user->assignedCourseIds() : [];
         $courses = Course::withCount('validIndices')
             ->where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         return view('admin.attendance.index', compact('courses'));

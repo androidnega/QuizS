@@ -57,7 +57,7 @@ class ClassGroupController extends Controller
         $ids = $this->classGroupIds();
         $classGroups = ClassGroup::withCount(['students', 'quizzes', 'courses'])
             ->with('examiner:id,username,name')
-            ->when(!empty($ids), fn ($q) => $q->whereIn('id', $ids))
+            ->whereIn('id', $ids)
             ->orderBy('name')
             ->paginate(15);
         return view('admin.class-groups.index', compact('classGroups'));
@@ -69,7 +69,7 @@ class ClassGroupController extends Controller
         $user = $this->adminUser();
         $courseIds = $user?->assignedCourseIds() ?? [];
         $courses = Course::where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         $examiners = $user?->isSuperAdmin()
@@ -118,7 +118,7 @@ class ClassGroupController extends Controller
         $courseIds = $user->assignedCourseIds();
         $requestCourseIds = array_map('intval', $request->input('course_ids', []));
         foreach ($requestCourseIds as $cid) {
-            if (!empty($courseIds) && !in_array($cid, $courseIds, true)) {
+            if (!$user->isSuperAdmin() && !in_array($cid, $courseIds, true)) {
                 return redirect()->route($this->staffRoutePrefix() . '.class-groups.create')
                     ->withInput()
                     ->with('error', 'You can only attach courses assigned to you.');
@@ -142,7 +142,7 @@ class ClassGroupController extends Controller
         $students = $classGroup->students()->orderBy('index_number')->paginate(20);
         $courseIds = $this->adminUser()?->assignedCourseIds() ?? [];
         $availableCourses = Course::where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         return view('admin.class-groups.show', compact('classGroup', 'students', 'availableCourses'));
@@ -155,7 +155,7 @@ class ClassGroupController extends Controller
         $user = $this->adminUser();
         $courseIds = $user?->assignedCourseIds() ?? [];
         $courses = Course::where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         $examiners = $user?->isSuperAdmin()
@@ -198,7 +198,7 @@ class ClassGroupController extends Controller
         $courseIds = $user ? $user->assignedCourseIds() : [];
         $requestCourseIds = array_map('intval', $request->input('course_ids', []));
         foreach ($requestCourseIds as $cid) {
-            if (!empty($courseIds) && !in_array($cid, $courseIds, true)) {
+            if (!$isSuperAdmin && !in_array($cid, $courseIds, true)) {
                 return redirect()->route($this->staffRoutePrefix() . '.class-groups.edit', $classGroup)
                     ->withInput()
                     ->with('error', 'You can only attach courses assigned to you.');

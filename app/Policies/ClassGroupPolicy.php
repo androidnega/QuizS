@@ -18,7 +18,13 @@ class ClassGroupPolicy
 
     public function view(User $user, ClassGroup $classGroup): bool
     {
-        return $user->isStaff();
+        if (! $user->isStaff()) {
+            return false;
+        }
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        return (int) $classGroup->examiner_id === (int) $user->id;
     }
 
     /**
@@ -37,11 +43,23 @@ class ClassGroupPolicy
 
     public function update(User $user, ClassGroup $classGroup): bool
     {
-        return $user->isStaff();
+        if (! $user->isStaff()) {
+            return false;
+        }
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        return (int) $classGroup->examiner_id === (int) $user->id;
     }
 
     public function delete(User $user, ClassGroup $classGroup): bool
     {
-        return $user->isStaff();
+        if (! $user->isStaff()) {
+            return false;
+        }
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        return (int) $classGroup->examiner_id === (int) $user->id;
     }
 }

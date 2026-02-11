@@ -23,7 +23,7 @@ class StudentManagementController extends Controller
     {
         $courseIds = $this->assignedCourseIds();
         $query = ValidIndex::with('course')
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('course_id', $courseIds))
+            ->whereIn('course_id', $courseIds)
             ->orderBy('index_number');
         if ($request->filled('index_number')) {
             $query->where('index_number', 'like', '%' . trim($request->index_number) . '%');
@@ -33,7 +33,7 @@ class StudentManagementController extends Controller
         }
         $students = $query->paginate(20)->withQueryString();
         $courses = Course::where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         return view('admin.students.index', compact('students', 'courses'));
@@ -43,7 +43,7 @@ class StudentManagementController extends Controller
     {
         $courseIds = $this->assignedCourseIds();
         $courses = Course::where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         return view('admin.students.create', compact('courses'));
@@ -73,13 +73,15 @@ class StudentManagementController extends Controller
 
     public function edit(ValidIndex $validIndex): View
     {
+        $user = $this->adminUser();
+        $isSuperAdmin = $user?->isSuperAdmin() ?? false;
         $courseIds = $this->assignedCourseIds();
-        if (!empty($courseIds) && !in_array($validIndex->course_id, $courseIds, true)) {
+        if (!$isSuperAdmin && !in_array($validIndex->course_id, $courseIds, true)) {
             abort(403, 'You do not have access to this student index.');
         }
         $validIndex->load('course');
         $courses = Course::where('is_archived', false)
-            ->when(!empty($courseIds), fn ($q) => $q->whereIn('id', $courseIds))
+            ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         return view('admin.students.edit', compact('validIndex', 'courses'));
@@ -87,8 +89,10 @@ class StudentManagementController extends Controller
 
     public function update(Request $request, ValidIndex $validIndex): RedirectResponse
     {
+        $user = $this->adminUser();
+        $isSuperAdmin = $user?->isSuperAdmin() ?? false;
         $courseIds = $this->assignedCourseIds();
-        if (!empty($courseIds) && !in_array($validIndex->course_id, $courseIds, true)) {
+        if (!$isSuperAdmin && !in_array($validIndex->course_id, $courseIds, true)) {
             abort(403, 'You do not have access to this student index.');
         }
         if (empty($courseIds)) {
@@ -116,8 +120,10 @@ class StudentManagementController extends Controller
 
     public function destroy(ValidIndex $validIndex): RedirectResponse
     {
+        $user = $this->adminUser();
+        $isSuperAdmin = $user?->isSuperAdmin() ?? false;
         $courseIds = $this->assignedCourseIds();
-        if (!empty($courseIds) && !in_array($validIndex->course_id, $courseIds, true)) {
+        if (!$isSuperAdmin && !in_array($validIndex->course_id, $courseIds, true)) {
             abort(403, 'You do not have access to this student index.');
         }
         $validIndex->delete();
