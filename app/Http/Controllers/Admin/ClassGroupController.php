@@ -59,7 +59,7 @@ class ClassGroupController extends Controller
             ->with('examiner:id,username,name')
             ->whereIn('id', $ids)
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate(24);
         return view('admin.class-groups.index', compact('classGroups'));
     }
 
