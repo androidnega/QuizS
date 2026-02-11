@@ -248,13 +248,21 @@ class QuizManagementController extends Controller
      * Logs admin view of face images for audit trail.
      * Route uses {quizSession} to avoid conflict with Laravel's session.
      */
-    public function showSession(Quiz $quiz, QuizSession $quizSession): View|RedirectResponse
+    public function showSession(string $quizId, QuizSession $quizSession): View|RedirectResponse
     {
-        $this->authorize('view', $quiz);
-        $session = $quizSession;
-        if ($session->quiz_id !== $quiz->id) {
+        $quiz = $quizSession->quiz;
+        if (! $quiz) {
             abort(404);
         }
+        $this->authorize('view', $quiz);
+        // Handle stale/migrated links by redirecting to canonical quiz/session URL.
+        if ((string) $quizId !== (string) $quiz->getRouteKey()) {
+            return redirect()->route('dashboard.quizzes.sessions.show', [
+                'quizId' => $quiz->getRouteKey(),
+                'quizSession' => $quizSession->getRouteKey(),
+            ]);
+        }
+        $session = $quizSession;
         $session->load(['quiz', 'result', 'violations' => fn ($q) => $q->orderBy('occurred_at')]);
 
         $admin = $this->adminUser();
@@ -284,13 +292,21 @@ class QuizManagementController extends Controller
     /**
      * Reset IP lock for a session (allow the IP to be used again).
      */
-    public function resetSessionIp(Quiz $quiz, QuizSession $quizSession): RedirectResponse
+    public function resetSessionIp(string $quizId, QuizSession $quizSession): RedirectResponse
     {
-        $this->authorize('update', $quiz);
-        $session = $quizSession;
-        if ($session->quiz_id !== $quiz->id) {
+        $quiz = $quizSession->quiz;
+        if (! $quiz) {
             abort(404);
         }
+        $this->authorize('update', $quiz);
+        // If URL quiz is stale, move to canonical URL first.
+        if ((string) $quizId !== (string) $quiz->getRouteKey()) {
+            return redirect()->route('dashboard.quizzes.sessions.show', [
+                'quizId' => $quiz->getRouteKey(),
+                'quizSession' => $quizSession->getRouteKey(),
+            ])->with('info', 'Session opened via updated quiz link.');
+        }
+        $session = $quizSession;
 
         $session->update([
             'ip_address' => 'reset-' . $session->id . '-' . now()->timestamp,

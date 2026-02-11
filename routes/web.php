@@ -178,8 +178,10 @@ Route::middleware('admin.auth')->group(function () {
         Route::delete('/class-groups/{classGroup}/students/{student}/phone', [ClassGroupController::class, 'removeStudentPhone'])->name('class-groups.students.remove-phone');
 
         // Quiz session detail — all staff (examiners + super admins) so session/student data always shows
-        Route::get('/quizzes/{quiz}/sessions/{quizSession}', [QuizManagementController::class, 'showSession'])->name('quizzes.sessions.show');
-        Route::post('/quizzes/{quiz}/sessions/{quizSession}/reset-ip', [QuizManagementController::class, 'resetSessionIp'])->name('quizzes.sessions.reset-ip');
+        // Keep quiz ID in URL for readability, but resolve by quizSession in controller
+        // so migrated/stale links do not hard-404 when quiz IDs changed.
+        Route::get('/quizzes/{quizId}/sessions/{quizSession}', [QuizManagementController::class, 'showSession'])->name('quizzes.sessions.show');
+        Route::post('/quizzes/{quizId}/sessions/{quizSession}/reset-ip', [QuizManagementController::class, 'resetSessionIp'])->name('quizzes.sessions.reset-ip');
 
         // Quizzes — examiner only
         Route::middleware('examiner.only')->group(function () {
