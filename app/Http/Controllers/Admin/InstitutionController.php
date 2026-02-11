@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\Concerns\InteractsWithAdminSession;
 use App\Models\Institution;
 use App\Services\CloudinaryService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -17,9 +18,17 @@ class InstitutionController extends Controller
     /**
      * List all institutions (Super Admin only). Assign examiners via User management.
      */
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
-        $institutions = Institution::withCount('users')->orderBy('name')->get();
+        try {
+            $institutions = Institution::withCount('users')->orderBy('name')->get();
+        } catch (QueryException $e) {
+            if (str_contains($e->getMessage(), "doesn't exist")) {
+                return redirect()->route('dashboard')
+                    ->with('error', 'The institutions table is missing. Please run: php artisan migrate');
+            }
+            throw $e;
+        }
         return view('admin.institutions.index', compact('institutions'));
     }
 
