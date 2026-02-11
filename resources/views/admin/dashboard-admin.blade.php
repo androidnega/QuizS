@@ -10,30 +10,30 @@
     </div>
 
     {{-- Update mode: when on, only staff can log in; others see maintenance page --}}
-    <section class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+    <section class="rounded-lg border p-4 {{ ($update_mode ?? false) ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50' }}">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h2 class="text-sm font-semibold text-amber-900">Update mode</h2>
-                <p class="text-xs text-amber-800 mt-0.5">When on, only Super Admins and Examiners can sign in at <code class="bg-amber-100 px-1 rounded">/login</code>. Everyone else sees a maintenance page.</p>
+                <h2 class="text-sm font-semibold {{ ($update_mode ?? false) ? 'text-green-900' : 'text-gray-900' }}">Update mode</h2>
+                <p class="text-xs {{ ($update_mode ?? false) ? 'text-green-800' : 'text-gray-600' }} mt-0.5">When on, only Super Admins and Examiners can sign in at <code class="{{ ($update_mode ?? false) ? 'bg-green-100' : 'bg-gray-200' }} px-1 rounded">/login</code>. Everyone else sees a maintenance page.</p>
             </div>
             <form method="post" action="{{ route('dashboard.settings.update-mode') }}" class="flex items-center gap-3">
                 @csrf
-                <span class="text-sm font-medium {{ $update_mode ?? false ? 'text-amber-700' : 'text-gray-600' }}">{{ ($update_mode ?? false) ? 'On' : 'Off' }}</span>
-                <button type="submit" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 {{ ($update_mode ?? false) ? 'bg-amber-500' : 'bg-gray-200' }}" role="switch" aria-checked="{{ ($update_mode ?? false) ? 'true' : 'false' }}">
+                <span class="text-sm font-medium {{ ($update_mode ?? false) ? 'text-green-700' : 'text-gray-600' }}">{{ ($update_mode ?? false) ? 'On' : 'Off' }}</span>
+                <button type="submit" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 {{ ($update_mode ?? false) ? 'bg-green-500 focus:ring-green-400' : 'bg-gray-300 focus:ring-gray-400' }}" role="switch" aria-checked="{{ ($update_mode ?? false) ? 'true' : 'false' }}">
                     <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ ($update_mode ?? false) ? 'translate-x-5' : 'translate-x-1' }}" style="margin-top: 2px;"></span>
                 </button>
             </form>
         </div>
         @if($update_mode ?? false)
-            <div class="mt-4 pt-4 border-t border-amber-200">
+            <div class="mt-4 pt-4 border-t {{ ($update_mode ?? false) ? 'border-green-200' : 'border-gray-200' }}">
                 @if($update_started_at ?? null)
-                    <p class="text-xs text-amber-800 mb-2">Started: {{ \Carbon\Carbon::parse($update_started_at)->format('M j, Y g:i A') }}</p>
+                    <p class="text-xs text-green-800 mb-2">Started: {{ \Carbon\Carbon::parse($update_started_at)->format('M j, Y g:i A') }}</p>
                 @endif
                 <form method="post" action="{{ route('dashboard.settings.update-estimated-end') }}" class="flex flex-wrap items-end gap-2">
                     @csrf
-                    <label class="text-xs text-amber-800">Estimated end (optional):</label>
-                    <input type="datetime-local" name="estimated_end" value="{{ $update_estimated_end ? \Carbon\Carbon::parse($update_estimated_end)->format('Y-m-d\TH:i') : '' }}" class="text-sm rounded border border-amber-300 px-2 py-1" />
-                    <button type="submit" class="text-sm font-medium text-amber-900 hover:text-amber-700">Save</button>
+                    <label class="text-xs text-green-800">Estimated end (optional):</label>
+                    <input type="datetime-local" name="estimated_end" value="{{ $update_estimated_end ? \Carbon\Carbon::parse($update_estimated_end)->format('Y-m-d\TH:i') : '' }}" class="text-sm rounded border border-green-300 px-2 py-1 min-w-0" />
+                    <button type="submit" class="text-sm font-medium text-green-900 hover:text-green-700">Save</button>
                 </form>
             </div>
         @endif
