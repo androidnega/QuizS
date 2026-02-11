@@ -144,7 +144,18 @@
                         @foreach($session->answers as $idx => $answer)
                             @php
                                 $question = $answer->question;
-                                $questionText = $question && trim((string)($question->text ?? '')) !== '' ? $question->text : 'Question (text not available)';
+                                $rawQText = $question ? trim((string)($question->text ?? '')) : '';
+                                if ($rawQText !== '') {
+                                    $questionText = $question->text;
+                                } else {
+                                    $correctKey = $question ? ($session->assigned_correct_answers[$answer->question_id] ?? $session->assigned_correct_answers[(string)$answer->question_id] ?? $question->correct_answer ?? '') : '';
+                                    $correctOpt = $question && is_array($question->options ?? null) ? collect($question->options)->firstWhere('key', $correctKey) : null;
+                                    $correctOptText = $correctOpt['text'] ?? '';
+                                    $questionText = $question && !empty($question->topic) ? 'Question about ' . $question->topic : 'Question (text not available)';
+                                    if ($correctOptText !== '') {
+                                        $questionText .= ' — Correct: ' . $correctOptText;
+                                    }
+                                }
                                 $sessionCorrect = $session->assigned_correct_answers[$answer->question_id] ?? $session->assigned_correct_answers[(string)$answer->question_id] ?? ($question->correct_answer ?? '');
                                 $correct = trim((string)$answer->student_answer) === trim((string)$sessionCorrect);
                                 $shuffledOpts = $session->shuffled_question_options[$answer->question_id] ?? $session->shuffled_question_options[(string)$answer->question_id] ?? null;

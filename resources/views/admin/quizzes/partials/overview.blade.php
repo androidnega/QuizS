@@ -160,7 +160,19 @@
                 @endphp
                 <div class="border border-warning-200 rounded-lg p-4 bg-white flex flex-wrap items-start justify-between gap-3 pool-question-row" data-search="{{ strtolower(strip_tags($poolSearchText)) }}">
                     <div class="flex-1 min-w-0">
-                        @php $poolQuestionText = trim((string)($pool->question_text ?? '')) !== '' ? $pool->question_text : 'Question (text not available)'; @endphp
+                        @php
+                            $poolRawText = trim((string)($pool->question_text ?? ''));
+                            if ($poolRawText !== '') {
+                                $poolQuestionText = $pool->question_text;
+                            } else {
+                                $poolCorrect = collect($pool->options ?? [])->firstWhere('key', $pool->correct_answer);
+                                $poolCorrectText = $poolCorrect['text'] ?? '';
+                                $poolQuestionText = !empty($pool->topic) ? 'Question about ' . $pool->topic : 'Question (text not available)';
+                                if ($poolCorrectText !== '') {
+                                    $poolQuestionText .= ' — Correct: ' . $poolCorrectText;
+                                }
+                            }
+                        @endphp
                         <p class="text-gray-900 mb-2">{{ $poolQuestionText }}</p>
                         @if($pool->options)
                             <ul class="text-sm text-gray-600 space-y-1 mb-2">
@@ -220,19 +232,25 @@
             <div class="space-y-4" id="approved-questions-list">
                 @foreach($approvedQuestions as $idx => $q)
                     @php
-                        $qSearchText = implode(' ', array_filter([$q->text ?? '', $q->topic ?? '', $q->type ?? '', $q->source ?? '']));
+                        $rawText = trim((string)($q->text ?? ''));
+                        $correctOption = $q->options && is_array($q->options) ? collect($q->options)->firstWhere('key', $q->correct_answer) : null;
+                        $correctText = $correctOption['text'] ?? '';
+                        if ($rawText !== '') {
+                            $questionText = $q->text;
+                        } else {
+                            $questionText = !empty($q->topic) ? 'Question about ' . $q->topic : 'Question (text not available)';
+                            if ($correctText !== '') {
+                                $questionText .= ' — Correct: ' . $correctText;
+                            }
+                        }
+                        $qSearchText = implode(' ', array_filter([$questionText, $q->topic ?? '', $q->type ?? '', $q->source ?? '']));
                     @endphp
                     <div class="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors approved-question-row" data-search="{{ strtolower(strip_tags($qSearchText)) }}">
                         <div class="flex items-start gap-3 mb-3">
                             <span class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-semibold text-sm">{{ $idx + 1 }}</span>
                             <div class="flex-1 min-w-0">
-                                @php $questionText = trim((string)($q->text ?? '')) !== '' ? $q->text : 'Question (text not available)'; @endphp
                                 <p class="text-gray-900 mb-2">{{ $questionText }}</p>
-                                @if($q->options && is_array($q->options))
-                                    @php
-                                        $correctOption = collect($q->options)->firstWhere('key', $q->correct_answer);
-                                        $correctText = $correctOption['text'] ?? '';
-                                    @endphp
+                                @if($q->options && is_array($q->options) && $rawText !== '')
                                     @if($correctText)
                                         <p class="text-gray-700 text-sm mb-3">{{ $correctText }}</p>
                                     @endif
