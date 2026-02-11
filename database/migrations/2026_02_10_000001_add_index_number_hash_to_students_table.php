@@ -12,15 +12,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('students', function (Blueprint $table) {
-            $table->string('index_number_hash', 64)->nullable()->after('index_number');
-        });
+        if (! Schema::hasColumn('students', 'index_number_hash')) {
+            Schema::table('students', function (Blueprint $table) {
+                $table->string('index_number_hash', 64)->nullable()->after('index_number');
+            });
+        }
 
         $this->backfillHashes();
 
-        Schema::table('students', function (Blueprint $table) {
-            $table->unique('index_number_hash');
-        });
+        if (Schema::hasColumn('students', 'index_number_hash')) {
+            try {
+                Schema::table('students', function (Blueprint $table) {
+                    $table->unique('index_number_hash');
+                });
+            } catch (\Throwable $e) {
+                // Unique index already exists (e.g. from previous run or migrated schema)
+                if (strpos($e->getMessage(), 'Duplicate') === false && strpos($e->getMessage(), 'already exists') === false) {
+                    throw $e;
+                }
+            }
+        }
     }
 
     private function backfillHashes(): void
@@ -40,9 +51,11 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasColumn('students', 'index_number_hash')) {
+            return;
+        }
         Schema::table('students', function (Blueprint $table) {
             $table->dropUnique(['index_number_hash']);
-            $table->dropIndex(['index_number_hash']);
             $table->dropColumn('index_number_hash');
         });
     }
