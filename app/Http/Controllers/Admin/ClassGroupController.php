@@ -25,6 +25,32 @@ class ClassGroupController extends Controller
         return $user ? $user->classGroupIds() : [];
     }
 
+    /**
+     * Resolve class group from student record (source of truth for nested URLs).
+     * Optionally redirect GET pages to canonical URL when classGroupId in URL is stale.
+     */
+    private function resolveStudentClassGroup(
+        string $classGroupId,
+        ClassGroupStudent $student,
+        string $ability,
+        ?string $canonicalRoute = null
+    ): ClassGroup|RedirectResponse {
+        $classGroup = $student->classGroup;
+        if (! $classGroup) {
+            abort(404);
+        }
+        $this->authorize($ability, $classGroup);
+
+        if ($canonicalRoute && (string) $classGroupId !== (string) $classGroup->getRouteKey()) {
+            return redirect()->route($this->staffRoutePrefix() . '.' . $canonicalRoute, [
+                'classGroupId' => $classGroup->getRouteKey(),
+                'student' => $student->getRouteKey(),
+            ]);
+        }
+
+        return $classGroup;
+    }
+
     public function index(): View
     {
         $this->authorize('viewAny', ClassGroup::class);
@@ -250,12 +276,13 @@ class ClassGroupController extends Controller
     }
 
     /** Show details page for one student in the class group. */
-    public function showStudent(ClassGroup $classGroup, ClassGroupStudent $student): View
+    public function showStudent(string $classGroupId, ClassGroupStudent $student): View|RedirectResponse
     {
-        $this->authorize('view', $classGroup);
-        if ($student->class_group_id !== $classGroup->id) {
-            abort(404);
+        $resolved = $this->resolveStudentClassGroup($classGroupId, $student, 'view', 'class-groups.students.show');
+        if ($resolved instanceof RedirectResponse) {
+            return $resolved;
         }
+        $classGroup = $resolved;
         
         $student->load('studentAccount');
         $studentAccount = $student->studentAccount;
@@ -297,12 +324,13 @@ class ClassGroupController extends Controller
     }
 
     /** Show edit form for one student in the class group. */
-    public function editStudent(ClassGroup $classGroup, ClassGroupStudent $student): View
+    public function editStudent(string $classGroupId, ClassGroupStudent $student): View|RedirectResponse
     {
-        $this->authorize('update', $classGroup);
-        if ($student->class_group_id !== $classGroup->id) {
-            abort(404);
+        $resolved = $this->resolveStudentClassGroup($classGroupId, $student, 'update', 'class-groups.students.edit');
+        if ($resolved instanceof RedirectResponse) {
+            return $resolved;
         }
+        $classGroup = $resolved;
         
         $student->load('studentAccount');
         $studentAccount = $student->studentAccount;
@@ -312,12 +340,13 @@ class ClassGroupController extends Controller
     }
 
     /** Update a student index/name/phone in the class group. */
-    public function updateStudent(Request $request, ClassGroup $classGroup, ClassGroupStudent $student): RedirectResponse
+    public function updateStudent(Request $request, string $classGroupId, ClassGroupStudent $student): RedirectResponse
     {
-        $this->authorize('update', $classGroup);
-        if ($student->class_group_id !== $classGroup->id) {
-            abort(404);
+        $resolved = $this->resolveStudentClassGroup($classGroupId, $student, 'update');
+        if ($resolved instanceof RedirectResponse) {
+            return $resolved;
         }
+        $classGroup = $resolved;
         $request->validate([
             'index_number' => 'required|string|max:64',
             'student_name' => 'nullable|string|max:255',
@@ -460,12 +489,13 @@ class ClassGroupController extends Controller
     }
 
     /** Remove a student from the class group. */
-    public function destroyStudent(ClassGroup $classGroup, ClassGroupStudent $student): RedirectResponse
+    public function destroyStudent(string $classGroupId, ClassGroupStudent $student): RedirectResponse
     {
-        $this->authorize('update', $classGroup);
-        if ($student->class_group_id !== $classGroup->id) {
-            abort(404);
+        $resolved = $this->resolveStudentClassGroup($classGroupId, $student, 'update');
+        if ($resolved instanceof RedirectResponse) {
+            return $resolved;
         }
+        $classGroup = $resolved;
         
         $indexNumber = $student->index_number;
         $indexUpper = strtoupper(trim($indexNumber));
@@ -492,12 +522,13 @@ class ClassGroupController extends Controller
     }
 
     /** Remove phone number from a student. */
-    public function removeStudentPhone(ClassGroup $classGroup, ClassGroupStudent $student): RedirectResponse
+    public function removeStudentPhone(string $classGroupId, ClassGroupStudent $student): RedirectResponse
     {
-        $this->authorize('update', $classGroup);
-        if ($student->class_group_id !== $classGroup->id) {
-            abort(404);
+        $resolved = $this->resolveStudentClassGroup($classGroupId, $student, 'update');
+        if ($resolved instanceof RedirectResponse) {
+            return $resolved;
         }
+        $classGroup = $resolved;
         
         // Find the Student record by index hash and remove phone
         $studentAccount = \App\Models\Student::where('index_number_hash', \App\Models\Student::hashIndexNumber($student->index_number))->first();

@@ -4,6 +4,7 @@ use App\Http\Controllers\Student\QuizRulesController;
 use App\Http\Controllers\Student\StudentLoginController;
 use App\Http\Controllers\Student\TokenValidationController;
 use App\Http\Controllers\MigrateSqliteToMysqlController;
+use App\Http\Controllers\RunMigrationsController;
 use App\Models\Quiz;
 use App\Models\QuizSession;
 use App\Http\Controllers\Student\ProctoringCaptureController;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 
 // SQLite → MySQL migration (run via URL with secret key; no auth)
 Route::get('/migrate-sqlite-to-mysql', MigrateSqliteToMysqlController::class)->name('migrate.sqlite.to.mysql');
+// Run normal pending Laravel migrations via URL with secret key (no data import)
+Route::get('/run-migrations', RunMigrationsController::class)->name('migrate.run.pending');
 
 // Public landing: single Start Quiz entry; no quiz list. If direct link has token (?t= or ?token=), go straight to rules.
 Route::get('/', function (\Illuminate\Http\Request $request) {
@@ -169,13 +172,14 @@ Route::middleware('admin.auth')->group(function () {
         Route::put('/class-groups/{classGroup}', [ClassGroupController::class, 'update'])->name('class-groups.update');
         Route::delete('/class-groups/{classGroup}', [ClassGroupController::class, 'destroy'])->name('class-groups.destroy');
         Route::get('/class-groups/{classGroup}/students', [ClassGroupController::class, 'studentsIndex'])->name('class-groups.students.index');
-        Route::get('/class-groups/{classGroup}/students/{student}', [ClassGroupController::class, 'showStudent'])->name('class-groups.students.show');
-        Route::get('/class-groups/{classGroup}/students/{student}/edit', [ClassGroupController::class, 'editStudent'])->name('class-groups.students.edit');
+        // Keep classGroup in URL for readability, but resolve from student to avoid stale nested URL 404s.
+        Route::get('/class-groups/{classGroupId}/students/{student}', [ClassGroupController::class, 'showStudent'])->name('class-groups.students.show');
+        Route::get('/class-groups/{classGroupId}/students/{student}/edit', [ClassGroupController::class, 'editStudent'])->name('class-groups.students.edit');
         Route::post('/class-groups/{classGroup}/students', [ClassGroupController::class, 'addStudent'])->name('class-groups.students.add');
         Route::post('/class-groups/{classGroup}/students/upload', [ClassGroupController::class, 'uploadStudents'])->name('class-groups.students.upload');
-        Route::put('/class-groups/{classGroup}/students/{student}', [ClassGroupController::class, 'updateStudent'])->name('class-groups.students.update');
-        Route::delete('/class-groups/{classGroup}/students/{student}', [ClassGroupController::class, 'destroyStudent'])->name('class-groups.students.destroy');
-        Route::delete('/class-groups/{classGroup}/students/{student}/phone', [ClassGroupController::class, 'removeStudentPhone'])->name('class-groups.students.remove-phone');
+        Route::put('/class-groups/{classGroupId}/students/{student}', [ClassGroupController::class, 'updateStudent'])->name('class-groups.students.update');
+        Route::delete('/class-groups/{classGroupId}/students/{student}', [ClassGroupController::class, 'destroyStudent'])->name('class-groups.students.destroy');
+        Route::delete('/class-groups/{classGroupId}/students/{student}/phone', [ClassGroupController::class, 'removeStudentPhone'])->name('class-groups.students.remove-phone');
 
         // Quiz session detail — all staff (examiners + super admins) so session/student data always shows
         // Keep quiz ID in URL for readability, but resolve by quizSession in controller
