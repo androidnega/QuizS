@@ -199,8 +199,14 @@ class QuizManagementController extends Controller
         }
     }
 
-    public function show(Request $request, Quiz $quiz): View|Response
+    public function show(Request $request, string $quiz): View|Response|RedirectResponse
     {
+        $quiz = Quiz::query()->find($quiz);
+        if (! $quiz) {
+            return redirect()->route('dashboard.quizzes.index')
+                ->with('error', 'Quiz not found. It may have been removed or moved.');
+        }
+
         $this->authorize('view', $quiz);
         $quiz->load(['course', 'classGroup', 'questions', 'questionPools']);
 
