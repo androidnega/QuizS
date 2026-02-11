@@ -160,7 +160,8 @@
                 @endphp
                 <div class="border border-warning-200 rounded-lg p-4 bg-white flex flex-wrap items-start justify-between gap-3 pool-question-row" data-search="{{ strtolower(strip_tags($poolSearchText)) }}">
                     <div class="flex-1 min-w-0">
-                        <p class="text-gray-900 mb-2">{{ $pool->question_text }}</p>
+                        @php $poolQuestionText = trim((string)($pool->question_text ?? '')) !== '' ? $pool->question_text : 'Question (text not available)'; @endphp
+                        <p class="text-gray-900 mb-2">{{ $poolQuestionText }}</p>
                         @if($pool->options)
                             <ul class="text-sm text-gray-600 space-y-1 mb-2">
                                 @foreach($pool->options as $opt)
@@ -225,7 +226,8 @@
                         <div class="flex items-start gap-3 mb-3">
                             <span class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-semibold text-sm">{{ $idx + 1 }}</span>
                             <div class="flex-1 min-w-0">
-                                <p class="text-gray-900 mb-2">{{ $q->text }}</p>
+                                @php $questionText = trim((string)($q->text ?? '')) !== '' ? $q->text : 'Question (text not available)'; @endphp
+                                <p class="text-gray-900 mb-2">{{ $questionText }}</p>
                                 @if($q->options && is_array($q->options))
                                     @php
                                         $correctOption = collect($q->options)->firstWhere('key', $q->correct_answer);
