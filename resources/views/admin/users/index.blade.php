@@ -33,7 +33,7 @@
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Role</th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-36">Institution</th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[120px] max-w-[200px]">Courses</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase min-w-[180px]">Actions</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase min-w-[120px]">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -53,23 +53,33 @@
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 text-right text-sm">
-                                    <div class="flex flex-wrap justify-end gap-x-2 gap-y-1">
+                                    <div class="flex justify-end gap-1">
                                         @if(isset($isSuperAdmin) && $isSuperAdmin)
-                                            <a href="{{ route('dashboard.users.view-password-form', $u) }}" class="text-primary-600 hover:text-primary-900 whitespace-nowrap" title="Reset password">Reset</a>
+                                            <a href="{{ route('dashboard.users.view-password-form', $u) }}" class="inline-flex p-1.5 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="Reset password">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                                            </a>
                                             <form action="{{ route('dashboard.users.revoke', $u) }}" method="post" class="inline" onsubmit="return confirm('Revoke access? User will need to log in again.');">
                                                 @csrf
-                                                <button type="submit" class="text-amber-600 hover:text-amber-800 whitespace-nowrap">Revoke</button>
+                                                <button type="submit" class="inline-flex p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-colors" title="Revoke access">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                </button>
                                             </form>
-                                            <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900 whitespace-nowrap">Edit</a>
+                                            <a href="{{ route('dashboard.users.edit', $u) }}" class="inline-flex p-1.5 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="Edit">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            </a>
                                             @if($u->role === 'examiner')
                                             <form action="{{ route('dashboard.users.destroy', $u) }}" method="post" class="inline" onsubmit="return confirm('Delete this user? This cannot be undone.');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-danger-600 hover:text-danger-800 whitespace-nowrap">Delete</button>
+                                                <button type="submit" class="inline-flex p-1.5 rounded-lg text-gray-500 hover:text-danger-600 hover:bg-danger-50 transition-colors" title="Delete">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                </button>
                                             </form>
                                             @endif
                                         @else
-                                            <a href="{{ route('dashboard.users.edit', $u) }}" class="text-primary-600 hover:text-primary-900 whitespace-nowrap">Edit</a>
+                                            <a href="{{ route('dashboard.users.edit', $u) }}" class="inline-flex p-1.5 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="Edit">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            </a>
                                         @endif
                                     </div>
                                 </td>
