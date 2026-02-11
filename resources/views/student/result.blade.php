@@ -142,31 +142,42 @@
                     <p class="text-xs text-gray-500 mb-4">Full review is available now that the quiz window has ended. See your answers, the correct answers, and why any were wrong.</p>
                     <div class="space-y-4">
                         @foreach($session->answers as $idx => $answer)
-                            @if($answer->question)
-                                @php
-                                    $sessionCorrect = $session->assigned_correct_answers[$answer->question_id] ?? $session->assigned_correct_answers[(string)$answer->question_id] ?? $answer->question->correct_answer;
-                                    $correct = trim((string)$answer->student_answer) === trim((string)$sessionCorrect);
-                                    $shuffledOpts = $session->shuffled_question_options[$answer->question_id] ?? $session->shuffled_question_options[(string)$answer->question_id] ?? null;
-                                    $yourText = null;
-                                    $correctText = null;
-                                    if (is_array($shuffledOpts)) {
-                                        foreach ($shuffledOpts as $o) {
-                                            $k = $o['key'] ?? $o;
-                                            $t = $o['text'] ?? $o;
-                                            if ((string)$k === trim((string)$answer->student_answer)) $yourText = $t;
-                                            if ((string)$k === trim((string)$sessionCorrect)) $correctText = $t;
-                                        }
+                            @php
+                                $question = $answer->question;
+                                $questionText = $question && trim((string)($question->text ?? '')) !== '' ? $question->text : 'Question (text not available)';
+                                $sessionCorrect = $session->assigned_correct_answers[$answer->question_id] ?? $session->assigned_correct_answers[(string)$answer->question_id] ?? ($question->correct_answer ?? '');
+                                $correct = trim((string)$answer->student_answer) === trim((string)$sessionCorrect);
+                                $shuffledOpts = $session->shuffled_question_options[$answer->question_id] ?? $session->shuffled_question_options[(string)$answer->question_id] ?? null;
+                                $yourText = null;
+                                $correctText = null;
+                                if (is_array($shuffledOpts)) {
+                                    foreach ($shuffledOpts as $o) {
+                                        $k = $o['key'] ?? $o;
+                                        $t = $o['text'] ?? $o;
+                                        if ((string)$k === trim((string)$answer->student_answer)) $yourText = $t;
+                                        if ((string)$k === trim((string)$sessionCorrect)) $correctText = $t;
                                     }
-                                @endphp
-                                <div class="border border-gray-200 rounded-lg p-3 {{ $correct ? 'bg-success-50/50 border-success-200' : 'bg-danger-50/50 border-danger-200' }}">
-                                    <p class="text-sm font-medium text-gray-900 mb-1">{{ $idx + 1 }}. {{ $answer->question->text }}</p>
+                                }
+                                if ($yourText === null && $question && is_array($question->options ?? null)) {
+                                    foreach ($question->options as $opt) {
+                                        if (is_array($opt) && (string)($opt['key'] ?? '') === trim((string)$answer->student_answer)) { $yourText = $opt['text'] ?? $opt['key'] ?? ''; break; }
+                                    }
+                                }
+                                if ($correctText === null && $question && is_array($question->options ?? null)) {
+                                    foreach ($question->options as $opt) {
+                                        if (is_array($opt) && (string)($opt['key'] ?? '') === trim((string)$sessionCorrect)) { $correctText = $opt['text'] ?? $opt['key'] ?? ''; break; }
+                                    }
+                                }
+                            @endphp
+                            <div class="border border-gray-200 rounded-lg p-3 {{ $correct ? 'bg-success-50/50 border-success-200' : 'bg-danger-50/50 border-danger-200' }}">
+                                    <p class="text-sm font-medium text-gray-900 mb-1">{{ $idx + 1 }}. {{ $questionText }}</p>
                                     <div class="flex flex-wrap gap-2 text-xs mt-2">
                                         <span class="text-gray-600">Your answer: <strong>{{ $yourText !== null ? $answer->student_answer . '. ' . $yourText : ($answer->student_answer ?: '—') }}</strong></span>
                                         <span class="text-success-700">Correct: <strong>{{ $correctText !== null ? $sessionCorrect . '. ' . $correctText : $sessionCorrect }}</strong></span>
                                     </div>
                                     @if(!$correct)
                                         @php
-                                            $whyWrong = $answer->question->explanation_wrong ?? $answer->explanation_wrong ?? null;
+                                            $whyWrong = ($question && trim((string)($question->explanation_wrong ?? '')) !== '') ? $question->explanation_wrong : ($answer->explanation_wrong ?? null);
                                         @endphp
                                         @if(!empty($whyWrong))
                                             <div class="mt-3 pt-3 border-t border-gray-200 text-xs">
@@ -175,7 +186,6 @@
                                         @endif
                                     @endif
                                 </div>
-                            @endif
                         @endforeach
                     </div>
                 </div>
