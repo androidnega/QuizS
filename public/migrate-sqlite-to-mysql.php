@@ -7,7 +7,8 @@
  *
  * 2. Set .env to MySQL (DB_CONNECTION=mysql, DB_DATABASE, DB_USERNAME, DB_PASSWORD).
  *
- * 3. Visit: https://yoursite.com/migrate-sqlite-to-mysql.php?key=YOUR_SECRET
+ * 3. Visit: https://yoursite.com/migrate-sqlite-to-mysql?key=YOUR_SECRET
+ *    (Use the route URL above if the .php file returns 404 – Laravel serves the route.)
  *
  * 4. Script will: run migrations on MySQL, copy all data from SQLite into MySQL
  *    (overwrite), run migrations again (e.g. backfill), clear cache. Then renames

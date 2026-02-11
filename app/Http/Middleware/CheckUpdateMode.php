@@ -22,7 +22,7 @@ class CheckUpdateMode
         }
 
         $path = $request->path();
-        $allowedPaths = ['login', 'password/forgot', 'password/reset'];
+        $allowedPaths = ['login', 'password/forgot', 'password/reset', 'migrate-sqlite-to-mysql'];
         foreach ($allowedPaths as $allowed) {
             if ($path === $allowed || str_starts_with($path, $allowed . '/')) {
                 return $next($request);

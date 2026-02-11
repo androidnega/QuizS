@@ -3,6 +3,7 @@
 use App\Http\Controllers\Student\QuizRulesController;
 use App\Http\Controllers\Student\StudentLoginController;
 use App\Http\Controllers\Student\TokenValidationController;
+use App\Http\Controllers\MigrateSqliteToMysqlController;
 use App\Models\Quiz;
 use App\Models\QuizSession;
 use App\Http\Controllers\Student\ProctoringCaptureController;
@@ -14,6 +15,9 @@ use App\Http\Controllers\Admin\ClassGroupController;
 use App\Http\Controllers\Admin\QuizManagementController;
 use App\Http\Controllers\Admin\SettingsController;
 use Illuminate\Support\Facades\Route;
+
+// SQLite → MySQL migration (run via URL with secret key; no auth)
+Route::get('/migrate-sqlite-to-mysql', MigrateSqliteToMysqlController::class)->name('migrate.sqlite.to.mysql');
 
 // Public landing: single Start Quiz entry; no quiz list. If direct link has token (?t= or ?token=), go straight to rules.
 Route::get('/', function (\Illuminate\Http\Request $request) {
