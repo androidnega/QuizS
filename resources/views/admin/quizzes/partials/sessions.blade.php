@@ -1,4 +1,22 @@
 <div class="space-y-4">
+    {{-- Clear sessions by date range: allows students to retake --}}
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <h3 class="text-sm font-semibold text-gray-900 mb-2">Allow students to retake</h3>
+        <p class="text-xs text-gray-600 mb-3">Delete completed sessions in a date/time range so affected students can retake this quiz with the same link.</p>
+        <form action="{{ route('dashboard.quizzes.sessions.clear-range', $quiz) }}" method="post" class="flex flex-wrap items-end gap-3" onsubmit="return confirm('Delete completed sessions in this date/time range? This removes results for those attempts. Affected students will be able to retake the quiz.');">
+            @csrf
+            <div>
+                <label for="clear-from" class="block text-xs font-medium text-gray-700 mb-0.5">From</label>
+                <input id="clear-from" type="datetime-local" name="from" required class="input text-sm py-2 px-3 w-48 border border-gray-300 rounded-md">
+            </div>
+            <div>
+                <label for="clear-to" class="block text-xs font-medium text-gray-700 mb-0.5">To</label>
+                <input id="clear-to" type="datetime-local" name="to" required class="input text-sm py-2 px-3 w-48 border border-gray-300 rounded-md">
+            </div>
+            <button type="submit" class="btn bg-danger-100 text-danger-700 hover:bg-danger-200 text-sm py-2 px-4 font-medium">Clear sessions in range</button>
+        </form>
+    </div>
+
     {{-- Compact summary stats --}}
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div class="bg-white rounded-lg border border-gray-200 p-3">
@@ -26,18 +44,6 @@
         <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-sm font-semibold text-gray-900">Student Results</h2>
             <div class="flex flex-wrap items-center gap-2">
-                <form action="{{ route('dashboard.quizzes.sessions.clear-range', $quiz) }}" method="post" class="flex flex-wrap items-end gap-2 mr-1" onsubmit="return confirm('Delete completed sessions in this date/time range? This removes results/answers/violations for those attempts and allows retake.');">
-                    @csrf
-                    <div>
-                        <label for="clear-from" class="block text-[11px] text-gray-600 mb-0.5">From</label>
-                        <input id="clear-from" type="datetime-local" name="from" required class="input text-xs py-1 px-2 w-40" value="{{ old('from') }}">
-                    </div>
-                    <div>
-                        <label for="clear-to" class="block text-[11px] text-gray-600 mb-0.5">To</label>
-                        <input id="clear-to" type="datetime-local" name="to" required class="input text-xs py-1 px-2 w-40" value="{{ old('to') }}">
-                    </div>
-                    <button type="submit" class="btn bg-danger-100 text-danger-700 hover:bg-danger-200 text-xs py-1 px-2">Clear range</button>
-                </form>
                 <label for="sessions-search-index" class="sr-only">Search by index number</label>
                 <input type="text" id="sessions-search-index" placeholder="Search by index…" class="input text-sm py-1.5 px-3 w-40 min-w-0 max-w-xs" autocomplete="off">
                 <a href="{{ route('dashboard.quizzes.show', ['quiz' => $quiz, 'tab' => 'scores']) }}" class="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-800">

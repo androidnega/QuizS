@@ -109,9 +109,13 @@ class StudentLoginController extends Controller
         ]);
         session()->forget('quiz_id_for_login');
 
+        $indexHash = Student::hashIndexNumber($indexNumber);
         $student = Student::firstOrCreate(
-            ['index_number' => $indexNumber],
-            ['index_number' => $indexNumber]
+            ['index_number_hash' => $indexHash],
+            [
+                'index_number' => $indexNumber,
+                'index_number_hash' => $indexHash,
+            ]
         );
 
         if (!$student->hasPhone()) {
@@ -132,6 +136,8 @@ class StudentLoginController extends Controller
                 'step' => 'otp',
                 'index_number' => $student->index_number,
                 'message' => 'Use your existing code sent within the last 24 hours, or request a new one below.',
+                'has_name' => !empty($student->student_name),
+                'can_resend' => true,
             ]);
         }
 
@@ -153,6 +159,8 @@ class StudentLoginController extends Controller
             'step' => 'otp',
             'index_number' => $student->index_number,
             'message' => 'A code has been sent to your registered number. This code is valid for 24 hours.',
+            'has_name' => !empty($student->student_name),
+            'can_resend' => true,
         ]);
     }
 
