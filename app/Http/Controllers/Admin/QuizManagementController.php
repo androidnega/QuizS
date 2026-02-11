@@ -101,7 +101,11 @@ class QuizManagementController extends Controller
                     ->withInput()
                     ->with('error', 'Class group not found.');
             }
-            $this->authorize('update', $classGroup);
+            if (! $user->isSuperAdmin() && (int) $classGroup->examiner_id !== (int) $user->id) {
+                return redirect()->route($this->staffRoutePrefix() . '.quizzes.create')
+                    ->withInput()
+                    ->with('error', 'You can only create quizzes for your own class groups.');
+            }
             if (! $classGroup || ! $classGroup->hasStudents()) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.create')
                     ->withInput()
