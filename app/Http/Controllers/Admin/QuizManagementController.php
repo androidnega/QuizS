@@ -21,6 +21,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
@@ -333,6 +334,57 @@ class QuizManagementController extends Controller
 
         return redirect()->route($this->staffRoutePrefix() . '.quizzes.sessions.show', [$quiz, $session])
             ->with('success', 'IP lock reset. The student can now retry from a new IP/session.');
+    }
+
+    /**
+     * Delete completed quiz sessions within a date/time window so affected students can retake.
+     * Cascades to answers/results/violations via FK constraints.
+     */
+    public function clearSessionsByRange(Request $request, Quiz $quiz): RedirectResponse
+    {
+        $this->authorize('update', $quiz);
+
+        $validated = $request->validate([
+            'from' => 'required|date',
+            'to' => 'required|date|after_or_equal:from',
+        ]);
+
+        $from = \Illuminate\Support\Carbon::parse($validated['from']);
+        $to = \Illuminate\Support\Carbon::parse($validated['to']);
+
+        $matching = $quiz->sessions()
+            ->whereNotNull('ended_at')
+            ->whereBetween('ended_at', [$from, $to])
+            ->get(['id', 'student_index']);
+
+        if ($matching->isEmpty()) {
+            return redirect()
+                ->route($this->staffRoutePrefix() . '.quizzes.show', ['quiz' => $quiz, 'tab' => 'sessions'])
+                ->with('info', 'No completed sessions found in the selected date/time range.');
+        }
+
+        $ids = $matching->pluck('id')->all();
+        $deletedSessions = count($ids);
+        $affectedStudents = $matching->pluck('student_index')
+            ->filter()
+            ->map(fn ($idx) => strtoupper(trim((string) $idx)))
+            ->unique()
+            ->count();
+
+        DB::transaction(function () use ($ids) {
+            QuizSession::whereIn('id', $ids)->delete();
+        });
+
+        try {
+            broadcast(new DataUpdated('quizzes'))->toOthers();
+            broadcast(new DataUpdated('dashboard'))->toOthers();
+        } catch (\Throwable $e) {
+            // ignore broadcast failures
+        }
+
+        return redirect()
+            ->route($this->staffRoutePrefix() . '.quizzes.show', ['quiz' => $quiz, 'tab' => 'sessions'])
+            ->with('success', "Cleared {$deletedSessions} session(s) for {$affectedStudents} student(s). They can retake this quiz.");
     }
 
     /**

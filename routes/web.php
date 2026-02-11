@@ -208,6 +208,7 @@ Route::middleware('admin.auth')->group(function () {
             Route::post('/quizzes/{quiz}/unpublish', [QuizManagementController::class, 'unpublish'])->name('quizzes.unpublish');
             Route::post('/quizzes/{quiz}/end', [QuizManagementController::class, 'endQuiz'])->name('quizzes.end');
             Route::post('/quizzes/{quiz}/extend-time', [QuizManagementController::class, 'extendTime'])->name('quizzes.extend-time');
+            Route::post('/quizzes/{quiz}/sessions/clear-range', [QuizManagementController::class, 'clearSessionsByRange'])->name('quizzes.sessions.clear-range');
             Route::get('/quizzes/{quiz}/questions/{question}/edit', [QuizManagementController::class, 'editQuestion'])->name('quizzes.questions.edit');
             Route::put('/quizzes/{quiz}/questions/{question}', [QuizManagementController::class, 'updateQuestion'])->name('quizzes.questions.update');
             Route::delete('/quizzes/{quiz}/questions/{question}', [QuizManagementController::class, 'destroyQuestion'])->name('quizzes.questions.destroy');
