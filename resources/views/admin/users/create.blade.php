@@ -68,7 +68,13 @@
                 </div>
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" name="password" id="password" required class="input w-full max-w-full min-w-0 @error('password') border-danger-500 @enderror" minlength="8" autocomplete="new-password">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <input type="password" name="password" id="password" required class="input flex-1 min-w-0 max-w-full @error('password') border-danger-500 @enderror" minlength="8" autocomplete="new-password">
+                        <button type="button" id="generate-password" class="btn btn-secondary shrink-0 text-sm">Generate</button>
+                        <button type="button" id="copy-password" class="p-2 rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-400 shrink-0" title="Copy password">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        </button>
+                    </div>
                     <p class="mt-1 text-xs text-gray-500">At least 8 characters, including one letter and one number.</p>
                     @error('password')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
@@ -84,4 +90,44 @@
         </div>
     </div>
 </div>
+@push('scripts')
+<script>
+(function() {
+    const letters = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ';
+    const digits = '23456789';
+    const chars = letters + digits + '!@#$%&*';
+
+    function generatePassword() {
+        let p = '';
+        p += letters[Math.floor(Math.random() * letters.length)];
+        p += digits[Math.floor(Math.random() * digits.length)];
+        for (let i = 0; i < 8; i++) {
+            p += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return p.split('').sort(() => Math.random() - 0.5).join('');
+    }
+
+    document.getElementById('generate-password').addEventListener('click', function() {
+        const pw = generatePassword();
+        document.getElementById('password').value = pw;
+        document.getElementById('password_confirmation').value = pw;
+    });
+
+    document.getElementById('copy-password').addEventListener('click', function() {
+        const pw = document.getElementById('password').value;
+        if (!pw) return;
+        navigator.clipboard.writeText(pw).then(function() {
+            const btn = document.getElementById('copy-password');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+            btn.title = 'Copied!';
+            setTimeout(function() {
+                btn.innerHTML = orig;
+                btn.title = 'Copy password';
+            }, 1500);
+        });
+    });
+})();
+</script>
+@endpush
 @endsection
