@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\Concerns\InteractsWithAdminSession;
 use App\Models\Course;
+use App\Models\Institution;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,8 @@ class UserManagementController extends Controller
             $query->where('id', $user->id);
         }
         
-        $users = $query->orderBy('role')
+        $users = $query->with('institution')
+            ->orderBy('role')
             ->orderBy('username')
             ->paginate(20);
         
@@ -40,8 +42,9 @@ class UserManagementController extends Controller
             ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
-        
-        return view('admin.users.index', compact('users', 'isSuperAdmin', 'courses'));
+        $institutions = Institution::orderBy('name')->get();
+
+        return view('admin.users.index', compact('users', 'isSuperAdmin', 'courses', 'institutions'));
     }
 
     public function create(): View
@@ -59,7 +62,8 @@ class UserManagementController extends Controller
             ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
-        return view('admin.users.create', compact('courses', 'isSuperAdmin'));
+        $institutions = Institution::orderBy('name')->get();
+        return view('admin.users.create', compact('courses', 'institutions', 'isSuperAdmin'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -81,12 +85,13 @@ class UserManagementController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
         ];
         
-        // Only Super Admin can assign courses, and only to courses they have access to
+        // Only Super Admin can assign courses and institution
         if ($isSuperAdmin) {
             $rules['course_ids'] = 'nullable|array';
             $rules['course_ids.*'] = 'exists:courses,id';
+            $rules['institution_id'] = 'nullable|exists:institutions,id';
         }
-        
+
         $request->validate($rules, [
             'password.required' => 'A password is required.',
             'password.confirmed' => 'The password confirmation does not match.',
@@ -103,6 +108,9 @@ class UserManagementController extends Controller
         ];
         if (Schema::hasColumn('users', 'email')) {
             $attrs['email'] = $request->filled('email') ? trim($request->email) : null;
+        }
+        if ($isSuperAdmin && $request->filled('institution_id')) {
+            $attrs['institution_id'] = $request->institution_id;
         }
         $newUser = User::create($attrs);
         if ($newUser->isExaminer() && $request->filled('course_ids')) {
@@ -128,13 +136,14 @@ class UserManagementController extends Controller
             abort(403, 'You can only edit your own profile.');
         }
         
-        $user->load('courses');
+        $user->load(['courses', 'institution']);
         $courseIds = $currentUser ? $currentUser->assignedCourseIds() : [];
         $courses = Course::where('is_archived', false)
             ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
-        return view('admin.users.edit', compact('user', 'courses', 'isSuperAdmin'));
+        $institutions = Institution::orderBy('name')->get();
+        return view('admin.users.edit', compact('user', 'courses', 'institutions', 'isSuperAdmin'));
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -164,12 +173,13 @@ class UserManagementController extends Controller
             $rules['role'] = 'required|in:super_admin,examiner';
         }
         
-        // Only Super Admin can assign courses
+        // Only Super Admin can assign courses and institution
         if ($isSuperAdmin) {
             $rules['course_ids'] = 'nullable|array';
             $rules['course_ids.*'] = 'exists:courses,id';
+            $rules['institution_id'] = 'nullable|exists:institutions,id';
         }
-        
+
         // Super Admin can set/reset password for any staff (super_admin or examiner).
         if ($request->filled('password')) {
             $rules['password'] = ['required', 'confirmed', Password::min(8)->letters()->numbers()];
@@ -197,9 +207,11 @@ class UserManagementController extends Controller
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
+        if ($isSuperAdmin) {
+            $user->institution_id = $request->filled('institution_id') ? $request->institution_id : null;
+        }
         $user->save();
-        
-        // Only Super Admin can assign courses
+
         if ($isSuperAdmin && $user->isExaminer() && $request->filled('course_ids')) {
             $user->courses()->sync($request->input('course_ids', []));
         }

@@ -31,6 +31,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institution</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned courses</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Password</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -46,6 +47,7 @@
                                         {{ $u->role === 'super_admin' ? 'Super Admin' : 'Examiner' }}
                                     </span>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $u->institution?->name ?? '—' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     @if(isset($isSuperAdmin) && $isSuperAdmin)
@@ -62,7 +64,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">No staff users yet. Add an admin or examiner.</td>
+                                <td colspan="7" class="px-6 py-12 text-center text-gray-500">No staff users yet. Add an admin or examiner.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -113,6 +115,16 @@
                     <option value="super_admin" {{ old('role') === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                 </select>
                 @error('role')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+            </div>
+            <div id="modal_institution_field">
+                <label for="modal_institution_id" class="block text-sm font-medium text-gray-700 mb-1">Institution (for Examiner)</label>
+                <select name="institution_id" id="modal_institution_id" class="input w-full @error('institution_id') border-danger-500 @enderror">
+                    <option value="">— Select institution —</option>
+                    @foreach($institutions ?? [] as $inst)
+                        <option value="{{ $inst->id }}" {{ old('institution_id') == $inst->id ? 'selected' : '' }}>{{ $inst->display_name }}</option>
+                    @endforeach
+                </select>
+                @error('institution_id')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
             </div>
             <div id="modal_course_field">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Assigned courses (for Examiner)</label>
@@ -173,10 +185,13 @@ function closeCreateUserModal() {
 function toggleCourseField() {
     const role = document.getElementById('modal_role').value;
     const courseField = document.getElementById('modal_course_field');
+    const institutionField = document.getElementById('modal_institution_field');
     if (role === 'super_admin') {
         courseField.style.display = 'none';
+        if (institutionField) institutionField.style.display = 'none';
     } else {
         courseField.style.display = 'block';
+        if (institutionField) institutionField.style.display = 'block';
     }
 }
 

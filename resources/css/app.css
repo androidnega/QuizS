@@ -57,16 +57,19 @@
         @apply bg-white rounded-xl border border-gray-200;
     }
     .alert {
-        @apply px-4 py-3 rounded-lg mb-4 flex items-center gap-2;
+        @apply px-3 py-2 rounded-lg flex items-center gap-2.5 text-sm shadow-sm;
     }
     .alert-success {
-        @apply bg-success-50 text-success-800 border border-success-200;
+        @apply bg-white text-success-800 border border-success-200;
     }
     .alert-error {
-        @apply bg-danger-50 text-danger-800 border border-danger-200;
+        @apply bg-white text-danger-800 border border-danger-200;
     }
     .alert-warning {
-        @apply bg-warning-50 text-warning-800 border border-warning-200;
+        @apply bg-white text-warning-800 border border-warning-200;
+    }
+    .flash-toast .flash-alert {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     .safe-area-b {
         padding-bottom: env(safe-area-inset-bottom, 0);

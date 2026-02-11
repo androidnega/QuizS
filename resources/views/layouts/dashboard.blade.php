@@ -17,7 +17,12 @@
         <div class="examiner-sidebar-inner flex flex-col h-full">
             <div class="examiner-sidebar-header flex h-16 flex-shrink-0 items-center justify-between gap-2 px-4">
                 <a href="{{ route('dashboard') }}" class="examiner-sidebar-brand flex min-w-0 flex-shrink-0 items-center gap-3 overflow-hidden transition-opacity hover:opacity-80">
-                    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white font-bold text-lg shadow-sm">Q</span>
+                    @php $user = auth()->user(); $inst = $user?->institution; @endphp
+                    @if($inst && $inst->logo_url)
+                        <img src="{{ $inst->logo_url }}" alt="{{ $inst->name }}" class="h-10 w-10 flex-shrink-0 object-contain rounded-lg border border-gray-200 bg-white">
+                    @else
+                        <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white font-bold text-lg shadow-sm">Q</span>
+                    @endif
                     <span class="examiner-sidebar-brand-text truncate text-lg font-bold">QuizSnap</span>
                 </a>
                 <button type="button" id="examiner-sidebar-toggle-inner" data-examiner-collapse class="examiner-sidebar-chevron flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-200 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300 md:flex" aria-label="Collapse sidebar" title="Collapse sidebar (desktop)">
@@ -40,12 +45,6 @@
                             <span class="examiner-nav-text truncate">Class Groups</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('dashboard.institution.index') }}" class="examiner-nav-link {{ request()->routeIs('dashboard.institution.*') ? 'examiner-nav-link--active' : '' }} group flex items-center gap-3 rounded-lg py-3 px-3 text-sm font-medium min-w-0 transition-all" title="Institution name and logo for PDF reports">
-                            <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                            <span class="examiner-nav-text truncate">Institution</span>
-                        </a>
-                    </li>
                     @if($isExaminer)
                     <li>
                         <a href="{{ route('dashboard.quizzes.index') }}" class="examiner-nav-link {{ request()->routeIs('dashboard.quizzes.*') ? 'examiner-nav-link--active' : '' }} group flex items-center gap-3 rounded-lg py-3 px-3 text-sm font-medium min-w-0 transition-all">
@@ -63,6 +62,12 @@
                     </li>
                     @endif
                     @if($isSuperAdmin)
+                    <li>
+                        <a href="{{ route('dashboard.institutions.index') }}" class="examiner-nav-link {{ request()->routeIs('dashboard.institutions.*') ? 'examiner-nav-link--active' : '' }} group flex items-center gap-3 rounded-lg py-3 px-3 text-sm font-medium min-w-0 transition-all" title="Manage institutions and assign examiners">
+                            <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            <span class="examiner-nav-text truncate">Institutions</span>
+                        </a>
+                    </li>
                     <li>
                         <a href="{{ route('dashboard.users.index') }}" class="examiner-nav-link {{ request()->routeIs('dashboard.users.*') ? 'examiner-nav-link--active' : '' }} group flex items-center gap-3 rounded-lg py-3 px-3 text-sm font-medium min-w-0 transition-all" title="Manage staff (Super Admin and examiners)">
                             <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>

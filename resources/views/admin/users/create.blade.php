@@ -41,6 +41,16 @@
                     </select>
                     @error('role')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
+                <div id="institution-field">
+                    <label for="institution_id" class="block text-sm font-medium text-gray-700 mb-1">Institution (for Examiner)</label>
+                    <select name="institution_id" id="institution_id" class="input w-full @error('institution_id') border-danger-500 @enderror">
+                        <option value="">— Select institution —</option>
+                        @foreach($institutions ?? [] as $inst)
+                            <option value="{{ $inst->id }}" {{ old('institution_id') == $inst->id ? 'selected' : '' }}>{{ $inst->display_name }}</option>
+                        @endforeach
+                    </select>
+                    @error('institution_id')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+                </div>
                 <div id="course-field">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Assigned courses (for Examiner)</label>
                     <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">

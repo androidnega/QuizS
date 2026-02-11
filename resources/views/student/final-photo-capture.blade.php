@@ -69,6 +69,12 @@
 </div>
 
 @push('scripts')
+<script>
+// On back/forward cache restore: force reload so server can redirect if quiz already submitted
+window.addEventListener('pageshow', function(e) {
+    if (e.persisted) window.location.reload();
+});
+</script>
 <script src="{{ asset('js/final-photo-capture.js') }}" defer></script>
 <script>
 window.QuizSnapFinalPhoto = {

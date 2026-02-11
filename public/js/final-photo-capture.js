@@ -178,9 +178,9 @@
             .then(function (r) { return r ? r.json() : null; })
             .then(function (data) {
                 if (data && data.redirect) {
-                    window.location.href = data.redirect;
+                    window.location.replace(data.redirect);
                 } else if (data && data.success) {
-                    window.location.href = config.resultUrl || '/quiz/complete';
+                    window.location.replace(config.resultUrl || '/quiz/complete');
                 } else {
                     showError((data && data.message) ? data.message : 'Could not complete. Please try again.');
                     setButtonLabel('Start camera');

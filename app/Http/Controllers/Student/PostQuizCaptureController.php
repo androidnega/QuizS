@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
@@ -19,7 +20,7 @@ class PostQuizCaptureController extends Controller
      * Show final photo capture screen (same UI/layout as first proctoring capture).
      * Student must have an active quiz session; after capturing, they submit and are redirected to result.
      */
-    public function show(Request $request): View|RedirectResponse
+    public function show(Request $request): View|RedirectResponse|Response
     {
         $token = session('quiz_session_token');
         if (!$token) {
@@ -35,9 +36,10 @@ class PostQuizCaptureController extends Controller
         if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
             return redirect()->route('student.quiz.complete')->with('info', 'Session could not be verified. If you completed the quiz, check your results.');
         }
-        return view('student.final-photo-capture', [
-            'quiz' => $session->quiz,
-        ]);
+        return response()
+            ->view('student.final-photo-capture', ['quiz' => $session->quiz])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     /**

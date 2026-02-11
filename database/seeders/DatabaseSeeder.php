@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             ['code' => 'CS101'],
             ['name' => 'Introduction to Programming']
         );
+        $this->call(InstitutionSeeder::class);
         $this->call(StaffSeeder::class);
     }
 }

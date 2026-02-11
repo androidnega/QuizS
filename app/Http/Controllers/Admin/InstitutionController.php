@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\Concerns\InteractsWithAdminSession;
-use App\Models\Setting;
+use App\Models\Institution;
 use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -15,40 +15,47 @@ class InstitutionController extends Controller
     use InteractsWithAdminSession;
 
     /**
-     * Institution / School settings (examiner-accessible). Used on PDF score reports.
+     * List all institutions (Super Admin only). Assign examiners via User management.
      */
     public function index(): View
     {
-        $institutionName = Setting::getValue(Setting::KEY_INSTITUTION_NAME, '');
-        $institutionLogo = Setting::getValue(Setting::KEY_INSTITUTION_LOGO, '');
-        return view('admin.institution.index', [
-            'institution_name' => $institutionName,
-            'institution_logo' => $institutionLogo,
-        ]);
+        $institutions = Institution::withCount('users')->orderBy('name')->get();
+        return view('admin.institutions.index', compact('institutions'));
     }
 
     /**
-     * Update institution name and/or logo. Logo uploads directly to Cloudinary.
+     * Edit institution name and logo.
      */
-    public function update(Request $request): RedirectResponse
+    public function edit(Institution $institution): View
+    {
+        return view('admin.institutions.edit', compact('institution'));
+    }
+
+    /**
+     * Update institution name and/or logo. Logo uploads to Cloudinary.
+     */
+    public function update(Request $request, Institution $institution): RedirectResponse
     {
         $request->validate([
-            'institution_name' => 'nullable|string|max:255',
-            'institution_logo' => 'nullable|image|max:2048',
+            'name' => 'required|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'logo' => 'nullable|image|max:2048',
         ]);
 
-        Setting::setValue(Setting::KEY_INSTITUTION_NAME, $request->filled('institution_name') ? trim($request->institution_name) : null);
+        $institution->name = trim($request->name);
+        $institution->region = $request->filled('region') ? trim($request->region) : null;
 
-        if ($request->hasFile('institution_logo')) {
-            $url = CloudinaryService::uploadFromFile($request->file('institution_logo'));
+        if ($request->hasFile('logo')) {
+            $url = CloudinaryService::uploadFromFile($request->file('logo'));
             if ($url) {
-                Setting::setValue(Setting::KEY_INSTITUTION_LOGO, $url);
+                $institution->logo = $url;
             } else {
-                return redirect()->route('dashboard.institution.index')
+                return redirect()->route('dashboard.institutions.edit', $institution)
                     ->with('error', 'Logo upload failed. Ensure Cloudinary is configured in Admin Settings.');
             }
         }
 
-        return redirect()->route('dashboard.institution.index')->with('success', 'Institution settings saved.');
+        $institution->save();
+        return redirect()->route('dashboard.institutions.index')->with('success', 'Institution updated.');
     }
 }

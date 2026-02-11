@@ -159,10 +159,6 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/profile/password', [\App\Http\Controllers\Admin\StaffProfileController::class, 'password'])->name('profile.password');
         Route::put('/profile/password', [\App\Http\Controllers\Admin\StaffProfileController::class, 'updatePassword'])->name('profile.password.update');
 
-        // Institution / School — both roles (examiner-accessible; logo uploads to Cloudinary)
-        Route::get('/institution', [\App\Http\Controllers\Admin\InstitutionController::class, 'index'])->name('institution.index');
-        Route::put('/institution', [\App\Http\Controllers\Admin\InstitutionController::class, 'update'])->name('institution.update');
-
         // Class groups — both (policy controls create/edit/delete)
         Route::get('/class-groups', [ClassGroupController::class, 'index'])->name('class-groups.index');
         Route::get('/class-groups/create', [ClassGroupController::class, 'create'])->name('class-groups.create');
@@ -230,8 +226,11 @@ Route::middleware('admin.auth')->group(function () {
             Route::delete('/courses/{course}', [\App\Http\Controllers\Admin\CourseController::class, 'destroy'])->name('courses.destroy');
         });
 
-        // Super Admin only: users, settings, system reset
+        // Super Admin only: institutions, users, settings, system reset
         Route::middleware('admin.role')->group(function () {
+            Route::get('/institutions', [\App\Http\Controllers\Admin\InstitutionController::class, 'index'])->name('institutions.index');
+            Route::get('/institutions/{institution}/edit', [\App\Http\Controllers\Admin\InstitutionController::class, 'edit'])->name('institutions.edit');
+            Route::put('/institutions/{institution}', [\App\Http\Controllers\Admin\InstitutionController::class, 'update'])->name('institutions.update');
             Route::post('/settings/update-mode', [SettingsController::class, 'toggleUpdateMode'])->name('settings.update-mode');
             Route::get('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'index'])->name('system.reset.index');
             Route::post('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'reset'])->name('system.reset');
