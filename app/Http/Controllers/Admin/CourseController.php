@@ -21,20 +21,32 @@ class CourseController extends Controller
     {
         $user = $this->adminUser();
         $isSuperAdmin = $user && $user->isSuperAdmin();
-        
-        // Super Admin sees all courses, Examiner sees only assigned courses
-        $query = Course::withCount(['quizzes', 'validIndices'])
-            ->with('examiners:id,username,name');
-        
-        if (!$isSuperAdmin && $user && $user->isExaminer()) {
-            $query->whereHas('examiners', function ($q) use ($user) {
-                $q->where('users.id', $user->id);
-            });
+
+        // Lecturer-centric: lecturers who have courses assigned, paginated
+        $lecturers = User::where('role', User::ROLE_EXAMINER)
+            ->whereHas('courses')
+            ->when(!$isSuperAdmin && $user?->isExaminer(), fn ($q) => $q->where('id', $user->id))
+            ->withCount('courses')
+            ->with([
+                'courses' => fn ($q) => $q->where('is_archived', false)
+                    ->withCount(['quizzes', 'validIndices'])
+                    ->with('examiners:id,username,name')
+                    ->orderBy('name'),
+            ])
+            ->orderBy('name')
+            ->paginate(10, ['id', 'username', 'name']);
+
+        // Courses with no examiners (unassigned)
+        $unassignedQuery = Course::withCount(['quizzes', 'validIndices'])
+            ->with('examiners:id,username,name')
+            ->whereDoesntHave('examiners')
+            ->where('is_archived', false);
+        if (!$isSuperAdmin && $user?->isExaminer()) {
+            $unassignedQuery->whereRaw('1=0'); // Examiners never see unassigned
         }
-        
-        $courses = $query->orderBy('name')->get();
-        
-        return view('admin.courses.index', compact('courses', 'isSuperAdmin'));
+        $unassignedCourses = $unassignedQuery->orderBy('name')->get();
+
+        return view('admin.courses.index', compact('lecturers', 'unassignedCourses', 'isSuperAdmin'));
     }
 
     public function create(): View

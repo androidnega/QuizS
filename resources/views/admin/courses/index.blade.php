@@ -4,79 +4,59 @@
 @section('dashboard_heading', 'Courses')
 
 @section('dashboard_content')
-<div class="w-full space-y-6">
+<div class="w-full space-y-4">
     <div class="flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-2 text-sm text-gray-600">
-                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Dashboard</a>
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                <span class="text-gray-900 font-medium">Courses</span>
-            </div>
-            <a href="{{ route('dashboard.courses.create') }}" class="btn btn-primary">Add course</a>
+            <a href="{{ route('dashboard') }}" class="hover:text-primary-600">Dashboard</a>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="text-gray-900 font-medium">Courses</span>
         </div>
+        <a href="{{ route('dashboard.courses.create') }}" class="btn btn-primary text-sm">Add course</a>
+    </div>
 
-        @if(session('success'))
-            <div class="alert alert-success mb-4">{{ session('success') }}</div>
+    @if(session('success'))
+        <div class="alert alert-success text-sm">{{ session('success') }}</div>
+    @endif
+
+    {{-- Unassigned courses (no examiners) --}}
+    @if($unassignedCourses->isNotEmpty())
+        <section class="border border-gray-200 rounded-lg overflow-hidden">
+            <details class="group/details" open>
+                <summary class="flex items-center justify-between cursor-pointer list-none px-4 py-3 bg-gray-50 hover:bg-gray-100 text-sm font-semibold text-gray-700">
+                    <span>Unassigned</span>
+                    <span class="text-gray-500 font-normal">{{ $unassignedCourses->count() }} course(s)</span>
+                </summary>
+                <div class="border-t border-gray-200 overflow-x-auto">
+                    @include('admin.courses.partials.courses-table', ['courses' => $unassignedCourses, 'isSuperAdmin' => $isSuperAdmin])
+                </div>
+            </details>
+        </section>
+    @endif
+
+    {{-- Lecturers with courses --}}
+    @forelse($lecturers as $lecturer)
+        <section class="border border-gray-200 rounded-lg overflow-hidden">
+            <details class="group/details">
+                <summary class="flex items-center justify-between cursor-pointer list-none px-4 py-3 bg-slate-50 hover:bg-slate-100 text-sm font-semibold text-gray-800">
+                    <span>{{ $lecturer->name ?? $lecturer->username }}</span>
+                    <span class="text-gray-500 font-normal">{{ $lecturer->courses_count ?? $lecturer->courses->count() }} course(s)</span>
+                </summary>
+                <div class="border-t border-gray-200 overflow-x-auto">
+                    @include('admin.courses.partials.courses-table', ['courses' => $lecturer->courses, 'isSuperAdmin' => $isSuperAdmin])
+                </div>
+            </details>
+        </section>
+    @empty
+        @if($unassignedCourses->isEmpty())
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+                <p class="text-sm text-gray-500">No courses yet. Create one to assign examiners and create quizzes.</p>
+                <a href="{{ route('dashboard.courses.create') }}" class="mt-3 inline-flex text-sm text-primary-600 font-medium hover:underline">Add course</a>
+            </div>
         @endif
+    @endforelse
 
-        <div class="card overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quizzes</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Examiners</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($courses as $c)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{{ $c->code ?? '—' }}</td>
-                                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">{{ $c->name }}</td>
-                                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-600">{{ $c->quizzes_count ?? 0 }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-600 max-w-[180px] truncate" title="{{ $c->examiners->isNotEmpty() ? $c->examiners->pluck('username')->join(', ') : '—' }}">
-                                    {{ $c->examiners->isNotEmpty() ? $c->examiners->pluck('username')->join(', ') : '—' }}
-                                </td>
-                                <td class="px-3 py-2 whitespace-nowrap">
-                                    @if($c->is_archived)
-                                        <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600">Archived</span>
-                                    @else
-                                        <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-success-100 text-success-800">Active</span>
-                                    @endif
-                                </td>
-                                <td class="px-3 py-2 whitespace-nowrap text-right text-sm">
-                                    <a href="{{ route('dashboard.courses.edit', $c) }}" class="text-primary-600 hover:text-primary-900 mr-2">Edit</a>
-                                    @if($c->is_archived)
-                                        <form action="{{ route('dashboard.courses.unarchive', $c) }}" method="post" class="inline mr-2">
-                                            @csrf
-                                            <button type="submit" class="text-success-600 hover:text-success-800">Restore</button>
-                                        </form>
-                                    @else
-                                        <form action="{{ route('dashboard.courses.archive', $c) }}" method="post" class="inline mr-2" onsubmit="return confirm('Archive this course?');">
-                                            @csrf
-                                            <button type="submit" class="text-gray-600 hover:text-gray-800">Archive</button>
-                                        </form>
-                                    @endif
-                                    @if(isset($isSuperAdmin) && $isSuperAdmin)
-                                    <form action="{{ route('dashboard.courses.destroy', $c) }}" method="post" class="inline" onsubmit="return confirm('Permanently delete course \'{{ addslashes($c->name) }}\'? This cannot be undone.');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-danger-600 hover:text-danger-800" title="Delete course">Delete</button>
-                                    </form>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-3 py-8 text-center text-sm text-gray-500">No courses yet. Create one to assign examiners and create quizzes.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    @if($lecturers->hasPages())
+        <div class="mt-4">{{ $lecturers->links() }}</div>
+    @endif
 </div>
 @endsection

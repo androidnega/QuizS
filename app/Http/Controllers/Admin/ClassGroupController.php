@@ -55,12 +55,28 @@ class ClassGroupController extends Controller
     {
         $this->authorize('viewAny', ClassGroup::class);
         $ids = $this->classGroupIds();
-        $classGroups = ClassGroup::withCount(['students', 'quizzes', 'courses'])
-            ->with('examiner:id,username,name')
+
+        // Lecturer-centric: lecturers who have class groups in scope, paginated
+        $lecturers = User::where('role', User::ROLE_EXAMINER)
+            ->whereHas('classGroups', fn ($q) => $q->whereIn('id', $ids))
+            ->withCount(['classGroups'])
+            ->with([
+                'classGroups' => fn ($q) => $q->whereIn('id', $ids)
+                    ->withCount(['students', 'quizzes', 'courses'])
+                    ->orderBy('name'),
+                'courses' => fn ($q) => $q->where('is_archived', false)->orderBy('name'),
+            ])
+            ->orderBy('name')
+            ->paginate(10, ['id', 'username', 'name']);
+
+        // Unassigned groups (examiner_id is null) in scope
+        $unassignedGroups = ClassGroup::withCount(['students', 'quizzes', 'courses'])
+            ->whereNull('examiner_id')
             ->whereIn('id', $ids)
             ->orderBy('name')
-            ->paginate(24);
-        return view('admin.class-groups.index', compact('classGroups'));
+            ->get();
+
+        return view('admin.class-groups.index', compact('lecturers', 'unassignedGroups'));
     }
 
     public function create(): View
