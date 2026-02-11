@@ -140,6 +140,10 @@
             } else if (data.step === 'otp') {
                 var otpMsg = document.getElementById('otp-step-message');
                 if (otpMsg) otpMsg.textContent = data.message || 'Enter the 6-digit code sent to your phone.';
+                // Registered-phone login can resend without phone step
+                if (data.can_resend) {
+                    lastPhoneUsed = '__registered__';
+                }
                 // Hide name field if student already has a name
                 if (data.has_name && nameInput) {
                     nameInput.closest('div').style.display = 'none';
@@ -206,18 +210,22 @@
     });
 
     document.getElementById('btn-resend-otp').addEventListener('click', function() {
-        if (!lastPhoneUsed || !currentIndexNumber) {
-            showError('otp-error', 'Go back and enter your phone, then send the code again.');
+        if (!currentIndexNumber) {
+            showError('otp-error', 'Go back and enter your index number, then try again.');
             return;
         }
         var resendBtn = document.getElementById('btn-resend-otp');
         resendBtn.disabled = true;
         resendBtn.textContent = 'Sending…';
         showError('otp-error', '');
+        var payload = { index_number: currentIndexNumber };
+        if (lastPhoneUsed && lastPhoneUsed !== '__registered__') {
+            payload.phone = lastPhoneUsed;
+        }
         fetch('{{ route("student.account.send-otp") }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
-            body: JSON.stringify({ index_number: currentIndexNumber, phone: lastPhoneUsed })
+            body: JSON.stringify(payload)
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {

@@ -102,6 +102,7 @@ class StudentAccountController extends Controller
                 'index_number' => $student->index_number,
                 'message' => 'Use your existing code sent within the last 24 hours, or request a new one below.',
                 'has_name' => !empty($student->student_name),
+                'can_resend' => true,
             ]);
         }
 
@@ -128,6 +129,7 @@ class StudentAccountController extends Controller
             'index_number' => $student->index_number,
             'message' => 'A code has been sent to your registered number. This code is valid for 24 hours.',
             'has_name' => !empty($student->student_name),
+            'can_resend' => true,
         ]);
     }
 
@@ -138,29 +140,34 @@ class StudentAccountController extends Controller
     {
         $request->validate([
             'index_number' => 'required|string|max:100',
-            'phone' => 'required|string|max:20',
+            'phone' => 'nullable|string|max:20',
         ]);
         $inputIndex = trim((string) $request->index_number);
-        $phone = preg_replace('/\D/', '', trim($request->phone));
-        if (strlen($phone) < 10) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please enter a valid phone number (e.g. 233XXXXXXXXX).',
-            ], 422);
-        }
 
         $student = Student::where('index_number_hash', Student::hashIndexNumber($inputIndex))->first();
         if (!$student) {
             return response()->json(['success' => false, 'message' => 'Invalid session. Start again.'], 422);
         }
         $indexNumber = $student->index_number;
+        $inputPhone = trim((string) ($request->phone ?? ''));
+        $phone = preg_replace('/\D/', '', $inputPhone);
 
         // Student cannot change phone—only examiner can remove it
         $storedNormalized = $student->phone_contact ? preg_replace('/\D/', '', $student->phone_contact) : '';
-        if ($storedNormalized !== '' && $storedNormalized !== $phone) {
+        if ($storedNormalized !== '' && $phone !== '' && $storedNormalized !== $phone) {
             return response()->json([
                 'success' => false,
                 'message' => 'Phone number cannot be changed. Ask your examiner to remove it first.',
+            ], 422);
+        }
+        if ($storedNormalized !== '' && $phone === '') {
+            // Registered students can request a new OTP without re-entering phone.
+            $phone = $storedNormalized;
+        }
+        if ($phone === '' || strlen($phone) < 10) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please enter a valid phone number (e.g. 233XXXXXXXXX).',
             ], 422);
         }
 
@@ -200,7 +207,9 @@ class StudentAccountController extends Controller
             'success' => true,
             'step' => 'otp',
             'index_number' => $student->index_number,
-            'message' => 'A code has been sent to your number.',
+            'message' => 'A code has been sent to your number. It is valid for 24 hours.',
+            'has_name' => !empty($student->student_name),
+            'can_resend' => true,
         ]);
     }
 
