@@ -172,18 +172,25 @@
     var form = document.getElementById('enter-token-form');
     var submitBtn = document.getElementById('enter-token-submit-btn');
 
-    function openModal() {
+    function openModal(prefillToken) {
         if (!modal) return;
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         if (input) {
-            input.value = '';
+            input.value = prefillToken || '';
             input.classList.remove('border-green-500', 'border-red-500', 'bg-amber-50');
             input.classList.add('border-gray-300');
         }
         if (messageEl) messageEl.textContent = '';
         if (submitBtn) { submitBtn.disabled = true; }
-        setTimeout(function() { if (input) input.focus(); }, 100);
+        setTimeout(function() {
+            if (input) input.focus();
+            if (prefillToken && prefillToken.length >= 8) {
+                if (debounceTimer) clearTimeout(debounceTimer);
+                debounceTimer = null;
+                runValidation(prefillToken);
+            }
+        }, 100);
     }
     function closeModal() {
         if (!modal) return;
@@ -288,6 +295,18 @@
             }
         });
     }
+
+    // If token in URL on enter, open modal with token pre-filled and Start button when valid
+    (function checkUrlToken() {
+        var params = new URLSearchParams(window.location.search);
+        var token = params.get('t') || params.get('token');
+        if (token && typeof token === 'string') {
+            token = token.trim();
+            if (token.length >= 8) {
+                openModal(token);
+            }
+        }
+    })();
 })();
 </script>
 @if(isset($scheduledQuiz) && $scheduledQuiz && $scheduledQuiz->starts_at && $scheduledQuiz->starts_at->isFuture())

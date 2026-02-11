@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassGroup;
+use App\Models\ClassGroupStudent;
 use App\Models\Quiz;
 use App\Models\QuizSession;
 use App\Models\Student;
@@ -29,7 +31,19 @@ class StudentDashboardController extends Controller
     {
         $student = $this->student();
         $student->load(['classGroupStudents.classGroup']);
+        // Use case-insensitive index match (class_group_students may differ from students.index_number after migration)
+        $classGroupIds = ClassGroupStudent::whereRaw('LOWER(TRIM(index_number)) = ?', [strtolower(trim($student->index_number ?? ''))])
+            ->pluck('class_group_id')
+            ->unique()
+            ->values()
+            ->all();
         $classGroups = $student->classGroupStudents->map(fn ($s) => $s->classGroup)->filter()->unique('id')->values();
+        if (empty($classGroupIds) && $classGroups->isNotEmpty()) {
+            $classGroupIds = $classGroups->pluck('id')->filter()->values()->all();
+        }
+        if ($classGroups->isEmpty() && !empty($classGroupIds)) {
+            $classGroups = ClassGroup::whereIn('id', $classGroupIds)->get();
+        }
 
         $sessionsCount = QuizSession::where('student_index', $student->index_number)->count();
         $recentSessions = QuizSession::where('student_index', $student->index_number)
@@ -45,7 +59,6 @@ class StudentDashboardController extends Controller
             ->orderByDesc('created_at')
             ->first();
 
-        $classGroupIds = $classGroups->pluck('id')->filter()->values()->all();
         $scheduledQuiz = null;
         $scheduledQuizSession = null;
         if (!empty($classGroupIds)) {
@@ -93,8 +106,16 @@ class StudentDashboardController extends Controller
     {
         $student = $this->student();
         $student->load(['classGroupStudents.classGroup']);
+        // Use case-insensitive index match (class_group_students may differ from students.index_number after migration)
+        $classGroupIds = ClassGroupStudent::whereRaw('LOWER(TRIM(index_number)) = ?', [strtolower(trim($student->index_number ?? ''))])
+            ->pluck('class_group_id')
+            ->unique()
+            ->values()
+            ->all();
         $classGroups = $student->classGroupStudents->map(fn ($s) => $s->classGroup)->filter()->unique('id')->values();
-        $classGroupIds = $classGroups->pluck('id')->filter()->values()->all();
+        if (empty($classGroupIds) && $classGroups->isNotEmpty()) {
+            $classGroupIds = $classGroups->pluck('id')->filter()->values()->all();
+        }
         
         // Get active quizzes the student can take
         $activeQuizzes = collect();
