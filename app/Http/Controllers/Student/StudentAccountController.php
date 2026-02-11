@@ -155,6 +155,24 @@ class StudentAccountController extends Controller
         }
         $indexNumber = $student->index_number;
 
+        // Student cannot change phone—only examiner can remove it
+        $storedNormalized = $student->phone_contact ? preg_replace('/\D/', '', $student->phone_contact) : '';
+        if ($storedNormalized !== '' && $storedNormalized !== $phone) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Phone number cannot be changed. Ask your examiner to remove it first.',
+            ], 422);
+        }
+
+        // Phone must not be used by another student
+        $otherStudent = Student::where('phone_contact', $phone)->where('id', '!=', $student->id)->first();
+        if ($otherStudent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This phone number is already registered to another student. Use a different number or ask your examiner for help.',
+            ], 422);
+        }
+
         // Check if there's an existing valid OTP for this index
         $existingCached = Cache::get(self::OTP_CACHE_PREFIX . $indexNumber);
         if ($existingCached && isset($existingCached['code']) && ($existingCached['phone'] ?? '') === $phone) {
@@ -236,6 +254,13 @@ class StudentAccountController extends Controller
         // Tie phone to account if this was first-time (phone from cache)
         $phone = $cached['phone'] ?? null;
         if ($phone && !$student->phone_contact) {
+            $otherStudent = Student::where('phone_contact', $phone)->where('id', '!=', $student->id)->first();
+            if ($otherStudent) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This phone number is already registered to another student. Use a different number.',
+                ], 422);
+            }
             $student->phone_contact = $phone;
         }
         if ($name !== null && $name !== '') {

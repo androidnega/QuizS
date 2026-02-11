@@ -314,11 +314,25 @@ class StudentQuizController extends Controller
     }
 
     /**
-     * Quiz complete page: "Log in to see your results". Shown after normal submit or auto-submit.
+     * Quiz complete page. If logged in as owner, redirect to result. Otherwise show friendly message.
      */
-    public function quizComplete(): View
+    public function quizComplete(): View|\Illuminate\Http\RedirectResponse
     {
-        return view('student.quiz-complete');
+        $token = session('quiz_session_token');
+        $studentId = session('student_id');
+        $student = $studentId ? Student::find($studentId) : null;
+        $session = $token && is_string($token)
+            ? QuizSession::where('session_token', $token)->first()
+            : null;
+        $isOwner = $student && $session && strtoupper(trim((string) $student->index_number)) === strtoupper(trim((string) $session->student_index));
+
+        if ($isOwner) {
+            return redirect()->route('student.result', ['token' => $token]);
+        }
+
+        return view('student.quiz-complete', [
+            'isLoggedIn' => (bool) $student,
+        ]);
     }
 
     /**

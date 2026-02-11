@@ -11,6 +11,17 @@
                 <span class="text-3xl" aria-hidden="true">✓</span>
             </div>
             <h1 class="text-xl font-bold text-gray-900 mb-2">Quiz submitted</h1>
+            @if(!empty($isLoggedIn))
+            <p class="text-gray-600 text-sm mb-6">Your answers have been recorded. See your result in My Quizzes.</p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="{{ route('dashboard.my-quizzes') }}" class="btn btn-action py-2.5 px-5 text-sm font-semibold inline-flex items-center justify-center gap-2">
+                    See your result
+                </a>
+                <a href="{{ route('student.landing') }}" class="btn btn-secondary py-2.5 px-5 text-sm font-medium inline-flex items-center justify-center">
+                    Back to home
+                </a>
+            </div>
+            @else
             <p class="text-gray-600 text-sm mb-6">Your answers have been recorded. Log in with your index number and phone to see your marks, review your answers, and what you got right or wrong.</p>
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 <a href="{{ route('student.account.login.form') }}" class="btn btn-action py-2.5 px-5 text-sm font-semibold inline-flex items-center justify-center gap-2">
@@ -20,8 +31,9 @@
                     Back to home
                 </a>
             </div>
+            <p class="mt-4 text-sm text-gray-500">Use the same index and phone you used when starting the quiz. We'll send you a code by SMS.</p>
+            @endif
         </div>
-        <p class="mt-4 text-sm text-gray-500">Use the same index and phone you used when starting the quiz. We'll send you a code by SMS.</p>
     </div>
 </div>
 @endsection

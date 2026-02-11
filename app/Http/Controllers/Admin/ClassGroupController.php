@@ -325,7 +325,9 @@ class ClassGroupController extends Controller
         ]);
         $indexNumber = trim($request->index_number);
         $name = $request->filled('student_name') ? trim($request->student_name) : null;
-        $phone = $request->filled('phone_contact') ? trim($request->phone_contact) : null;
+        $phoneRaw = $request->filled('phone_contact') ? trim($request->phone_contact) : null;
+        $phone = $phoneRaw ? preg_replace('/\D/', '', $phoneRaw) : null;
+        $phone = ($phone !== null && $phone !== '') ? $phone : null;
         
         // If index changed, ensure no duplicate (unique is class_group_id + index_number)
         if (strcasecmp($student->index_number, $indexNumber) !== 0) {
@@ -341,8 +343,17 @@ class ClassGroupController extends Controller
         
         // Update phone in Student account if exists
         $studentAccount = \App\Models\Student::where('index_number_hash', \App\Models\Student::hashIndexNumber($indexNumber))->first();
-        if ($studentAccount) {
+        if ($studentAccount && $phone !== null) {
+            $otherStudent = \App\Models\Student::where('phone_contact', $phone)->where('id', '!=', $studentAccount->id)->first();
+            if ($otherStudent) {
+                return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.edit', [$classGroup, $student])
+                    ->withInput()
+                    ->with('error', 'This phone number is already registered to another student.');
+            }
             $studentAccount->phone_contact = $phone;
+            $studentAccount->save();
+        } elseif ($studentAccount && $phone === null) {
+            $studentAccount->phone_contact = null;
             $studentAccount->save();
         }
         
