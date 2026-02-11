@@ -104,7 +104,6 @@ class MigrateSqliteToMysqlController extends Controller
                     $out .= "  {$table}: skip (table not in MySQL?)\n";
                     continue;
                 }
-                $colSet = array_flip($cols);
 
                 DB::table($table)->truncate();
 
@@ -114,7 +113,16 @@ class MigrateSqliteToMysqlController extends Controller
                 foreach ($chunks as $chunk) {
                     $insertRows = [];
                     foreach ($chunk as $row) {
-                        $filtered = array_intersect_key($row, $colSet);
+                        // Map SQLite row to MySQL columns case-insensitively (fixes "Field 'TEXT' doesn't have a default value")
+                        $filtered = [];
+                        foreach ($cols as $col) {
+                            foreach ($row as $k => $v) {
+                                if (strcasecmp((string) $k, (string) $col) === 0) {
+                                    $filtered[$col] = $v;
+                                    break;
+                                }
+                            }
+                        }
                         if (!empty($filtered)) {
                             $insertRows[] = $filtered;
                         }
