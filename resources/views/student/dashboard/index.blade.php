@@ -216,7 +216,7 @@
 <div id="camera-test-modal" class="fixed inset-0 z-50 hidden" aria-modal="true" aria-labelledby="camera-test-modal-title" role="dialog">
     <div class="fixed inset-0 bg-black/50" id="camera-test-modal-backdrop"></div>
     <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
-        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 pointer-events-auto">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 pointer-events-auto" id="camera-test-modal-panel">
             <div class="flex items-center justify-between mb-4">
                 <h2 id="camera-test-modal-title" class="text-lg font-semibold text-gray-900">Camera Test</h2>
                 <button type="button" id="camera-test-modal-close-btn" class="p-1 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="Close">
@@ -452,8 +452,14 @@
     if (cameraTestBtn) {
         cameraTestBtn.addEventListener('click', openCameraModal);
     }
+    var cameraTestModalPanel = document.getElementById('camera-test-modal-panel');
     if (cameraTestModalBackdrop) {
         cameraTestModalBackdrop.addEventListener('click', closeCameraModal);
+    }
+    if (cameraTestModalPanel) {
+        cameraTestModalPanel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
     }
     if (cameraTestModalCloseBtn) {
         cameraTestModalCloseBtn.addEventListener('click', closeCameraModal);
