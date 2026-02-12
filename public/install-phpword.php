@@ -98,22 +98,15 @@ if (empty($homeDir)) {
     }
 }
 
-// Set environment variables
+// Set environment variables using putenv (for current process)
 putenv('HOME=' . $homeDir);
 putenv('COMPOSER_HOME=' . $homeDir);
 
-// Build environment string for exec command
-$envVars = [
-    'HOME' => $homeDir,
-    'COMPOSER_HOME' => $homeDir,
-];
-$envString = '';
-foreach ($envVars as $key => $value) {
-    $envString .= escapeshellarg($key) . '=' . escapeshellarg($value) . ' ';
-}
+// Build environment string for exec command (proper shell syntax)
+$envString = 'HOME=' . escapeshellarg($homeDir) . ' COMPOSER_HOME=' . escapeshellarg($homeDir) . ' ';
 
 echo "Setting HOME environment variable to: {$homeDir}\n";
-echo "Environment: {$envString}\n";
+echo "Environment string: {$envString}\n";
 echo str_repeat('=', 70) . "\n\n";
 
 // First, try composer install to ensure all dependencies are installed
@@ -122,13 +115,6 @@ echo str_repeat('=', 70) . "\n\n";
 
 $output1 = [];
 $returnVar1 = 0;
-
-// Set environment variables using putenv (for current process)
-putenv('HOME=' . $homeDir);
-putenv('COMPOSER_HOME=' . $homeDir);
-
-// Also build environment string for exec command
-$envString = 'HOME=' . escapeshellarg($homeDir) . ' COMPOSER_HOME=' . escapeshellarg($homeDir) . ' ';
 
 // Use shell_exec with explicit environment variable setting
 $fullCommand = "cd " . escapeshellarg($baseDir) . " && {$envString}{$composerCmd} install --no-dev --optimize-autoloader 2>&1";
