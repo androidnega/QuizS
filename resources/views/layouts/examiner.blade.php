@@ -80,9 +80,10 @@
                     $examiner = auth()->user();
                     $smsRemaining = $examiner && $examiner->isExaminer() ? $examiner->sms_remaining : 0;
                     $smsAllocation = $examiner && $examiner->isExaminer() ? ($examiner->sms_allocation ?? 0) : 0;
+                    $smsColorClass = $smsRemaining >= 100 ? 'text-green-600' : 'text-red-600';
                 @endphp
                 @if($examiner && $examiner->isExaminer())
-                <div class="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm text-gray-700" title="SMS balance for sending login tokens to students">
+                <div class="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm {{ $smsColorClass }}" title="SMS balance for sending login tokens to students">
                     <span class="text-gray-500">SMS:</span>
                     <span class="font-semibold">{{ $smsRemaining }}</span>
                     <span class="text-gray-400">/</span>

@@ -5,6 +5,32 @@
 
 @section('dashboard_content')
 <div class="w-full space-y-8">
+    @php
+        $examiner = auth()->user();
+        $smsRemaining = $examiner && $examiner->isExaminer() ? $examiner->sms_remaining : 0;
+        $showLowSmsWarning = $examiner && $examiner->isExaminer() && $smsRemaining < 100 && $smsRemaining > 0;
+    @endphp
+    
+    {{-- Low SMS Warning Banner --}}
+    @if($showLowSmsWarning)
+    <div id="low-sms-warning" class="rounded-lg border border-amber-200 bg-amber-50 p-4 flex items-start gap-3" role="alert">
+        <div class="flex-shrink-0 mt-0.5">
+            <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-amber-900">Low SMS Balance</p>
+            <p class="mt-1 text-sm text-amber-800">You have <strong>{{ $smsRemaining }}</strong> SMS remaining. Please contact your administrator to reload your SMS allocation so you can continue sending login tokens to students.</p>
+        </div>
+        <button type="button" onclick="dismissLowSmsWarning()" class="flex-shrink-0 text-amber-600 hover:text-amber-800 transition-colors" aria-label="Dismiss">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+    @endif
+    
     <div>
         <h2 class="text-xl font-semibold text-gray-900">Overview</h2>
         <p class="mt-1 text-sm text-gray-500">Manage class groups, quizzes, and view session results.</p>
@@ -73,4 +99,39 @@
         </div>
     </section>
 </div>
+
+@push('scripts')
+<script>
+(function() {
+    // Low SMS Warning Dismissal (12-18 hours)
+    const WARNING_KEY = 'low_sms_warning_dismissed';
+    const DISMISS_HOURS = 15; // 15 hours (between 12-18)
+    
+    function dismissLowSmsWarning() {
+        const warning = document.getElementById('low-sms-warning');
+        if (warning) {
+            warning.style.display = 'none';
+            const dismissUntil = Date.now() + (DISMISS_HOURS * 60 * 60 * 1000);
+            localStorage.setItem(WARNING_KEY, dismissUntil.toString());
+        }
+    }
+    
+    function shouldShowWarning() {
+        const dismissed = localStorage.getItem(WARNING_KEY);
+        if (!dismissed) return true;
+        const dismissUntil = parseInt(dismissed, 10);
+        return Date.now() > dismissUntil;
+    }
+    
+    // Hide warning if dismissed and still valid
+    const warning = document.getElementById('low-sms-warning');
+    if (warning && !shouldShowWarning()) {
+        warning.style.display = 'none';
+    }
+    
+    // Make dismiss function global
+    window.dismissLowSmsWarning = dismissLowSmsWarning;
+})();
+</script>
+@endpush
 @endsection
