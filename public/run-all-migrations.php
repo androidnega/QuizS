@@ -12,12 +12,16 @@
  * SECURITY: Change the key below before deploying!
  */
 
+// Start output buffering to prevent "headers already sent" errors
+ob_start();
+
 $secret = 'QuizSnapMigrations2026';
 $key = $_GET['key'] ?? '';
 $run = $_GET['run'] ?? '';
 
 if ($key !== $secret || $run !== 'yes') {
     http_response_code(403);
+    ob_end_flush();
     die('Access denied. Provide correct key and run=yes parameter.');
 }
 
@@ -54,8 +58,12 @@ try {
     echo "2. Add faculties and departments for each institution\n";
     echo "3. Examiners can then select their faculty/department from their profile\n";
     
+    // Flush output buffer
+    ob_end_flush();
+    
 } catch (Exception $e) {
     echo "\n❌ Error: " . $e->getMessage() . "\n";
     echo "\nStack trace:\n" . $e->getTraceAsString() . "\n";
+    ob_end_flush();
     http_response_code(500);
 }
