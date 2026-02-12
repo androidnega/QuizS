@@ -988,8 +988,26 @@ class QuizManagementController extends Controller
             $courseName = trim($quiz->course->name ?? '');
         }
         
-        $examDate = $quiz->ends_at ? $quiz->ends_at->format('F j, Y') : ($quiz->starts_at ? $quiz->starts_at->format('F j, Y') : now()->format('F j, Y'));
-        $duration = $quiz->duration_minutes ? $quiz->duration_minutes . ' HOURS' : '2 HOURS';
+        // Format date properly - use ends_at if available, otherwise starts_at, otherwise current date
+        if ($quiz->ends_at) {
+            $examDate = $quiz->ends_at->format('F j, Y');
+        } elseif ($quiz->starts_at) {
+            $examDate = $quiz->starts_at->format('F j, Y');
+        } else {
+            $examDate = now()->format('F j, Y');
+        }
+        
+        // Format duration properly
+        $durationMinutes = $quiz->duration_minutes ?? 120;
+        $hours = floor($durationMinutes / 60);
+        $minutes = $durationMinutes % 60;
+        if ($hours > 0 && $minutes > 0) {
+            $duration = $hours . ' HOUR' . ($hours > 1 ? 'S' : '') . ' ' . $minutes . ' MINUTE' . ($minutes > 1 ? 'S' : '');
+        } elseif ($hours > 0) {
+            $duration = $hours . ' HOUR' . ($hours > 1 ? 'S' : '');
+        } else {
+            $duration = $minutes . ' MINUTE' . ($minutes > 1 ? 'S' : '');
+        }
         
         $institutionName = Setting::getValue(Setting::KEY_INSTITUTION_NAME, 'TAKORADI TECHNICAL UNIVERSITY');
         $logoPath = Setting::getValue(Setting::KEY_INSTITUTION_LOGO, '');
