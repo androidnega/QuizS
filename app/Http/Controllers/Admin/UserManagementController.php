@@ -127,7 +127,7 @@ class UserManagementController extends Controller
             ->with('success', 'User created.');
     }
 
-    public function edit(User $user): View|RedirectResponse
+    public function edit(Request $request, User $user): View|RedirectResponse
     {
         $currentUser = $this->adminUser();
         $isSuperAdmin = $currentUser && $currentUser->isSuperAdmin();
