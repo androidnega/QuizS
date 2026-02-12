@@ -123,28 +123,38 @@ class StudentLoginController extends Controller
                 'success' => true,
                 'step' => 'phone',
                 'index_number' => $student->index_number,
-                'message' => 'Enter an active phone number to receive an SMS. We\'ll save it to your index for future logins. The code we send will also be your login for the next 24 hours—keep it.',
+                'message' => 'Enter an active phone number to receive an SMS. We\'ll save it to your index for future logins. The code we send will also be your login for the next 14 days—keep it.',
             ]);
         }
 
-        // Check if there's an existing valid OTP (within 24 hours)
+        // Examiner (quiz's class group) must have SMS balance
+        $quiz->load('classGroup.examiner');
+        $examiner = $quiz->classGroup?->examiner;
+        if (!$examiner || !$examiner->isExaminer() || $examiner->sms_remaining <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your examiner has no SMS balance. Contact your examiner to receive a login code.',
+            ], 422);
+        }
+
+        $otpTtl = (int) config('quizsnap.otp_ttl_seconds', 14 * 86400);
+        // Check if there's an existing valid OTP (within validity period)
         $cached = Cache::get('student_otp:' . $indexNumber);
         if ($cached && isset($cached['code'])) {
-            // OTP already exists and is valid, no need to send new SMS
             return response()->json([
                 'success' => true,
                 'step' => 'otp',
                 'index_number' => $student->index_number,
-                'message' => 'Use your existing code sent within the last 24 hours, or request a new one below.',
+                'message' => 'Use your existing code sent within the last 14 days, or request a new one below.',
                 'has_name' => !empty($student->student_name),
                 'can_resend' => true,
             ]);
         }
 
-        // No valid OTP, generate and send new one
+        // No valid OTP, generate and send new one (deduct from examiner)
         $code = (string) random_int(100000, 999999);
-        Cache::put('student_otp:' . $indexNumber, ['code' => $code, 'phone' => $student->phone_contact], 86400);
-        $message = 'Your QuizSnap code is: ' . $code . '. Use it to continue the quiz and as login for 24 hours. Do not share.';
+        Cache::put('student_otp:' . $indexNumber, ['code' => $code, 'phone' => $student->phone_contact], $otpTtl);
+        $message = 'Your QuizSnap code is: ' . $code . '. Use it to continue the quiz and as login for 14 days. Do not share.';
         $result = ArkeselService::sendSms($student->phone_contact, $message);
         if (!$result['success']) {
             $msg = $result['message'] ?? 'We couldn\'t send the code.';
@@ -153,12 +163,14 @@ class StudentLoginController extends Controller
             }
             return response()->json(['success' => false, 'message' => $msg], 422);
         }
-
+        if ($result['success']) {
+            $examiner->increment('sms_used');
+        }
         return response()->json([
             'success' => true,
             'step' => 'otp',
             'index_number' => $student->index_number,
-            'message' => 'A code has been sent to your registered number. This code is valid for 24 hours.',
+            'message' => 'A code has been sent to your registered number. This code is valid for 14 days.',
             'has_name' => !empty($student->student_name),
             'can_resend' => true,
         ]);

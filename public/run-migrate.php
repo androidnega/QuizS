@@ -31,16 +31,24 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 ob_start();
 try {
+    echo "Running migrations...\n";
     Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-    $output = Illuminate\Support\Facades\Artisan::output();
+    echo trim(Illuminate\Support\Facades\Artisan::output()) . "\n\n";
+
+    echo "Clearing caches...\n";
+    Illuminate\Support\Facades\Artisan::call('config:clear');
+    Illuminate\Support\Facades\Artisan::call('route:clear');
+    Illuminate\Support\Facades\Artisan::call('cache:clear');
+    Illuminate\Support\Facades\Artisan::call('view:clear');
+    echo "Caches cleared.\n\n";
+
     echo "Migrations completed.\n\n";
-    echo $output;
 
     // Delete this file after successful run (one-time use)
     if (@unlink(__FILE__)) {
-        echo "\n[run-migrate.php has been deleted. Do not visit again.]\n";
+        echo "[run-migrate.php has been deleted. Do not visit again.]\n";
     } else {
-        echo "\n[Delete public/run-migrate.php manually for security.]\n";
+        echo "[Delete public/run-migrate.php manually for security.]\n";
     }
 } catch (Throwable $e) {
     echo "Error: " . $e->getMessage() . "\n";

@@ -76,6 +76,19 @@
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
                 <h1 class="min-w-0 flex-1 truncate text-lg font-semibold text-gray-900">@yield('examiner_heading', 'Examiner')</h1>
+                @php
+                    $examiner = auth()->user();
+                    $smsRemaining = $examiner && $examiner->isExaminer() ? $examiner->sms_remaining : 0;
+                    $smsAllocation = $examiner && $examiner->isExaminer() ? ($examiner->sms_allocation ?? 0) : 0;
+                @endphp
+                @if($examiner && $examiner->isExaminer())
+                <div class="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm text-gray-700" title="SMS balance for sending login tokens to students">
+                    <span class="text-gray-500">SMS:</span>
+                    <span class="font-semibold">{{ $smsRemaining }}</span>
+                    <span class="text-gray-400">/</span>
+                    <span>{{ $smsAllocation }}</span>
+                </div>
+                @endif
                 <div class="relative flex flex-shrink-0 items-center ml-2" id="profile-menu-wrap">
                     <button type="button" class="flex items-center gap-2 rounded-full p-0.5 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2" aria-expanded="false" aria-haspopup="true" id="profile-menu-btn" title="Profile">
                         @php $user = auth()->user(); @endphp

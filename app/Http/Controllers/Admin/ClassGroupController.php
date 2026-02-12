@@ -8,8 +8,11 @@ use App\Models\AttendanceUploadLog;
 use App\Models\ClassGroup;
 use App\Models\ClassGroupStudent;
 use App\Models\Course;
+use App\Models\Student;
 use App\Models\User;
+use App\Services\ArkeselService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -501,6 +504,47 @@ class ClassGroupController extends Controller
         $message = $mode === 'replace'
             ? 'Student list replaced with ' . count($byIndex) . ' indices.'
             : 'Merged ' . count($byIndex) . ' indices into the class group.';
+
+        // Send login tokens by SMS to students with phone numbers; deduct from examiner's SMS balance.
+        $classGroup->load('examiner');
+        $examiner = $classGroup->examiner;
+        $otpTtl = (int) config('quizsnap.otp_ttl_seconds', 14 * 86400);
+        $smsSent = 0;
+        if ($examiner && $examiner->isExaminer()) {
+            $examiner->refresh();
+            $remaining = $examiner->sms_remaining;
+            if ($remaining > 0) {
+                $studentsInGroup = $classGroup->students()->get();
+                foreach ($studentsInGroup as $cgStudent) {
+                    if ($remaining <= 0) {
+                        break;
+                    }
+                    $indexNumber = strtoupper(trim($cgStudent->index_number));
+                    $studentAccount = Student::where('index_number_hash', Student::hashIndexNumber($indexNumber))->first();
+                    if (!$studentAccount || !$studentAccount->hasPhone()) {
+                        continue;
+                    }
+                    $code = (string) random_int(100000, 999999);
+                    Cache::put('student_otp:' . $indexNumber, [
+                        'code' => $code,
+                        'phone' => $studentAccount->phone_contact,
+                    ], $otpTtl);
+                    $smsMessage = 'Your QuizSnap login code is: ' . $code . '. Valid for 14 days. Do not share.';
+                    $result = ArkeselService::sendSms($studentAccount->phone_contact, $smsMessage);
+                    if ($result['success']) {
+                        $examiner->increment('sms_used');
+                        $remaining--;
+                        $smsSent++;
+                    }
+                }
+            }
+        }
+        if ($smsSent > 0) {
+            $message .= ' Login tokens sent by SMS to ' . $smsSent . ' student(s).';
+        } elseif ($examiner && $examiner->isExaminer() && $examiner->sms_remaining <= 0) {
+            $message .= ' No SMS balance—login tokens were not sent.';
+        }
+
         return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', $message);
     }
 

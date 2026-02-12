@@ -41,6 +41,12 @@
                     </select>
                     @error('role')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
+                <div>
+                    <label for="sms_allocation" class="block text-sm font-medium text-gray-700 mb-1">SMS allocation (for Examiner)</label>
+                    <input type="number" name="sms_allocation" id="sms_allocation" value="{{ old('sms_allocation', 0) }}" min="0" step="1" class="input w-full max-w-full min-w-0 @error('sms_allocation') border-danger-500 @enderror" placeholder="0">
+                    <p class="mt-1 text-xs text-gray-500">Number of SMS the examiner can use to send login tokens to students (e.g. 20).</p>
+                    @error('sms_allocation')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+                </div>
                 <div id="institution-field">
                     <label for="institution_id" class="block text-sm font-medium text-gray-700 mb-1">Institution (for Examiner)</label>
                     <select name="institution_id" id="institution_id" class="input w-full max-w-full min-w-0 @error('institution_id') border-danger-500 @enderror">

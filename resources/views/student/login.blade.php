@@ -33,7 +33,7 @@
             <div id="step-phone" class="space-y-4 hidden">
                 <div class="rounded-lg bg-primary-50 border border-primary-200 p-3 mb-2 text-sm text-primary-900">
                     <p class="font-medium mb-1">Use an active phone number</p>
-                    <p>We'll send a one-time code by SMS. <strong>Keep that code—it will be your login for the next 24 hours</strong> so you can open your dashboard and see your results. We'll also save your phone and name to your index for future logins.</p>
+                    <p>We'll send a one-time code by SMS. <strong>Keep that code—it will be your login for the next 14 days</strong> so you can open your dashboard and see your results. We'll also save your phone and name to your index for future logins.</p>
                 </div>
                 <p class="text-sm text-gray-600" id="phone-step-message">Enter your active phone number (e.g. 233XXXXXXXXX).</p>
                 <div>
@@ -49,7 +49,7 @@
 
             {{-- Step 3: OTP --}}
             <div id="step-otp" class="space-y-4 hidden">
-                <p class="text-sm text-gray-600" id="otp-step-message">Enter the 6-digit code sent to your phone. Keep it—it's your login for the next 24 hours.</p>
+                <p class="text-sm text-gray-600" id="otp-step-message">Enter the 6-digit code sent to your phone. Keep it—it's your login for the next 14 days.</p>
                 <div>
                     <label for="otp_code" class="block text-sm font-medium text-gray-700 mb-1">Code</label>
                     <input type="text" id="otp_code" name="code" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" class="input w-full text-center tracking-widest text-lg" autocomplete="one-time-code">

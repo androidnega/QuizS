@@ -17,7 +17,7 @@ class User extends Authenticatable
     public const ROLE_SUPER_ADMIN = 'super_admin';
     public const ROLE_EXAMINER = 'examiner';
 
-    protected $fillable = ['username', 'email', 'index_number', 'name', 'course_id', 'role', 'password', 'avatar', 'institution_id'];
+    protected $fillable = ['username', 'email', 'index_number', 'name', 'course_id', 'role', 'password', 'avatar', 'institution_id', 'sms_allocation'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -32,7 +32,19 @@ class User extends Authenticatable
      */
     protected function casts(): array
     {
-        return ['password' => 'hashed'];
+        return [
+            'password' => 'hashed',
+            'sms_allocation' => 'integer',
+            'sms_used' => 'integer',
+        ];
+    }
+
+    /** SMS remaining for this examiner (allocation minus used). */
+    public function getSmsRemainingAttribute(): int
+    {
+        $alloc = (int) ($this->attributes['sms_allocation'] ?? 0);
+        $used = (int) ($this->attributes['sms_used'] ?? 0);
+        return max(0, $alloc - $used);
     }
 
     public function course(): BelongsTo

@@ -85,11 +85,12 @@ class UserManagementController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
         ];
         
-        // Only Super Admin can assign courses and institution
+        // Only Super Admin can assign courses, institution, and SMS allocation
         if ($isSuperAdmin) {
             $rules['course_ids'] = 'nullable|array';
             $rules['course_ids.*'] = 'exists:courses,id';
             $rules['institution_id'] = 'nullable|exists:institutions,id';
+            $rules['sms_allocation'] = 'nullable|integer|min:0';
         }
 
         $request->validate($rules, [
@@ -111,6 +112,9 @@ class UserManagementController extends Controller
         }
         if ($isSuperAdmin && $request->filled('institution_id')) {
             $attrs['institution_id'] = $request->institution_id;
+        }
+        if ($isSuperAdmin && $request->has('sms_allocation') && $request->input('sms_allocation') !== null && $request->input('sms_allocation') !== '') {
+            $attrs['sms_allocation'] = max(0, (int) $request->sms_allocation);
         }
         $newUser = User::create($attrs);
         if ($newUser->isExaminer() && $request->filled('course_ids')) {
@@ -173,11 +177,12 @@ class UserManagementController extends Controller
             $rules['role'] = 'required|in:super_admin,examiner';
         }
         
-        // Only Super Admin can assign courses and institution
+        // Only Super Admin can assign courses, institution, and SMS allocation
         if ($isSuperAdmin) {
             $rules['course_ids'] = 'nullable|array';
             $rules['course_ids.*'] = 'exists:courses,id';
             $rules['institution_id'] = 'nullable|exists:institutions,id';
+            $rules['sms_allocation'] = 'nullable|integer|min:0';
         }
 
         // Super Admin can set/reset password for any staff (super_admin or examiner).
@@ -209,6 +214,9 @@ class UserManagementController extends Controller
         }
         if ($isSuperAdmin) {
             $user->institution_id = $request->filled('institution_id') ? $request->institution_id : null;
+            if ($request->has('sms_allocation') && $request->input('sms_allocation') !== null && $request->input('sms_allocation') !== '') {
+                $user->sms_allocation = max(0, (int) $request->sms_allocation);
+            }
         }
         $user->save();
 

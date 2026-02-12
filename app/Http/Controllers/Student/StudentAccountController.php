@@ -15,7 +15,11 @@ use Illuminate\View\View;
 class StudentAccountController extends Controller
 {
     private const OTP_CACHE_PREFIX = 'student_otp:';
-    private const OTP_TTL_SECONDS = 86400; // 24 hours
+
+    private static function otpTtlSeconds(): int
+    {
+        return (int) config('quizsnap.otp_ttl_seconds', 14 * 86400);
+    }
 
     /**
      * Student account login form (index → phone → OTP flow).
@@ -92,28 +96,36 @@ class StudentAccountController extends Controller
             ]);
         }
 
-        // Check if there's an existing valid OTP (within 24 hours)
+        // Check examiner SMS balance: student must be linked to an examiner with remaining SMS
+        $examiner = $this->examinerWithSmsBalanceForIndex($cgStudent->index_number);
+        if (!$examiner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your examiner has no SMS balance. Contact your examiner to receive a login code.',
+            ], 422);
+        }
+
+        // Check if there's an existing valid OTP (within validity period)
         $cached = Cache::get(self::OTP_CACHE_PREFIX . $indexNumber);
         if ($cached && isset($cached['code'])) {
-            // OTP already exists and is valid, no need to send new SMS
             return response()->json([
                 'success' => true,
                 'step' => 'otp',
                 'index_number' => $student->index_number,
-                'message' => 'Use your existing code sent within the last 24 hours, or request a new one below.',
+                'message' => 'Use your existing code sent within the last 14 days, or request a new one below.',
                 'has_name' => !empty($student->student_name),
                 'can_resend' => true,
             ]);
         }
 
-        // Has phone: generate OTP and send
+        // Has phone: generate OTP and send (deduct from examiner)
         $code = (string) random_int(100000, 999999);
         Cache::put(self::OTP_CACHE_PREFIX . $indexNumber, [
             'code' => $code,
             'phone' => $student->phone_contact,
-        ], self::OTP_TTL_SECONDS);
+        ], self::otpTtlSeconds());
 
-        $message = 'Your QuizSnap login code is: ' . $code . '. Do not share. Valid for 24 hours.';
+        $message = 'Your QuizSnap login code is: ' . $code . '. Do not share. Valid for 14 days.';
         $result = ArkeselService::sendSms($student->phone_contact, $message);
         if (!$result['success']) {
             $msg = $result['message'] ?? 'We couldn\'t send the code.';
@@ -123,11 +135,14 @@ class StudentAccountController extends Controller
             return response()->json(['success' => false, 'message' => $msg], 422);
         }
 
+        if ($result['success']) {
+            $examiner->increment('sms_used');
+        }
         return response()->json([
             'success' => true,
             'step' => 'otp',
             'index_number' => $student->index_number,
-            'message' => 'A code has been sent to your registered number. This code is valid for 24 hours.',
+            'message' => 'A code has been sent to your registered number. This code is valid for 14 days.',
             'has_name' => !empty($student->student_name),
             'can_resend' => true,
         ]);
@@ -180,10 +195,18 @@ class StudentAccountController extends Controller
             ], 422);
         }
 
+        // Examiner must have SMS balance
+        $examiner = $this->examinerWithSmsBalanceForIndex($student->index_number);
+        if (!$examiner) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your examiner has no SMS balance. Contact your examiner to receive a login code.',
+            ], 422);
+        }
+
         // Check if there's an existing valid OTP for this index
         $existingCached = Cache::get(self::OTP_CACHE_PREFIX . $indexNumber);
         if ($existingCached && isset($existingCached['code']) && ($existingCached['phone'] ?? '') === $phone) {
-            // Same phone number and OTP still valid, regenerate OTP to refresh
             Cache::forget(self::OTP_CACHE_PREFIX . $indexNumber);
         }
 
@@ -191,9 +214,9 @@ class StudentAccountController extends Controller
         Cache::put(self::OTP_CACHE_PREFIX . $indexNumber, [
             'code' => $code,
             'phone' => $phone,
-        ], self::OTP_TTL_SECONDS);
+        ], self::otpTtlSeconds());
 
-        $message = 'Your QuizSnap login code is: ' . $code . '. Do not share. Valid for 24 hours.';
+        $message = 'Your QuizSnap login code is: ' . $code . '. Do not share. Valid for 14 days.';
         $result = ArkeselService::sendSms($phone, $message);
         if (!$result['success']) {
             $msg = $result['message'] ?? 'We couldn\'t send the code.';
@@ -202,15 +225,32 @@ class StudentAccountController extends Controller
             }
             return response()->json(['success' => false, 'message' => $msg], 422);
         }
-
+        if ($result['success']) {
+            $examiner->increment('sms_used');
+        }
         return response()->json([
             'success' => true,
             'step' => 'otp',
             'index_number' => $student->index_number,
-            'message' => 'A code has been sent to your number. It is valid for 24 hours.',
+            'message' => 'A code has been sent to your number. It is valid for 14 days.',
             'has_name' => !empty($student->student_name),
             'can_resend' => true,
         ]);
+    }
+
+    /** Get an examiner with SMS balance for the given index (via class group membership). */
+    private function examinerWithSmsBalanceForIndex(string $indexNumber): ?\App\Models\User
+    {
+        $cgStudents = ClassGroupStudent::whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper(trim($indexNumber))])
+            ->with('classGroup.examiner')
+            ->get();
+        foreach ($cgStudents as $cg) {
+            $examiner = $cg->classGroup?->examiner;
+            if ($examiner && $examiner->isExaminer() && $examiner->sms_remaining > 0) {
+                return $examiner;
+            }
+        }
+        return null;
     }
 
     /**
