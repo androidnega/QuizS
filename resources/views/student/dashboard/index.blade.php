@@ -10,6 +10,66 @@
         <p class="text-sm text-gray-600 mt-1">Your quiz history and scheduled quizzes.</p>
     </div>
 
+    {{-- Device Testing Section --}}
+    <div class="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 class="text-sm font-semibold text-gray-800 mb-3">Test Your Devices</h2>
+        <p class="text-xs text-gray-600 mb-4">Check your microphone and camera before starting a quiz.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{-- Microphone Test --}}
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm font-semibold text-gray-900">Microphone</h3>
+                        <p class="text-xs text-gray-600">Test your microphone</p>
+                    </div>
+                </div>
+                
+                <div id="mic-test-container" class="space-y-3">
+                    <div id="mic-visualizer" class="hidden h-16 bg-gray-200 rounded-lg flex items-center justify-center px-3">
+                        <div class="flex-1 h-12 flex items-end justify-center gap-1" id="mic-bars-container">
+                            <!-- Bars will be dynamically created -->
+                        </div>
+                    </div>
+                    <div id="mic-status" class="text-xs text-gray-600 min-h-[1rem]"></div>
+                    <button type="button" id="mic-test-btn" class="w-full px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        Start Microphone Test
+                    </button>
+                </div>
+            </div>
+
+            {{-- Camera Test --}}
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm font-semibold text-gray-900">Camera</h3>
+                        <p class="text-xs text-gray-600">Test your camera</p>
+                    </div>
+                </div>
+                
+                <div id="camera-test-container" class="space-y-3">
+                    <div id="camera-preview" class="hidden aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                        <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
+                    </div>
+                    <div id="camera-status" class="text-xs text-gray-600 min-h-[1rem]"></div>
+                    <button type="button" id="camera-test-btn" class="w-full px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+                        Start Camera Test
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="flex flex-row flex-wrap gap-3">
         <a href="{{ route('dashboard.my-quizzes') }}" class="flex-1 min-w-[180px] rounded-lg border border-yellow-300 bg-yellow-100 p-4 block">
             <p class="text-xs font-medium text-yellow-800">Quizzes taken</p>
@@ -158,6 +218,200 @@
 </div>
 
 @push('scripts')
+{{-- Device Testing: Microphone and Camera --}}
+<script>
+(function() {
+    'use strict';
+    
+    // Microphone Test
+    var micTestBtn = document.getElementById('mic-test-btn');
+    var micVisualizer = document.getElementById('mic-visualizer');
+    var micStatus = document.getElementById('mic-status');
+    var micContainer = document.getElementById('mic-test-container');
+    var audioContext = null;
+    var analyser = null;
+    var microphone = null;
+    var dataArray = null;
+    var animationFrame = null;
+    var isMicTesting = false;
+
+    function initMicrophoneTest() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            micStatus.textContent = 'Microphone access not supported in this browser.';
+            micStatus.className = 'text-xs text-red-600 min-h-[1rem]';
+            return;
+        }
+
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function(stream) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                
+                analyser.fftSize = 256;
+                analyser.smoothingTimeConstant = 0.8;
+                var bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                // Create visualizer bars dynamically
+                var barsContainer = document.getElementById('mic-bars-container');
+                if (barsContainer) {
+                    barsContainer.innerHTML = '';
+                    var barCount = 20;
+                    for (var i = 0; i < barCount; i++) {
+                        var bar = document.createElement('div');
+                        bar.className = 'flex-1 bg-green-500 rounded-t transition-all duration-75 ease-out';
+                        bar.style.minHeight = '4px';
+                        bar.style.height = '4px';
+                        barsContainer.appendChild(bar);
+                    }
+                }
+                
+                micVisualizer.classList.remove('hidden');
+                micStatus.textContent = 'Microphone is working! Speak to see the levels.';
+                micStatus.className = 'text-xs text-green-600 min-h-[1rem]';
+                micTestBtn.textContent = 'Stop Microphone Test';
+                micTestBtn.className = 'w-full px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors';
+                isMicTesting = true;
+                
+                function updateVisualizer() {
+                    if (!isMicTesting) return;
+                    analyser.getByteFrequencyData(dataArray);
+                    var bars = barsContainer ? barsContainer.querySelectorAll('div') : [];
+                    var max = Math.max.apply(null, Array.from(dataArray));
+                    
+                    bars.forEach(function(bar, index) {
+                        var value = dataArray[Math.floor((index / bars.length) * bufferLength)] || 0;
+                        var normalizedValue = value / 255;
+                        var height = Math.max(8, normalizedValue * 100);
+                        bar.style.height = height + '%';
+                        
+                        // Color intensity based on level
+                        if (normalizedValue > 0.7) {
+                            bar.className = 'flex-1 bg-red-500 rounded-t transition-all duration-75 ease-out';
+                        } else if (normalizedValue > 0.4) {
+                            bar.className = 'flex-1 bg-yellow-500 rounded-t transition-all duration-75 ease-out';
+                        } else {
+                            bar.className = 'flex-1 bg-green-500 rounded-t transition-all duration-75 ease-out';
+                        }
+                    });
+                    
+                    animationFrame = requestAnimationFrame(updateVisualizer);
+                }
+                updateVisualizer();
+            })
+            .catch(function(err) {
+                micStatus.textContent = 'Could not access microphone: ' + (err.message || 'Permission denied');
+                micStatus.className = 'text-xs text-red-600 min-h-[1rem]';
+            });
+    }
+
+    function stopMicrophoneTest() {
+        isMicTesting = false;
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+        }
+        if (microphone && microphone.mediaStream) {
+            microphone.mediaStream.getTracks().forEach(function(track) {
+                track.stop();
+            });
+        }
+        if (audioContext && audioContext.state !== 'closed') {
+            audioContext.close();
+        }
+        var barsContainer = document.getElementById('mic-bars-container');
+        if (barsContainer) {
+            barsContainer.innerHTML = '';
+        }
+        micVisualizer.classList.add('hidden');
+        micStatus.textContent = '';
+        micTestBtn.textContent = 'Start Microphone Test';
+        micTestBtn.className = 'w-full px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors';
+        audioContext = null;
+        analyser = null;
+        microphone = null;
+        dataArray = null;
+    }
+
+    if (micTestBtn) {
+        micTestBtn.addEventListener('click', function() {
+            if (isMicTesting) {
+                stopMicrophoneTest();
+            } else {
+                initMicrophoneTest();
+            }
+        });
+    }
+
+    // Camera Test
+    var cameraTestBtn = document.getElementById('camera-test-btn');
+    var cameraPreview = document.getElementById('camera-preview');
+    var cameraVideo = document.getElementById('camera-video');
+    var cameraStatus = document.getElementById('camera-status');
+    var cameraStream = null;
+    var isCameraTesting = false;
+
+    function initCameraTest() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            cameraStatus.textContent = 'Camera access not supported in this browser.';
+            cameraStatus.className = 'text-xs text-red-600 min-h-[1rem]';
+            return;
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(stream) {
+                cameraStream = stream;
+                cameraVideo.srcObject = stream;
+                cameraPreview.classList.remove('hidden');
+                cameraStatus.textContent = 'Camera is working! You can see yourself.';
+                cameraStatus.className = 'text-xs text-green-600 min-h-[1rem]';
+                cameraTestBtn.textContent = 'Stop Camera Test';
+                cameraTestBtn.className = 'w-full px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors';
+                isCameraTesting = true;
+            })
+            .catch(function(err) {
+                cameraStatus.textContent = 'Could not access camera: ' + (err.message || 'Permission denied');
+                cameraStatus.className = 'text-xs text-red-600 min-h-[1rem]';
+            });
+    }
+
+    function stopCameraTest() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(function(track) {
+                track.stop();
+            });
+            cameraStream = null;
+        }
+        if (cameraVideo) {
+            cameraVideo.srcObject = null;
+        }
+        cameraPreview.classList.add('hidden');
+        cameraStatus.textContent = '';
+        cameraTestBtn.textContent = 'Start Camera Test';
+        cameraTestBtn.className = 'w-full px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors';
+        isCameraTesting = false;
+    }
+
+    if (cameraTestBtn) {
+        cameraTestBtn.addEventListener('click', function() {
+            if (isCameraTesting) {
+                stopCameraTest();
+            } else {
+                initCameraTest();
+            }
+        });
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (isMicTesting) stopMicrophoneTest();
+        if (isCameraTesting) stopCameraTest();
+    });
+})();
+</script>
+
 {{-- Enter token modal: open/close and validation --}}
 <script>
 (function() {
