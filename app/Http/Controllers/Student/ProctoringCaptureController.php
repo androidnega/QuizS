@@ -57,6 +57,8 @@ class ProctoringCaptureController extends Controller
     /**
      * Store face image, bind IP, create session, assign questions.
      */
+    public function store(Request $request): JsonResponse
+    {
         $request->validate([
             'quiz_id' => 'required|exists:quizzes,id',
             'index_number' => 'required|string',
