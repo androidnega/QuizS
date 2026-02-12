@@ -12,8 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('faculty_id')->nullable()->after('institution_id')->constrained('faculties')->onDelete('set null');
-            $table->foreignId('department_id')->nullable()->after('faculty_id')->constrained('departments')->onDelete('set null');
+            // Check if columns already exist before adding them (idempotent migration)
+            if (!Schema::hasColumn('users', 'faculty_id')) {
+                $table->foreignId('faculty_id')->nullable()->after('institution_id')->constrained('faculties')->onDelete('set null');
+            }
+            if (!Schema::hasColumn('users', 'department_id')) {
+                $table->foreignId('department_id')->nullable()->after('faculty_id')->constrained('departments')->onDelete('set null');
+            }
         });
     }
 

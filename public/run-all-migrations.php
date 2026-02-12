@@ -34,6 +34,25 @@ $app = require_once __DIR__ . '/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
+// Disable Laravel's error handler to prevent Ignition from intercepting errors
+app()->singleton(
+    Illuminate\Contracts\Debug\ExceptionHandler::class,
+    function () {
+        return new class implements Illuminate\Contracts\Debug\ExceptionHandler {
+            public function report(\Throwable $e) {}
+            public function render($request, \Throwable $e) {
+                throw $e; // Re-throw so our catch block can handle it
+            }
+            public function renderForConsole($output, \Throwable $e) {
+                throw $e;
+            }
+            public function shouldReport(\Throwable $e) {
+                return false;
+            }
+        };
+    }
+);
+
 header('Content-Type: text/plain; charset=utf-8');
 echo "QuizSnap Migration Runner\n";
 echo "==========================\n\n";
@@ -62,8 +81,13 @@ try {
     ob_end_flush();
     
 } catch (Exception $e) {
+    // Clean any buffered output (including potential HTML from Ignition)
+    ob_end_clean();
+    
+    // Set error response code before outputting anything
+    http_response_code(500);
+    
+    // Output plain text error
     echo "\n❌ Error: " . $e->getMessage() . "\n";
     echo "\nStack trace:\n" . $e->getTraceAsString() . "\n";
-    ob_end_flush();
-    http_response_code(500);
 }
