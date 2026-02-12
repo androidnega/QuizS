@@ -9,7 +9,7 @@
  * 2. Upload this file to your site's public/ folder via cPanel File Manager
  *    (e.g. public_html/quizsnap/public/fix-git-pull.php if your app lives in public_html/quizsnap).
  * 3. Visit: https://YOUR-SITE.com/fix-git-pull.php?key=YOUR_SECRET&run=yes
- * 4. The script deletes itself after running. Visit only once.
+ * 4. The script remains available for future use if conflicts occur again.
  */
 $secret = 'QuizSnapFixPull2026';
 
@@ -97,11 +97,8 @@ if ($code === 0) {
     echo "Reset failed. Check that the remote branch is 'main' or 'master' and that Git can run on the server.\n";
 }
 
-if (@unlink(__FILE__)) {
-    echo "\n[fix-git-pull.php has been deleted.]\n";
-} else {
-    echo "\n[Delete public/fix-git-pull.php manually for security.]\n";
-}
+echo "\n[fix-git-pull.php remains available for future use.]\n";
+echo "[You can run this script again anytime if conflicts occur.]\n";
 
 $body = ob_get_clean();
 header('Content-Type: text/plain; charset=utf-8');
