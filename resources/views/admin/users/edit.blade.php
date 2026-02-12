@@ -177,13 +177,22 @@ const currentFacultyId = {{ $user->faculty_id ?? 'null' }};
 const currentDepartmentId = {{ $user->department_id ?? 'null' }};
 
 function loadFaculties() {
-    const institutionId = document.getElementById('institution_id').value;
+    const institutionSelect = document.getElementById('institution_id');
     const facultySelect = document.getElementById('faculty_id');
     const departmentSelect = document.getElementById('department_id');
     
+    // Check if elements exist
+    if (!institutionSelect || !facultySelect) {
+        return;
+    }
+    
+    const institutionId = institutionSelect.value;
+    
     // Clear options
     facultySelect.innerHTML = '<option value="">— Select faculty —</option>';
-    departmentSelect.innerHTML = '<option value="">— Select department —</option>';
+    if (departmentSelect) {
+        departmentSelect.innerHTML = '<option value="">— Select department —</option>';
+    }
     
     if (!institutionId) {
         return;
@@ -195,7 +204,12 @@ function loadFaculties() {
             'X-CSRF-TOKEN': csrfToken
         }
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load faculties');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success && data.faculties) {
                 data.faculties.forEach(faculty => {
@@ -215,8 +229,15 @@ function loadFaculties() {
 }
 
 function loadDepartments() {
-    const facultyId = document.getElementById('faculty_id').value;
+    const facultySelect = document.getElementById('faculty_id');
     const departmentSelect = document.getElementById('department_id');
+    
+    // Check if elements exist
+    if (!facultySelect || !departmentSelect) {
+        return;
+    }
+    
+    const facultyId = facultySelect.value;
     
     // Clear options
     departmentSelect.innerHTML = '<option value="">— Select department —</option>';
@@ -231,7 +252,12 @@ function loadDepartments() {
             'X-CSRF-TOKEN': csrfToken
         }
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load departments');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success && data.departments) {
                 data.departments.forEach(dept => {
@@ -248,14 +274,18 @@ function loadDepartments() {
         .catch(error => console.error('Error loading departments:', error));
 }
 
-// Load faculties on page load if institution is selected
+// Load faculties on page load if institution is selected and institution select exists
 @if($user->institution_id)
-    loadFaculties();
+    if (document.getElementById('institution_id')) {
+        loadFaculties();
+    }
 @endif
 
-// Load departments on page load if faculty is selected
+// Load departments on page load if faculty is selected and faculty select exists
 @if($user->faculty_id)
-    setTimeout(() => loadDepartments(), 200);
+    if (document.getElementById('faculty_id')) {
+        setTimeout(() => loadDepartments(), 200);
+    }
 @endif
 </script>
 @endpush
