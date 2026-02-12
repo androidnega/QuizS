@@ -150,7 +150,7 @@ class UserManagementController extends Controller
             ->get();
         $institutions = Institution::orderBy('name')->get();
         
-        // Load faculties and departments for examiner
+        // Load faculties and departments for examiner (both super admin and examiner can see)
         $faculties = collect();
         $departments = collect();
         $institutionIdForFaculties = $request->get('institution_id', $user->institution_id);
@@ -266,6 +266,12 @@ class UserManagementController extends Controller
 
         if ($isSuperAdmin && $user->isExaminer() && $request->filled('course_ids')) {
             $user->courses()->sync($request->input('course_ids', []));
+        }
+
+        // If examiner is updating their own profile, redirect to dashboard
+        if (!$isSuperAdmin && $currentUser && $currentUser->id === $user->id) {
+            return redirect()->route('dashboard')
+                ->with('success', 'Profile updated successfully.');
         }
 
         return redirect()->route('dashboard.users.index')

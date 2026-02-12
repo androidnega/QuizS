@@ -59,8 +59,15 @@
                     </select>
                     @error('institution_id')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
+                @elseif($user->isExaminer() && $user->institution_id)
+                {{-- Show read-only institution for examiners --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Institution</label>
+                    <input type="text" value="{{ $user->institution->display_name ?? 'N/A' }}" class="input w-full max-w-full min-w-0 bg-gray-50" readonly disabled>
+                    <input type="hidden" name="institution_id" value="{{ $user->institution_id }}">
+                </div>
                 @endif
-                @if($user->isExaminer() || (auth()->user()->isSuperAdmin() && $user->isExaminer()))
+                @if($user->isExaminer())
                 <div id="faculty-field">
                     <label for="faculty_id" class="block text-sm font-medium text-gray-700 mb-1">Faculty</label>
                     <select name="faculty_id" id="faculty_id" class="input w-full max-w-full min-w-0 @error('faculty_id') border-danger-500 @enderror" onchange="loadDepartments()">

@@ -13,17 +13,17 @@
     
     {{-- Faculty/Department Notice --}}
     @if(isset($needsFacultyDepartment) && $needsFacultyDepartment)
-    <div id="faculty-department-notice" class="rounded-lg border border-yellow-200 bg-yellow-50 p-4 flex items-start gap-3" role="alert">
+    <div id="faculty-department-notice" class="rounded-lg border border-orange-300 bg-orange-50 p-4 flex items-start gap-3" role="alert">
         <div class="flex-shrink-0 mt-0.5">
-            <svg class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
         </div>
         <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-yellow-900">Complete Your Profile</p>
-            <p class="mt-1 text-sm text-yellow-800">Please select your faculty and department to continue. <a href="{{ route('dashboard.users.edit', $examiner) }}" class="font-semibold underline hover:text-yellow-900">Update your profile here</a>.</p>
+            <p class="text-sm font-medium text-orange-900">Complete Your Profile</p>
+            <p class="mt-1 text-sm text-orange-800">Please select your faculty and department to continue. <a href="{{ route('dashboard.users.edit', $examiner) }}" class="font-semibold underline hover:text-orange-900">Update your profile here</a>.</p>
         </div>
-        <button type="button" onclick="dismissFacultyDepartmentNotice()" class="flex-shrink-0 text-yellow-600 hover:text-yellow-800 transition-colors" aria-label="Dismiss">
+        <button type="button" onclick="dismissFacultyDepartmentNotice()" class="flex-shrink-0 text-orange-600 hover:text-orange-800 transition-colors" aria-label="Dismiss">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -33,17 +33,17 @@
     
     {{-- Low SMS Warning Banner --}}
     @if($showLowSmsWarning)
-    <div id="low-sms-warning" class="rounded-lg border border-amber-200 bg-amber-50 p-4 flex items-start gap-3" role="alert">
+    <div id="low-sms-warning" class="rounded-lg border border-red-300 bg-red-50 p-4 flex items-start gap-3" role="alert">
         <div class="flex-shrink-0 mt-0.5">
-            <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
         </div>
         <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-amber-900">Low SMS Balance</p>
-            <p class="mt-1 text-sm text-amber-800">You have <strong>{{ $smsRemaining }}</strong> SMS remaining. Please contact your administrator to reload your SMS allocation so you can continue sending login tokens to students.</p>
+            <p class="text-sm font-medium text-red-900">Low SMS Balance</p>
+            <p class="mt-1 text-sm text-red-800">You have <strong>{{ $smsRemaining }}</strong> SMS remaining. Please contact your administrator to reload your SMS allocation so you can continue sending login tokens to students via SMS.</p>
         </div>
-        <button type="button" onclick="dismissLowSmsWarning()" class="flex-shrink-0 text-amber-600 hover:text-amber-800 transition-colors" aria-label="Dismiss">
+        <button type="button" onclick="dismissLowSmsWarning()" class="flex-shrink-0 text-red-600 hover:text-red-800 transition-colors" aria-label="Dismiss">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -123,9 +123,9 @@
 @push('scripts')
 <script>
 (function() {
-    // Low SMS Warning Dismissal (12-18 hours)
+    // Low SMS Warning Dismissal (24 hours)
     const WARNING_KEY = 'low_sms_warning_dismissed';
-    const DISMISS_HOURS = 15; // 15 hours (between 12-18)
+    const DISMISS_HOURS = 24;
     
     function dismissLowSmsWarning() {
         const warning = document.getElementById('low-sms-warning');
@@ -149,9 +149,9 @@
         warning.style.display = 'none';
     }
     
-    // Faculty/Department Notice Dismissal (12-18 hours)
+    // Faculty/Department Notice Dismissal (24 hours)
     const FACULTY_NOTICE_KEY = 'faculty_department_notice_dismissed';
-    const FACULTY_DISMISS_HOURS = 15;
+    const FACULTY_DISMISS_HOURS = 24;
     
     function dismissFacultyDepartmentNotice() {
         const notice = document.getElementById('faculty-department-notice');
@@ -174,6 +174,11 @@
     if (facultyNotice && !shouldShowFacultyNotice()) {
         facultyNotice.style.display = 'none';
     }
+    
+    // Auto-hide faculty notice if faculty and department are set (check on page load)
+    @if(!$needsFacultyDepartment)
+        localStorage.removeItem(FACULTY_NOTICE_KEY);
+    @endif
     
     // Make dismiss functions global
     window.dismissLowSmsWarning = dismissLowSmsWarning;

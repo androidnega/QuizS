@@ -49,55 +49,56 @@
     </div>
 
     {{-- Faculties and Departments Management --}}
-    <div class="card p-4 md:p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <svg class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div class="card p-3 md:p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h2 class="text-base font-semibold text-gray-900 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-primary-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
-                Faculties and Departments
+                <span>Faculties and Departments</span>
             </h2>
-            <button type="button" onclick="openAddFacultyModal()" class="btn btn-sm btn-primary flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            <button type="button" onclick="openAddFacultyModal()" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                 </svg>
-                Add Faculty
+                <span class="hidden sm:inline">Add Faculty</span>
+                <span class="sm:hidden">Add</span>
             </button>
         </div>
         
         {{-- Faculties List --}}
-        <div id="faculties-list" class="space-y-3">
+        <div id="faculties-list" class="space-y-2">
             @forelse($institution->faculties as $faculty)
-                <div class="border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors" data-faculty-id="{{ $faculty->id }}">
+                <div class="border border-gray-200 rounded-md overflow-hidden hover:border-gray-300 transition-colors bg-white" data-faculty-id="{{ $faculty->id }}">
                     {{-- Faculty Header --}}
-                    <div class="bg-gray-50 px-3 py-2.5 flex items-center justify-between gap-3">
-                        <div class="flex-1 min-w-0 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    <div class="bg-gray-50 px-2.5 py-2 flex items-center justify-between gap-2">
+                        <div class="flex-1 min-w-0 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                             </svg>
-                            <span class="font-medium text-gray-900 truncate" id="faculty-name-{{ $faculty->id }}">{{ $faculty->name }}</span>
+                            <span class="text-sm font-medium text-gray-900 truncate" id="faculty-name-{{ $faculty->id }}">{{ $faculty->name }}</span>
                             <span class="text-xs text-gray-500 flex-shrink-0">({{ $faculty->departments->count() }})</span>
                         </div>
-                        <div class="flex items-center gap-1 flex-shrink-0">
+                        <div class="flex items-center gap-0.5 flex-shrink-0">
                             <button type="button" onclick="openEditFacultyModal({{ $faculty->id }}, '{{ addslashes($faculty->name) }}')" 
-                                class="p-1.5 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors" 
+                                class="p-1.5 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors" 
                                 title="Edit Faculty">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </button>
                             <button type="button" onclick="openAddDepartmentModal({{ $faculty->id }}, '{{ addslashes($faculty->name) }}')" 
                                 class="p-1.5 text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded transition-colors" 
                                 title="Add Department">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                                 </svg>
                             </button>
                             <button type="button" onclick="deleteFaculty({{ $faculty->id }})" 
                                 class="p-1.5 text-danger-600 hover:text-danger-700 hover:bg-danger-50 rounded transition-colors" 
                                 title="Delete Faculty">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
                             </button>
                         </div>
@@ -105,23 +106,26 @@
                     
                     {{-- Departments List --}}
                     @if($faculty->departments->isNotEmpty())
-                        <div class="px-3 py-2 bg-white">
-                            <div class="flex flex-wrap gap-1.5">
+                        <div class="px-2.5 py-1.5 bg-white border-t border-gray-100">
+                            <div class="flex flex-wrap gap-1">
                                 @foreach($faculty->departments as $dept)
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors group" id="dept-badge-{{ $dept->id }}">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors group" id="dept-badge-{{ $dept->id }}">
+                                        <svg class="w-3 h-3 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                        </svg>
                                         <span id="dept-name-{{ $dept->id }}">{{ $dept->name }}</span>
                                         <button type="button" onclick="openEditDepartmentModal({{ $dept->id }}, '{{ addslashes($dept->name) }}', {{ $faculty->id }})" 
-                                            class="opacity-0 group-hover:opacity-100 text-primary-600 hover:text-primary-700 transition-opacity" 
+                                            class="opacity-0 group-hover:opacity-100 text-primary-600 hover:text-primary-700 transition-opacity ml-0.5" 
                                             title="Edit">
-                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                             </svg>
                                         </button>
                                         <button type="button" onclick="deleteDepartment({{ $dept->id }})" 
                                             class="opacity-0 group-hover:opacity-100 text-danger-600 hover:text-danger-700 transition-opacity" 
                                             title="Delete">
-                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                             </svg>
                                         </button>
                                     </span>
@@ -129,13 +133,13 @@
                             </div>
                         </div>
                     @else
-                        <div class="px-3 py-2 bg-white text-xs text-gray-400 italic">No departments yet</div>
+                        <div class="px-2.5 py-1.5 bg-white border-t border-gray-100 text-xs text-gray-400 italic">No departments yet</div>
                     @endif
                 </div>
             @empty
-                <div class="text-center py-8 text-gray-500">
-                    <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                <div class="text-center py-6 text-gray-500">
+                    <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
                     <p class="text-sm">No faculties added yet.</p>
                 </div>
