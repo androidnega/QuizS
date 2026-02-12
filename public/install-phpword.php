@@ -69,13 +69,46 @@ echo "<!DOCTYPE html>
 // Change to base directory
 chdir($baseDir);
 
+// Set HOME environment variable for composer (required for composer to run)
+$homeDir = getenv('HOME');
+if (empty($homeDir)) {
+    // Try to use a temp directory or the base directory
+    $homeDir = sys_get_temp_dir();
+    // Or try common home directory locations
+    $possibleHomes = [
+        '/home/' . get_current_user(),
+        '/home2/' . get_current_user(),
+        $baseDir . '/.composer',
+        sys_get_temp_dir() . '/composer-home',
+    ];
+    foreach ($possibleHomes as $possibleHome) {
+        if (is_dir(dirname($possibleHome)) || @mkdir(dirname($possibleHome), 0755, true)) {
+            $homeDir = $possibleHome;
+            break;
+        }
+    }
+}
+putenv('HOME=' . $homeDir);
+putenv('COMPOSER_HOME=' . $homeDir);
+
+echo "Setting HOME environment variable to: {$homeDir}\n";
+echo str_repeat('=', 70) . "\n\n";
+
 // First, try composer install to ensure all dependencies are installed
 echo "Step 1: Running composer install to ensure all dependencies are up to date...\n";
 echo str_repeat('=', 70) . "\n\n";
 
 $output1 = [];
 $returnVar1 = 0;
-exec("{$composerCmd} install --no-dev --optimize-autoloader 2>&1", $output1, $returnVar1);
+$env = [
+    'HOME' => $homeDir,
+    'COMPOSER_HOME' => $homeDir,
+];
+$envString = '';
+foreach ($env as $key => $value) {
+    $envString .= escapeshellarg($key) . '=' . escapeshellarg($value) . ' ';
+}
+exec("{$envString}{$composerCmd} install --no-dev --optimize-autoloader 2>&1", $output1, $returnVar1);
 
 foreach ($output1 as $line) {
     echo htmlspecialchars($line) . "\n";
@@ -94,7 +127,7 @@ if ($returnVar1 === 0) {
         
         $output = [];
         $returnVar = 0;
-        exec("{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1", $output, $returnVar);
+        exec("{$envString}{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1", $output, $returnVar);
         
         foreach ($output as $line) {
             echo htmlspecialchars($line) . "\n";
@@ -112,7 +145,7 @@ if ($returnVar1 === 0) {
     
     $output = [];
     $returnVar = 0;
-    exec("{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1", $output, $returnVar);
+    exec("{$envString}{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1", $output, $returnVar);
     
     foreach ($output as $line) {
         echo htmlspecialchars($line) . "\n";
