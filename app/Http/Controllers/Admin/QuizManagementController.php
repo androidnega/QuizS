@@ -1049,106 +1049,131 @@ class QuizManagementController extends Controller
         $nextYear = now()->addYear()->format('y');
         $examYear = $currentYear . '/' . $nextYear;
         
-        // Create new PhpWord object
-        $phpWord = new PhpWord();
-        $phpWord->setDefaultFontName('Times New Roman');
-        $phpWord->setDefaultFontSize(11);
-        
-        // Add section with margins
-        $section = $phpWord->addSection([
-            'marginTop' => 1134, // 2cm
-            'marginBottom' => 1134,
-            'marginLeft' => 1134,
-            'marginRight' => 1134,
-        ]);
-        
-        // Header table with logo and institution info
-        $headerTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 50]);
-        $headerRow = $headerTable->addRow();
-        
-        // Logo cell (left)
-        $logoCell = $headerRow->addCell(2000);
-        if ($logoFilePath && file_exists($logoFilePath)) {
-            try {
-                $logoCell->addImage($logoFilePath, [
-                    'width' => 60,
-                    'height' => 60,
-                    'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::LEFT,
-                ]);
-            } catch (\Throwable $e) {
-                // Skip logo if image can't be added
-            }
+        // Check if PhpWord is available
+        if (!class_exists(PhpWord::class)) {
+            abort(500, 'PhpWord library is not installed. Please run: composer require phpoffice/phpword');
         }
         
-        // Institution info cell (right, centered)
-        $infoCell = $headerRow->addCell(14000);
-        $infoCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::CENTER);
-        
-        $institutionStyle = ['bold' => true, 'size' => 12, 'allCaps' => true];
-        $infoCell->addText($institutionName, $institutionStyle, ['spaceAfter' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-        $infoCell->addText('FACULTY OF APPLIED ARTS AND TECHNOLOGY', $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-        $infoCell->addText('DEPARTMENT OF COMPUTER SCIENCE', $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-        $infoCell->addText('END OF FIRST SEMESTER EXAMINATIONS, ' . $examYear, $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-        $infoCell->addText('PROGRAMME: ' . $programme, $institutionStyle, ['spaceAfter' => 120, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-        
-        // Course info table
-        $courseStyle = ['bold' => true, 'size' => 10, 'allCaps' => true];
-        $courseTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 50]);
-        $courseRow = $courseTable->addRow();
-        $courseRow->addCell(7000)->addText('COURSE TITLE: ' . strtoupper($courseName), $courseStyle);
-        $codeCell = $courseRow->addCell(7000);
-        $codeCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::RIGHT);
-        $codeCell->addText('COURSE CODE: ' . strtoupper($courseCode), $courseStyle);
-        
-        $dateRow = $courseTable->addRow();
-        $dateRow->addCell(7000)->addText('DATE: ' . strtoupper($examDate), $courseStyle);
-        $durationCell = $dateRow->addCell(7000);
-        $durationCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::RIGHT);
-        $durationCell->addText('DURATION: ' . strtoupper($duration), $courseStyle);
-        
-        $section->addTextBreak(1);
-        
-        // Instructions
-        $instructionsStyle = ['bold' => true, 'size' => 10, 'allCaps' => true];
-        $section->addText('INSTRUCTIONS:', $instructionsStyle);
-        $section->addText('Answer all questions. Each question carries equal marks. Write clearly and legibly.', ['size' => 9.5]);
-        
-        $section->addTextBreak(1);
-        
-        // Questions
-        foreach ($questions as $idx => $question) {
-            $questionNumStyle = ['bold' => true, 'size' => 11];
-            $section->addText(($idx + 1) . '.', $questionNumStyle);
+        try {
+            // Create new PhpWord object
+            $phpWord = new PhpWord();
+            $phpWord->setDefaultFontName('Times New Roman');
+            $phpWord->setDefaultFontSize(11);
             
-            $questionTextStyle = ['size' => 10];
-            $section->addText($question->text, $questionTextStyle);
+            // Add section with margins
+            $section = $phpWord->addSection([
+                'marginTop' => 1134, // 2cm
+                'marginBottom' => 1134,
+                'marginLeft' => 1134,
+                'marginRight' => 1134,
+            ]);
             
-            if ($question->options && is_array($question->options) && count($question->options) > 0) {
-                foreach ($question->options as $option) {
-                    if (isset($option['key']) && isset($option['text'])) {
-                        $section->addText('   ' . $option['key'] . '. ' . $option['text'], ['size' => 10], ['indentation' => ['left' => 480]]);
-                    }
+            // Header table with logo and institution info
+            $headerTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 50]);
+            $headerRow = $headerTable->addRow();
+            
+            // Logo cell (left)
+            $logoCell = $headerRow->addCell(2000);
+            if ($logoFilePath && file_exists($logoFilePath)) {
+                try {
+                    $logoCell->addImage($logoFilePath, [
+                        'width' => 60,
+                        'height' => 60,
+                        'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::LEFT,
+                    ]);
+                } catch (\Throwable $e) {
+                    // Skip logo if image can't be added
                 }
             }
             
+            // Institution info cell (right, centered)
+            $infoCell = $headerRow->addCell(14000);
+            $infoCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::CENTER);
+            
+            $institutionStyle = ['bold' => true, 'size' => 12, 'allCaps' => true];
+            $infoCell->addText($institutionName, $institutionStyle, ['spaceAfter' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+            $infoCell->addText('FACULTY OF APPLIED ARTS AND TECHNOLOGY', $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+            $infoCell->addText('DEPARTMENT OF COMPUTER SCIENCE', $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+            $infoCell->addText('END OF FIRST SEMESTER EXAMINATIONS, ' . $examYear, $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+            $infoCell->addText('PROGRAMME: ' . $programme, $institutionStyle, ['spaceAfter' => 120, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+            
+            // Course info table
+            $courseStyle = ['bold' => true, 'size' => 10, 'allCaps' => true];
+            $courseTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 50]);
+            $courseRow = $courseTable->addRow();
+            $courseRow->addCell(7000)->addText('COURSE TITLE: ' . strtoupper($courseName), $courseStyle);
+            $codeCell = $courseRow->addCell(7000);
+            $codeCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::RIGHT);
+            $codeCell->addText('COURSE CODE: ' . strtoupper($courseCode), $courseStyle);
+            
+            $dateRow = $courseTable->addRow();
+            $dateRow->addCell(7000)->addText('DATE: ' . strtoupper($examDate), $courseStyle);
+            $durationCell = $dateRow->addCell(7000);
+            $durationCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::RIGHT);
+            $durationCell->addText('DURATION: ' . strtoupper($duration), $courseStyle);
+            
             $section->addTextBreak(1);
+            
+            // Instructions
+            $instructionsStyle = ['bold' => true, 'size' => 10, 'allCaps' => true];
+            $section->addText('INSTRUCTIONS:', $instructionsStyle);
+            $section->addText('Answer all questions. Each question carries equal marks. Write clearly and legibly.', ['size' => 9.5]);
+            
+            $section->addTextBreak(1);
+            
+            // Questions
+            foreach ($questions as $idx => $question) {
+                $questionNumStyle = ['bold' => true, 'size' => 11];
+                $section->addText(($idx + 1) . '.', $questionNumStyle);
+                
+                $questionTextStyle = ['size' => 10];
+                $section->addText($question->text, $questionTextStyle);
+                
+                if ($question->options && is_array($question->options) && count($question->options) > 0) {
+                    foreach ($question->options as $option) {
+                        if (isset($option['key']) && isset($option['text'])) {
+                            $section->addText('   ' . $option['key'] . '. ' . $option['text'], ['size' => 10], ['indentation' => ['left' => 480]]);
+                        }
+                    }
+                }
+                
+                $section->addTextBreak(1);
+            }
+            
+            // Footer
+            $section->addTextBreak(1);
+            $footerStyle = ['size' => 8, 'color' => '64748b'];
+            $section->addText('Generated ' . now()->format('M d, Y H:i') . ' — QuizSnap', $footerStyle, ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+            
+            // Create temporary file with .docx extension
+            $tempDir = sys_get_temp_dir();
+            $tempFile = $tempDir . DIRECTORY_SEPARATOR . 'questions_' . uniqid() . '.docx';
+            
+            // Save document
+            $writer = IOFactory::createWriter($phpWord, 'Word2007');
+            $writer->save($tempFile);
+            
+            // Verify file was created
+            if (!file_exists($tempFile)) {
+                throw new \Exception('Failed to create DOCX file');
+            }
+            
+            $courseSlug = \Illuminate\Support\Str::slug($courseName ?: 'course');
+            $dateStr = now()->format('Y-m-d');
+            $filename = 'questions-' . $courseSlug . '-' . $dateStr . '.docx';
+            
+            // Return download with proper headers
+            return response()->download($tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ])->deleteFileAfterSend(true);
+            
+        } catch (\Throwable $e) {
+            // Clean up temp file if it exists
+            if (isset($tempFile) && file_exists($tempFile)) {
+                @unlink($tempFile);
+            }
+            abort(500, 'Failed to generate DOCX file: ' . $e->getMessage());
         }
-        
-        // Footer
-        $section->addTextBreak(1);
-        $footerStyle = ['size' => 8, 'color' => '64748b'];
-        $section->addText('Generated ' . now()->format('M d, Y H:i') . ' — QuizSnap', $footerStyle, ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-        
-        // Save to temporary file
-        $tempFile = tempnam(sys_get_temp_dir(), 'questions_') . '.docx';
-        $writer = IOFactory::createWriter($phpWord, 'Word2007');
-        $writer->save($tempFile);
-        
-        $courseSlug = \Illuminate\Support\Str::slug($courseName ?: 'course');
-        $dateStr = now()->format('Y-m-d');
-        $filename = 'questions-' . $courseSlug . '-' . $dateStr . '.docx';
-        
-        return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
     }
 
     /**
