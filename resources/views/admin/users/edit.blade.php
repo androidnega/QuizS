@@ -199,7 +199,8 @@ function loadFaculties() {
     }
     
     // Fetch faculties for this institution
-    fetch(`{{ route('dashboard.faculties.by-institution', '') }}/${institutionId}`, {
+    const facultiesUrl = `{{ url('/dashboard/institutions') }}/${institutionId}/faculties`;
+    fetch(facultiesUrl, {
         headers: {
             'X-CSRF-TOKEN': csrfToken
         }
@@ -247,7 +248,8 @@ function loadDepartments() {
     }
     
     // Fetch departments for this faculty
-    fetch(`{{ route('dashboard.departments.by-faculty', '') }}/${facultyId}`, {
+    const departmentsUrl = `{{ url('/dashboard/faculties') }}/${facultyId}/departments`;
+    fetch(departmentsUrl, {
         headers: {
             'X-CSRF-TOKEN': csrfToken
         }
