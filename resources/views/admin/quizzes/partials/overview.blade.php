@@ -213,20 +213,10 @@
                 </div>
             </div>
             <div class="flex-shrink-0">
-                @php
-                    $hasQuestions = isset($approvedQuestionsTotal) && $approvedQuestionsTotal > 0;
-                @endphp
-                @if($hasQuestions)
-                    <a href="{{ route('dashboard.quizzes.questions.export.pdf', $quiz) }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md transition-colors" download>
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                        Download Questions PDF
-                    </a>
-                @else
-                    <span class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed" title="No questions available to download">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                        Download Questions PDF
-                    </span>
-                @endif
+                <a href="{{ route('dashboard.quizzes.questions.export.pdf', $quiz) }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-gray-900 bg-yellow-400 hover:bg-yellow-500 rounded-lg shadow-lg border-2 border-yellow-600 transition-colors" download>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    Download Questions PDF
+                </a>
             </div>
         </div>
         <div class="mb-4 pb-4 border-b border-gray-200">
