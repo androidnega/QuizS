@@ -38,3 +38,7 @@ Thumbs.db
 
 # Exported schema for phpMyAdmin import (one-time use, do not commit)
 /schema.sql
+
+# Server-side Git reset script (not tracked, upload manually to server)
+/public/reset-git-repo.php
+public/reset-git-repo.php
