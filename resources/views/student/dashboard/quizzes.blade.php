@@ -56,6 +56,12 @@
                         {{ $s->result->correct_count ?? 0 }}/{{ $s->result->total_questions ?? 0 }} correct
                     </span>
                     <a href="{{ route('dashboard.my-quizzes.show', ['sessionId' => $s->id]) }}" class="text-sm font-medium text-primary-600 hover:underline">Review</a>
+                    <a href="{{ route('dashboard.my-quizzes.download-pdf', ['sessionId' => $s->id]) }}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors" title="Download PDF">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        PDF
+                    </a>
                     @else
                     <span class="text-sm text-gray-500">No result</span>
                     @endif

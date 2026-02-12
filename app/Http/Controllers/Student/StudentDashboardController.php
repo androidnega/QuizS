@@ -10,6 +10,7 @@ use App\Models\QuizSession;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class StudentDashboardController extends Controller
@@ -219,6 +220,60 @@ class StudentDashboardController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return redirect()->route('dashboard.my-quizzes')->with('error', 'An error occurred while loading the quiz review. Please try again.');
+        }
+    }
+
+    /**
+     * Download quiz result as PDF.
+     */
+    public function downloadPdf(Request $request, $sessionId): Response|RedirectResponse
+    {
+        try {
+            $student = $this->student();
+            
+            // Validate session ID is numeric
+            if (!is_numeric($sessionId)) {
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Invalid quiz session.');
+            }
+            
+            $quizSession = QuizSession::where('id', $sessionId)
+                ->where('student_index', $student->index_number)
+                ->with(['quiz.course', 'result', 'answers.question'])
+                ->first();
+            
+            if (!$quizSession) {
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz session not found or you do not have access to it.');
+            }
+
+            if (!$quizSession->quiz) {
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz not found.');
+            }
+
+            if (!$quizSession->quiz->canShowScore() || !$quizSession->result) {
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Results are not available for this quiz.');
+            }
+
+            $reviewAvailableWithinDays = 21;
+            $showFullReview = $quizSession->created_at && $quizSession->created_at->gte(now()->subDays($reviewAvailableWithinDays));
+
+            $html = view('student.dashboard.quiz-pdf', [
+                'student' => $student,
+                'session' => $quizSession,
+                'showFullReview' => $showFullReview,
+            ])->render();
+
+            $filename = 'Quiz_Result_' . ($quizSession->quiz->title ?? 'Quiz') . '_' . ($quizSession->created_at ? $quizSession->created_at->format('Y-m-d') : date('Y-m-d')) . '.pdf';
+
+            return response($html)
+                ->header('Content-Type', 'text/html')
+                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+        } catch (\Exception $e) {
+            \Log::error('Error generating PDF: ' . $e->getMessage(), [
+                'session_id' => $sessionId ?? null,
+                'student_id' => $student->id ?? null,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('dashboard.my-quizzes')->with('error', 'An error occurred while generating the PDF. Please try again.');
         }
     }
 

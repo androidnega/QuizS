@@ -133,6 +133,7 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardGatewayController::clas
 Route::middleware(['dashboard.auth', 'student.auth'])->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/my-quizzes', [\App\Http\Controllers\Student\StudentDashboardController::class, 'quizzes'])->name('my-quizzes');
     Route::get('/my-quizzes/{sessionId}', [\App\Http\Controllers\Student\StudentDashboardController::class, 'showQuiz'])->name('my-quizzes.show');
+    Route::get('/my-quizzes/{sessionId}/download-pdf', [\App\Http\Controllers\Student\StudentDashboardController::class, 'downloadPdf'])->name('my-quizzes.download-pdf');
     Route::get('/my-profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'profile'])->name('my-profile');
     Route::put('/my-profile', [\App\Http\Controllers\Student\StudentDashboardController::class, 'updateProfile'])->name('my-profile.update');
     Route::get('/course-materials', [\App\Http\Controllers\Student\StudentDashboardController::class, 'courseMaterials'])->name('course-materials');

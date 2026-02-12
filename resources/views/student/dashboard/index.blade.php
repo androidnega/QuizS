@@ -82,8 +82,8 @@
                 </div>
                 
                 <div id="mic-test-container" class="space-y-1.5">
-                    <div id="mic-visualizer" class="hidden bg-gray-200 rounded-lg p-1.5">
-                        <div class="flex flex-col gap-1" id="mic-bars-container">
+                    <div id="mic-visualizer" class="hidden bg-gray-200 rounded-lg p-2" style="min-height: 40px;">
+                        <div class="flex flex-wrap items-end justify-center gap-0.5" id="mic-bars-container" style="min-height: 36px;">
                             <!-- Bars will be dynamically created -->
                         </div>
                     </div>
@@ -256,28 +256,18 @@
                 var barsContainer = document.getElementById('mic-bars-container');
                 if (barsContainer) {
                     barsContainer.innerHTML = '';
-                    var barCount = 20;
-                    var barsPerRow = 10;
-                    var rowCount = Math.ceil(barCount / barsPerRow);
+                    var barCount = 16;
+                    var barWidth = '3px';
                     
-                    for (var row = 0; row < rowCount; row++) {
-                        var rowDiv = document.createElement('div');
-                        rowDiv.className = 'flex items-end justify-center gap-0.5 h-4';
-                        rowDiv.id = 'mic-row-' + row;
-                        
-                        var startIdx = row * barsPerRow;
-                        var endIdx = Math.min(startIdx + barsPerRow, barCount);
-                        
-                        for (var i = startIdx; i < endIdx; i++) {
-                            var bar = document.createElement('div');
-                            bar.className = 'flex-1 bg-green-500 rounded-t transition-all duration-75 ease-out';
-                            bar.style.minHeight = '2px';
-                            bar.style.height = '2px';
-                            bar.style.maxHeight = '12px';
-                            rowDiv.appendChild(bar);
-                        }
-                        
-                        barsContainer.appendChild(rowDiv);
+                    for (var i = 0; i < barCount; i++) {
+                        var bar = document.createElement('div');
+                        bar.className = 'bg-green-500 rounded-t transition-all duration-75 ease-out';
+                        bar.style.width = barWidth;
+                        bar.style.minHeight = '4px';
+                        bar.style.height = '4px';
+                        bar.style.maxHeight = '32px';
+                        bar.style.display = 'inline-block';
+                        barsContainer.appendChild(bar);
                     }
                 }
                 
@@ -293,24 +283,23 @@
                 function updateVisualizer() {
                     if (!isMicTesting) return;
                     analyser.getByteFrequencyData(dataArray);
-                    var allBars = barsContainer ? barsContainer.querySelectorAll('[id^="mic-row-"] > div') : [];
+                    var allBars = barsContainer ? barsContainer.querySelectorAll('div') : [];
                     var max = Math.max.apply(null, Array.from(dataArray));
                     
                     allBars.forEach(function(bar, index) {
                         var value = dataArray[Math.floor((index / allBars.length) * bufferLength)] || 0;
                         var normalizedValue = value / 255;
-                        // Reduce max height - use 50% of container
-                        var heightPercent = Math.min(50, normalizedValue * 50);
-                        var heightPx = Math.max(2, (heightPercent / 100) * 12); // Max 12px height
+                        // Calculate height with better range
+                        var heightPx = Math.max(4, normalizedValue * 32); // Max 32px height
                         bar.style.height = heightPx + 'px';
                         
                         // Color intensity based on level
                         if (normalizedValue > 0.7) {
-                            bar.className = 'flex-1 bg-red-500 rounded-t transition-all duration-75 ease-out';
+                            bar.className = 'bg-red-500 rounded-t transition-all duration-75 ease-out';
                         } else if (normalizedValue > 0.4) {
-                            bar.className = 'flex-1 bg-yellow-500 rounded-t transition-all duration-75 ease-out';
+                            bar.className = 'bg-yellow-500 rounded-t transition-all duration-75 ease-out';
                         } else {
-                            bar.className = 'flex-1 bg-green-500 rounded-t transition-all duration-75 ease-out';
+                            bar.className = 'bg-green-500 rounded-t transition-all duration-75 ease-out';
                         }
                     });
                     
