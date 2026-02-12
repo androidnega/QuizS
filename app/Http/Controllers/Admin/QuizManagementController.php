@@ -1036,6 +1036,11 @@ class QuizManagementController extends Controller
         $classGroupName = $quiz->classGroup ? $quiz->classGroup->name : '—';
         $programme = $classGroupName !== '—' ? strtoupper($classGroupName) : '—';
         
+        // Get exam year (current year / next year format)
+        $currentYear = now()->format('Y');
+        $nextYear = now()->addYear()->format('y');
+        $examYear = $currentYear . '/' . $nextYear;
+        
         $pdf = Pdf::loadView('admin.quizzes.questions-export-pdf', [
             'quiz' => $quiz,
             'questions' => $questions,
@@ -1047,6 +1052,7 @@ class QuizManagementController extends Controller
             'institutionName' => $institutionName,
             'institutionLogoPath' => $institutionLogoPath,
             'programme' => $programme,
+            'examYear' => $examYear,
         ])->setPaper('a4', 'portrait')->setWarnings(false);
         
         $courseSlug = \Illuminate\Support\Str::slug($courseName ?: 'course');

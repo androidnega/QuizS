@@ -1,29 +1,28 @@
-{{-- PDF questions export: clean design matching results PDF format --}}
+{{-- PDF questions export: exact format matching exam paper header --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <title>Questions – {{ $quiz->title }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 10pt; color: #1f2937; margin: 20px 24px; line-height: 1.4; }
-        .header { display: table; width: 100%; margin-bottom: 16px; border-bottom: 2px solid #3b82f6; padding-bottom: 12px; }
-        .header-logo { display: table-cell; width: 64px; vertical-align: middle; }
-        .header-logo img { max-height: 52px; max-width: 60px; }
-        .header-text { display: table-cell; vertical-align: middle; padding-left: 14px; }
-        .institution { font-size: 12pt; font-weight: bold; color: #111827; margin: 0 0 4px 0; }
-        .report-title { font-size: 11pt; font-weight: bold; color: #1d4ed8; margin: 0; }
-        .meta { margin: 16px 0 18px 0; padding: 12px 14px; background: #f8fafc; border-radius: 6px; font-size: 9pt; color: #475569; }
-        .meta-row { margin: 4px 0; }
-        .meta-label { font-weight: bold; color: #334155; }
-        .instructions-section { margin: 18px 0 16px 0; padding: 10px 14px; background: #eff6ff; border-left: 3px solid #3b82f6; font-size: 9pt; }
-        .instructions-title { font-weight: bold; color: #1e40af; margin-bottom: 6px; }
-        .questions-section { margin-top: 16px; }
-        .question { margin-bottom: 20px; page-break-inside: avoid; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
-        .question:last-child { border-bottom: none; }
-        .question-number { font-weight: bold; font-size: 10pt; color: #1e40af; margin-bottom: 6px; }
-        .question-text { font-size: 10pt; color: #374151; margin-bottom: 10px; line-height: 1.5; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10pt; color: #000; margin: 20px 24px; line-height: 1.4; }
+        .header { display: table; width: 100%; margin-bottom: 20px; }
+        .header-logo { display: table-cell; width: 80px; vertical-align: middle; padding-right: 15px; }
+        .header-logo img { max-height: 70px; max-width: 80px; }
+        .header-text { display: table-cell; vertical-align: middle; text-align: center; }
+        .header-text p { font-weight: bold; text-transform: uppercase; margin-bottom: 5px; font-size: 12pt; color: #000; }
+        .exam-info { margin-top: 20px; margin-bottom: 20px; }
+        .exam-info-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; font-size: 11pt; }
+        .exam-info-row.centered { justify-content: center; text-align: center; }
+        .exam-info-row .left { text-align: left; }
+        .exam-info-row .right { text-align: right; }
+        .instructions-title { margin-top: 20px; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; font-size: 11pt; }
+        .questions-section { margin-top: 20px; }
+        .question { margin-bottom: 20px; page-break-inside: avoid; padding-bottom: 12px; }
+        .question-number { font-weight: bold; font-size: 11pt; margin-bottom: 6px; }
+        .question-text { font-size: 10pt; color: #000; margin-bottom: 10px; line-height: 1.5; }
         .question-options { margin-left: 20px; margin-top: 8px; }
-        .question-option { font-size: 9.5pt; color: #4b5563; margin-bottom: 4px; line-height: 1.4; }
+        .question-option { font-size: 10pt; color: #000; margin-bottom: 4px; line-height: 1.4; }
         .footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #64748b; text-align: center; }
     </style>
 </head>
@@ -35,26 +34,26 @@
         </div>
         @endif
         <div class="header-text">
-            @if(!empty($institutionName))
-                <p class="institution">{{ $institutionName }}</p>
-            @endif
-            <p class="report-title">Examination Questions — {{ $quiz->title }}</p>
+            <p>{{ $institutionName }}</p>
+            <p>FACULTY OF APPLIED ARTS AND TECHNOLOGY</p>
+            <p>DEPARTMENT OF COMPUTER SCIENCE</p>
+            <p>END OF FIRST SEMESTER EXAMINATIONS, {{ $examYear }}</p>
+            <p>PROGRAMME: {{ $programme }}</p>
         </div>
     </div>
 
-    <div class="meta">
-        <div class="meta-row"><span class="meta-label">Lecturer:</span> {{ $lecturerName }}</div>
-        <div class="meta-row"><span class="meta-label">Course:</span> {{ $courseName }} @if($courseCode)({{ $courseCode }})@endif</div>
-        <div class="meta-row"><span class="meta-label">Programme:</span> {{ $programme }}</div>
-        <div class="meta-row"><span class="meta-label">Date:</span> {{ $examDate }}</div>
-        <div class="meta-row"><span class="meta-label">Duration:</span> {{ $duration }}</div>
-        <div class="meta-row"><span class="meta-label">Number of questions:</span> {{ $questions->count() }}</div>
+    <div class="exam-info">
+        <div class="exam-info-row">
+            <span class="left">COURSE TITLE: {{ strtoupper($courseName) }}</span>
+            <span class="right">COURSE CODE: {{ strtoupper($courseCode) }}</span>
+        </div>
+        <div class="exam-info-row">
+            <span class="left">DATE: {{ strtoupper($examDate) }}</span>
+            <span class="right">DURATION: {{ $duration }}</span>
+        </div>
     </div>
 
-    <div class="instructions-section">
-        <div class="instructions-title">INSTRUCTIONS:</div>
-        <div>Answer all questions. Each question carries equal marks. Write clearly and legibly.</div>
-    </div>
+    <div class="instructions-title">INSTRUCTIONS:</div>
 
     <div class="questions-section">
         @foreach($questions as $idx => $question)

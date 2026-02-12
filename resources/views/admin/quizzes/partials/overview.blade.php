@@ -211,13 +211,13 @@
                     <h2 class="text-xl font-semibold text-gray-900">Questions</h2>
                     <p class="text-sm text-gray-600">{{ $approvedQuestionsTotal }} question(s) in quiz (showing {{ $approvedQuestions->count() }} on this page)</p>
                 </div>
-                @if($approvedQuestionsTotal > 0)
-                    <a href="{{ route('dashboard.quizzes.questions.export.pdf', $quiz) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300" download>
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                        Download Questions PDF
-                    </a>
-                @endif
             </div>
+            @if($approvedQuestionsTotal > 0)
+                <a href="{{ route('dashboard.quizzes.questions.export.pdf', $quiz) }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition-colors" download>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    Download Questions PDF
+                </a>
+            @endif
         </div>
         <div class="mb-4 pb-4 border-b border-gray-200">
             <label for="questions-search" class="block text-sm font-medium text-gray-700 mb-2">Search questions</label>
