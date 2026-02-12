@@ -169,6 +169,8 @@ Route::middleware('admin.auth')->group(function () {
         Route::put('/class-groups/{classGroup}', [ClassGroupController::class, 'update'])->name('class-groups.update');
         Route::delete('/class-groups/{classGroup}', [ClassGroupController::class, 'destroy'])->name('class-groups.destroy');
         Route::get('/class-groups/{classGroup}/students', [ClassGroupController::class, 'studentsIndex'])->name('class-groups.students.index');
+        Route::get('/class-groups/{classGroup}/students/export/excel', [ClassGroupController::class, 'exportStudentsExcel'])->name('class-groups.students.export.excel');
+        Route::get('/class-groups/{classGroup}/students/export/pdf', [ClassGroupController::class, 'exportStudentsPdf'])->name('class-groups.students.export.pdf');
         // Keep classGroup in URL for readability, but resolve from student to avoid stale nested URL 404s.
         Route::get('/class-groups/{classGroupId}/students/{student}', [ClassGroupController::class, 'showStudent'])->name('class-groups.students.show');
         Route::get('/class-groups/{classGroupId}/students/{student}/edit', [ClassGroupController::class, 'editStudent'])->name('class-groups.students.edit');
@@ -183,6 +185,7 @@ Route::middleware('admin.auth')->group(function () {
         // so migrated/stale links do not hard-404 when quiz IDs changed.
         Route::get('/quizzes/{quizId}/sessions/{quizSession}', [QuizManagementController::class, 'showSession'])->name('quizzes.sessions.show');
         Route::post('/quizzes/{quizId}/sessions/{quizSession}/reset-ip', [QuizManagementController::class, 'resetSessionIp'])->name('quizzes.sessions.reset-ip');
+        Route::delete('/quizzes/{quizId}/sessions/{quizSession}/kill', [QuizManagementController::class, 'killSession'])->name('quizzes.sessions.kill');
 
         // Quizzes — examiner only
         Route::middleware('examiner.only')->group(function () {
@@ -200,6 +203,7 @@ Route::middleware('admin.auth')->group(function () {
             Route::get('/quizzes/{quiz}/scores/export/excel', [QuizManagementController::class, 'exportScoresExcel'])->name('quizzes.scores.export.excel');
             Route::get('/quizzes/{quiz}/scores/export', [QuizManagementController::class, 'exportScores'])->name('quizzes.scores.export');
             Route::get('/quizzes/{quiz}/violations/export', [QuizManagementController::class, 'exportViolations'])->name('quizzes.violations.export');
+            Route::get('/quizzes/{quiz}/questions/export/pdf', [QuizManagementController::class, 'exportQuestionsPdf'])->name('quizzes.questions.export.pdf');
             Route::post('/quizzes/{quiz}/question-pools/{pool}/approve', [QuizManagementController::class, 'approvePool'])->name('quizzes.pool.approve');
             Route::get('/quizzes/{quiz}/question-pools/{pool}/edit', [QuizManagementController::class, 'editPool'])->name('quizzes.pool.edit');
             Route::put('/quizzes/{quiz}/question-pools/{pool}', [QuizManagementController::class, 'updatePool'])->name('quizzes.pool.update');

@@ -337,6 +337,43 @@ class QuizManagementController extends Controller
     }
 
     /**
+     * Kill a session: delete the session and its result, allowing the student to retake the quiz.
+     */
+    public function killSession(string $quizId, QuizSession $quizSession): RedirectResponse
+    {
+        $quiz = $quizSession->quiz;
+        if (! $quiz) {
+            abort(404);
+        }
+        $this->authorize('update', $quiz);
+        
+        // If URL quiz is stale, move to canonical URL first.
+        if ((string) $quizId !== (string) $quiz->getRouteKey()) {
+            return redirect()->route('dashboard.quizzes.sessions.kill', [
+                'quizId' => $quiz->getRouteKey(),
+                'quizSession' => $quizSession->getRouteKey(),
+            ]);
+        }
+        
+        $studentIndex = $quizSession->student_index;
+        
+        // Delete the result first (if exists)
+        $result = $quizSession->result;
+        if ($result) {
+            $result->delete();
+        }
+        
+        // Delete the session (this will cascade to answers and violations via FK constraints)
+        $quizSession->delete();
+        
+        broadcast(new DataUpdated('dashboard'))->toOthers();
+        
+        return redirect()
+            ->route($this->staffRoutePrefix() . '.quizzes.show', ['quiz' => $quiz, 'tab' => 'sessions'])
+            ->with('success', "Session killed for student {$studentIndex}. The student can now retake the quiz.");
+    }
+
+    /**
      * Delete completed quiz sessions within a date/time window so affected students can retake.
      * Cascades to answers/results/violations via FK constraints.
      */
@@ -928,6 +965,76 @@ class QuizManagementController extends Controller
         if (request()->routeIs('*scores.export.pdf.preview')) {
             return $pdf->stream($filename);
         }
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export quiz questions as PDF in exam format.
+     */
+    public function exportQuestionsPdf(Quiz $quiz): Response
+    {
+        $this->authorize('view', $quiz);
+        $quiz->load(['course', 'classGroup', 'questions']);
+        
+        $questions = $quiz->questions()->orderBy('id')->get();
+        
+        $lecturer = $this->adminUser();
+        $lecturerName = $lecturer ? ($lecturer->name ?: $lecturer->username) : '—';
+        
+        $courseName = '—';
+        $courseCode = '—';
+        if ($quiz->course) {
+            $courseCode = trim($quiz->course->code ?? '');
+            $courseName = trim($quiz->course->name ?? '');
+        }
+        
+        $examDate = $quiz->ends_at ? $quiz->ends_at->format('F j, Y') : ($quiz->starts_at ? $quiz->starts_at->format('F j, Y') : now()->format('F j, Y'));
+        $duration = $quiz->duration_minutes ? $quiz->duration_minutes . ' HOURS' : '2 HOURS';
+        
+        $institutionName = Setting::getValue(Setting::KEY_INSTITUTION_NAME, 'TAKORADI TECHNICAL UNIVERSITY');
+        $logoPath = Setting::getValue(Setting::KEY_INSTITUTION_LOGO, '');
+        $institutionLogoPath = null;
+        if ($logoPath) {
+            if (str_starts_with($logoPath, 'http')) {
+                try {
+                    $response = \Illuminate\Support\Facades\Http::timeout(10)->get($logoPath);
+                    if ($response->successful()) {
+                        $body = $response->body();
+                        $mime = $response->header('Content-Type') ?: 'image/png';
+                        $institutionLogoPath = 'data:' . (explode(';', $mime)[0] ?: 'image/png') . ';base64,' . base64_encode($body);
+                    }
+                } catch (\Throwable $e) {
+                    // omit logo on fetch failure
+                }
+            } else {
+                $fullPath = storage_path('app/public/' . $logoPath);
+                if (file_exists($fullPath)) {
+                    $mime = @mime_content_type($fullPath) ?: 'image/png';
+                    $institutionLogoPath = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fullPath));
+                }
+            }
+        }
+        
+        $classGroupName = $quiz->classGroup ? $quiz->classGroup->name : '—';
+        $programme = $classGroupName !== '—' ? strtoupper($classGroupName) : '—';
+        
+        $pdf = Pdf::loadView('admin.quizzes.questions-export-pdf', [
+            'quiz' => $quiz,
+            'questions' => $questions,
+            'lecturerName' => $lecturerName,
+            'courseName' => $courseName,
+            'courseCode' => $courseCode,
+            'examDate' => $examDate,
+            'duration' => $duration,
+            'institutionName' => $institutionName,
+            'institutionLogoPath' => $institutionLogoPath,
+            'programme' => $programme,
+        ])->setPaper('a4', 'portrait')->setWarnings(false);
+        
+        $courseSlug = \Illuminate\Support\Str::slug($courseName ?: 'course');
+        $dateStr = now()->format('Y-m-d');
+        $filename = 'questions-' . $courseSlug . '-' . $dateStr . '.pdf';
+        
         return $pdf->download($filename);
     }
 

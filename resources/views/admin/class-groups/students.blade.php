@@ -67,11 +67,21 @@
     <div class="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
         <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-lg font-semibold text-gray-900">All indices ({{ $students->total() }})</h2>
-            <form method="get" action="{{ route('dashboard.class-groups.students.index', $classGroup) }}" id="student-search-form" class="flex items-center gap-2">
-                <label for="student-search" class="sr-only">Search</label>
-                <input type="search" name="search" id="student-search" value="{{ old('search', $search ?? '') }}" placeholder="Search index, name, phone…" class="input min-h-0 py-1.5 px-2.5 text-sm w-48 max-w-full" autocomplete="off">
-                <button type="submit" class="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Search</button>
-            </form>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('dashboard.class-groups.students.export.excel', $classGroup) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300" download>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Excel
+                </a>
+                <a href="{{ route('dashboard.class-groups.students.export.pdf', $classGroup) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300" download>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    PDF
+                </a>
+                <form method="get" action="{{ route('dashboard.class-groups.students.index', $classGroup) }}" id="student-search-form" class="flex items-center gap-2">
+                    <label for="student-search" class="sr-only">Search</label>
+                    <input type="search" name="search" id="student-search" value="{{ old('search', $search ?? '') }}" placeholder="Search index, name, phone…" class="input min-h-0 py-1.5 px-2.5 text-sm w-48 max-w-full" autocomplete="off">
+                    <button type="submit" class="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Search</button>
+                </form>
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full divide-y divide-gray-200 min-w-[500px]">

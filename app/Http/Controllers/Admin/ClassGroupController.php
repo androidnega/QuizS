@@ -17,6 +17,10 @@ use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\Response;
+use App\Exports\ClassGroupStudentsExport;
 
 class ClassGroupController extends Controller
 {
@@ -599,5 +603,40 @@ class ClassGroupController extends Controller
         }
         
         return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('error', 'No phone number found for this student.');
+    }
+
+    /**
+     * Export class group students list as Excel.
+     */
+    public function exportStudentsExcel(ClassGroup $classGroup): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $this->authorize('view', $classGroup);
+        $filename = 'class-list-' . \Illuminate\Support\Str::slug($classGroup->name) . '-' . now()->format('Y-m-d-His') . '.xlsx';
+        return Excel::download(new ClassGroupStudentsExport($classGroup), $filename);
+    }
+
+    /**
+     * Export class group students list as PDF.
+     */
+    public function exportStudentsPdf(ClassGroup $classGroup): Response
+    {
+        $this->authorize('view', $classGroup);
+        $classGroup->load(['examiner:id,username,name', 'students.studentAccount']);
+        
+        $students = $classGroup->students()
+            ->with('studentAccount')
+            ->orderBy('index_number')
+            ->get();
+        
+        $examinerName = $classGroup->examiner ? ($classGroup->examiner->name ?: $classGroup->examiner->username) : '—';
+        
+        $pdf = Pdf::loadView('admin.class-groups.export-pdf', [
+            'classGroup' => $classGroup,
+            'students' => $students,
+            'examinerName' => $examinerName,
+        ])->setPaper('a4', 'portrait')->setWarnings(false);
+        
+        $filename = 'class-list-' . \Illuminate\Support\Str::slug($classGroup->name) . '-' . now()->format('Y-m-d') . '.pdf';
+        return $pdf->download($filename);
     }
 }
