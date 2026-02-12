@@ -213,9 +213,9 @@
                 </div>
             </div>
             <div class="flex-shrink-0">
-                <a href="{{ route('dashboard.quizzes.questions.export.pdf', $quiz) }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-gray-900 bg-yellow-400 hover:bg-yellow-500 rounded-lg shadow-lg border-2 border-yellow-600 transition-colors" download>
+                <a href="{{ route('dashboard.quizzes.questions.export.docx', $quiz) }}" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-gray-900 bg-yellow-400 hover:bg-yellow-500 rounded-lg shadow-lg border-2 border-yellow-600 transition-colors" download>
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                    Download Questions PDF
+                    Download Questions DOCX
                 </a>
             </div>
         </div>

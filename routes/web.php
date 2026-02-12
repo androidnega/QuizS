@@ -203,7 +203,7 @@ Route::middleware('admin.auth')->group(function () {
             Route::get('/quizzes/{quiz}/scores/export/excel', [QuizManagementController::class, 'exportScoresExcel'])->name('quizzes.scores.export.excel');
             Route::get('/quizzes/{quiz}/scores/export', [QuizManagementController::class, 'exportScores'])->name('quizzes.scores.export');
             Route::get('/quizzes/{quiz}/violations/export', [QuizManagementController::class, 'exportViolations'])->name('quizzes.violations.export');
-            Route::get('/quizzes/{quiz}/questions/export/pdf', [QuizManagementController::class, 'exportQuestionsPdf'])->name('quizzes.questions.export.pdf');
+            Route::get('/quizzes/{quiz}/questions/export/docx', [QuizManagementController::class, 'exportQuestionsDocx'])->name('quizzes.questions.export.docx');
             Route::post('/quizzes/{quiz}/question-pools/{pool}/approve', [QuizManagementController::class, 'approvePool'])->name('quizzes.pool.approve');
             Route::get('/quizzes/{quiz}/question-pools/{pool}/edit', [QuizManagementController::class, 'editPool'])->name('quizzes.pool.edit');
             Route::put('/quizzes/{quiz}/question-pools/{pool}', [QuizManagementController::class, 'updatePool'])->name('quizzes.pool.update');

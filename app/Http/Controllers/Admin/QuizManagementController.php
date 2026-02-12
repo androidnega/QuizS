@@ -25,6 +25,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\Shared\Html;
+use PhpOffice\PhpWord\Style\Font;
+use PhpOffice\PhpWord\Style\Paragraph;
 
 class QuizManagementController extends Controller
 {
@@ -969,9 +974,9 @@ class QuizManagementController extends Controller
     }
 
     /**
-     * Export quiz questions as PDF in exam format.
+     * Export quiz questions as DOCX in exam format.
      */
-    public function exportQuestionsPdf(Quiz $quiz): Response
+    public function exportQuestionsDocx(Quiz $quiz): Response
     {
         $this->authorize('view', $quiz);
         $quiz->load(['course', 'classGroup', 'questions']);
@@ -1015,15 +1020,15 @@ class QuizManagementController extends Controller
         
         $institutionName = Setting::getValue(Setting::KEY_INSTITUTION_NAME, 'TAKORADI TECHNICAL UNIVERSITY');
         $logoPath = Setting::getValue(Setting::KEY_INSTITUTION_LOGO, '');
-        $institutionLogoPath = null;
+        $logoFilePath = null;
         if ($logoPath) {
             if (str_starts_with($logoPath, 'http')) {
                 try {
                     $response = \Illuminate\Support\Facades\Http::timeout(10)->get($logoPath);
                     if ($response->successful()) {
-                        $body = $response->body();
-                        $mime = $response->header('Content-Type') ?: 'image/png';
-                        $institutionLogoPath = 'data:' . (explode(';', $mime)[0] ?: 'image/png') . ';base64,' . base64_encode($body);
+                        $tempFile = tempnam(sys_get_temp_dir(), 'logo_');
+                        file_put_contents($tempFile, $response->body());
+                        $logoFilePath = $tempFile;
                     }
                 } catch (\Throwable $e) {
                     // omit logo on fetch failure
@@ -1031,8 +1036,7 @@ class QuizManagementController extends Controller
             } else {
                 $fullPath = storage_path('app/public/' . $logoPath);
                 if (file_exists($fullPath)) {
-                    $mime = @mime_content_type($fullPath) ?: 'image/png';
-                    $institutionLogoPath = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fullPath));
+                    $logoFilePath = $fullPath;
                 }
             }
         }
@@ -1045,25 +1049,106 @@ class QuizManagementController extends Controller
         $nextYear = now()->addYear()->format('y');
         $examYear = $currentYear . '/' . $nextYear;
         
-        $pdf = Pdf::loadView('admin.quizzes.questions-export-pdf', [
-            'quiz' => $quiz,
-            'questions' => $questions,
-            'lecturerName' => $lecturerName,
-            'courseName' => $courseName,
-            'courseCode' => $courseCode,
-            'examDate' => $examDate,
-            'duration' => $duration,
-            'institutionName' => $institutionName,
-            'institutionLogoPath' => $institutionLogoPath,
-            'programme' => $programme,
-            'examYear' => $examYear,
-        ])->setPaper('a4', 'portrait')->setWarnings(false);
+        // Create new PhpWord object
+        $phpWord = new PhpWord();
+        $phpWord->setDefaultFontName('Times New Roman');
+        $phpWord->setDefaultFontSize(11);
+        
+        // Add section with margins
+        $section = $phpWord->addSection([
+            'marginTop' => 1134, // 2cm
+            'marginBottom' => 1134,
+            'marginLeft' => 1134,
+            'marginRight' => 1134,
+        ]);
+        
+        // Header table with logo and institution info
+        $headerTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 50]);
+        $headerRow = $headerTable->addRow();
+        
+        // Logo cell (left)
+        $logoCell = $headerRow->addCell(2000);
+        if ($logoFilePath && file_exists($logoFilePath)) {
+            try {
+                $logoCell->addImage($logoFilePath, [
+                    'width' => 60,
+                    'height' => 60,
+                    'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::LEFT,
+                ]);
+            } catch (\Throwable $e) {
+                // Skip logo if image can't be added
+            }
+        }
+        
+        // Institution info cell (right, centered)
+        $infoCell = $headerRow->addCell(14000);
+        $infoCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::CENTER);
+        
+        $institutionStyle = ['bold' => true, 'size' => 12, 'allCaps' => true];
+        $infoCell->addText($institutionName, $institutionStyle, ['spaceAfter' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        $infoCell->addText('FACULTY OF APPLIED ARTS AND TECHNOLOGY', $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        $infoCell->addText('DEPARTMENT OF COMPUTER SCIENCE', $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        $infoCell->addText('END OF FIRST SEMESTER EXAMINATIONS, ' . $examYear, $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        $infoCell->addText('PROGRAMME: ' . $programme, $institutionStyle, ['spaceAfter' => 120, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        
+        // Course info table
+        $courseStyle = ['bold' => true, 'size' => 10, 'allCaps' => true];
+        $courseTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 50]);
+        $courseRow = $courseTable->addRow();
+        $courseRow->addCell(7000)->addText('COURSE TITLE: ' . strtoupper($courseName), $courseStyle);
+        $codeCell = $courseRow->addCell(7000);
+        $codeCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::RIGHT);
+        $codeCell->addText('COURSE CODE: ' . strtoupper($courseCode), $courseStyle);
+        
+        $dateRow = $courseTable->addRow();
+        $dateRow->addCell(7000)->addText('DATE: ' . strtoupper($examDate), $courseStyle);
+        $durationCell = $dateRow->addCell(7000);
+        $durationCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::RIGHT);
+        $durationCell->addText('DURATION: ' . strtoupper($duration), $courseStyle);
+        
+        $section->addTextBreak(1);
+        
+        // Instructions
+        $instructionsStyle = ['bold' => true, 'size' => 10, 'allCaps' => true];
+        $section->addText('INSTRUCTIONS:', $instructionsStyle);
+        $section->addText('Answer all questions. Each question carries equal marks. Write clearly and legibly.', ['size' => 9.5]);
+        
+        $section->addTextBreak(1);
+        
+        // Questions
+        foreach ($questions as $idx => $question) {
+            $questionNumStyle = ['bold' => true, 'size' => 11];
+            $section->addText(($idx + 1) . '.', $questionNumStyle);
+            
+            $questionTextStyle = ['size' => 10];
+            $section->addText($question->text, $questionTextStyle);
+            
+            if ($question->options && is_array($question->options) && count($question->options) > 0) {
+                foreach ($question->options as $option) {
+                    if (isset($option['key']) && isset($option['text'])) {
+                        $section->addText('   ' . $option['key'] . '. ' . $option['text'], ['size' => 10], ['indentation' => ['left' => 480]]);
+                    }
+                }
+            }
+            
+            $section->addTextBreak(1);
+        }
+        
+        // Footer
+        $section->addTextBreak(1);
+        $footerStyle = ['size' => 8, 'color' => '64748b'];
+        $section->addText('Generated ' . now()->format('M d, Y H:i') . ' — QuizSnap', $footerStyle, ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+        
+        // Save to temporary file
+        $tempFile = tempnam(sys_get_temp_dir(), 'questions_') . '.docx';
+        $writer = IOFactory::createWriter($phpWord, 'Word2007');
+        $writer->save($tempFile);
         
         $courseSlug = \Illuminate\Support\Str::slug($courseName ?: 'course');
         $dateStr = now()->format('Y-m-d');
-        $filename = 'questions-' . $courseSlug . '-' . $dateStr . '.pdf';
+        $filename = 'questions-' . $courseSlug . '-' . $dateStr . '.docx';
         
-        return $pdf->download($filename);
+        return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
     }
 
     /**
