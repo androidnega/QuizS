@@ -254,6 +254,21 @@ Route::middleware('admin.auth')->group(function () {
             Route::post('/users/update-sms', [\App\Http\Controllers\Admin\UserManagementController::class, 'updateSms'])->name('users.update-sms');
             Route::post('/users/{user}/revoke', [\App\Http\Controllers\Admin\UserManagementController::class, 'revoke'])->name('users.revoke');
             Route::delete('/users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])->name('users.destroy');
+            
+            // Faculties and Departments
+            Route::get('/faculties', [\App\Http\Controllers\Admin\FacultyController::class, 'index'])->name('faculties.index');
+            Route::post('/faculties', [\App\Http\Controllers\Admin\FacultyController::class, 'store'])->name('faculties.store');
+            Route::put('/faculties/{faculty}', [\App\Http\Controllers\Admin\FacultyController::class, 'update'])->name('faculties.update');
+            Route::delete('/faculties/{faculty}', [\App\Http\Controllers\Admin\FacultyController::class, 'destroy'])->name('faculties.destroy');
+            
+            Route::get('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'index'])->name('departments.index');
+            Route::post('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'store'])->name('departments.store');
+            Route::put('/departments/{department}', [\App\Http\Controllers\Admin\DepartmentController::class, 'update'])->name('departments.update');
+            Route::delete('/departments/{department}', [\App\Http\Controllers\Admin\DepartmentController::class, 'destroy'])->name('departments.destroy');
+            Route::get('/departments/by-faculty/{faculty}', [\App\Http\Controllers\Admin\DepartmentController::class, 'getByFaculty'])->name('departments.by-faculty');
         });
+        
+        // Examiner faculty/department update
+        Route::post('/examiner/update-faculty-department', [\App\Http\Controllers\Admin\ExaminerProfileController::class, 'updateFacultyDepartment'])->name('examiner.update-faculty-department');
     });
 });

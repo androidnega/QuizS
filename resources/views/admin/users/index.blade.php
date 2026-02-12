@@ -50,10 +50,18 @@
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 text-sm text-gray-600 break-words" title="{{ $u->institution?->name ?? '—' }}">{{ $u->institution?->name ?? '—' }}</td>
-                                <td class="px-3 py-2 text-sm text-gray-600 min-w-[120px] max-w-[200px]">
-                                    <span class="block break-words">
-                                        {{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}
-                                    </span>
+                                <td class="px-3 py-2 text-sm text-gray-600">
+                                    @if($u->courses->isNotEmpty())
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @foreach($u->courses as $course)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200 whitespace-nowrap">
+                                                    {{ $course->name }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
                                 </td>
                                 @if(isset($isSuperAdmin) && $isSuperAdmin)
                                 <td class="px-3 py-2 text-sm">

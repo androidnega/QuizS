@@ -10,6 +10,16 @@ class Course extends Model
 {
     protected $fillable = ['name', 'code', 'is_archived'];
 
+    protected static function booted(): void
+    {
+        static::saving(function (Course $course) {
+            // Force course name to uppercase
+            if (isset($course->name)) {
+                $course->name = strtoupper(trim($course->name));
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return ['is_archived' => 'boolean'];

@@ -82,7 +82,7 @@ class CourseController extends Controller
         
         $course = Course::create([
             'code' => trim($request->code),
-            'name' => trim($request->name),
+            'name' => strtoupper(trim($request->name)), // Force uppercase
             'is_archived' => false,
         ]);
         
@@ -147,7 +147,7 @@ class CourseController extends Controller
         
         $course->update([
             'code' => trim($request->code),
-            'name' => trim($request->name),
+            'name' => strtoupper(trim($request->name)), // Force uppercase
         ]);
         
         // Super Admin can assign examiners, Examiner keeps themselves assigned

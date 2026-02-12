@@ -63,6 +63,10 @@ class AdminDashboardController extends Controller
             'results' => $quizIds->isEmpty() ? 0 : Result::whereHas('quizSession', fn ($q) => $q->whereIn('quiz_id', $quizIds))->count(),
         ];
         $recentSessions = $quizIds->isEmpty() ? collect() : QuizSession::with(['quiz', 'result'])->whereIn('quiz_id', $quizIds)->orderByDesc('start_time')->limit(20)->get();
-        return view('admin.dashboard-examiner', compact('quizzes', 'classGroups', 'recentSessions', 'stats'));
+        
+        // Check if examiner needs to set faculty/department
+        $needsFacultyDepartment = $user && $user->isExaminer() && (!$user->faculty_id || !$user->department_id);
+        
+        return view('admin.dashboard-examiner', compact('quizzes', 'classGroups', 'recentSessions', 'stats', 'needsFacultyDepartment'));
     }
 }

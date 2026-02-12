@@ -14,6 +14,11 @@ class Institution extends Model
         return $this->hasMany(User::class);
     }
 
+    public function faculties(): HasMany
+    {
+        return $this->hasMany(Faculty::class);
+    }
+
     /** Display name with region (e.g. "Accra Technical University - Greater Accra Region") */
     public function getDisplayNameAttribute(): string
     {

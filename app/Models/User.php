@@ -17,13 +17,23 @@ class User extends Authenticatable
     public const ROLE_SUPER_ADMIN = 'super_admin';
     public const ROLE_EXAMINER = 'examiner';
 
-    protected $fillable = ['username', 'email', 'index_number', 'name', 'course_id', 'role', 'password', 'avatar', 'institution_id', 'sms_allocation'];
+    protected $fillable = ['username', 'email', 'index_number', 'name', 'course_id', 'role', 'password', 'avatar', 'institution_id', 'sms_allocation', 'faculty_id', 'department_id'];
 
     protected $hidden = ['password', 'remember_token'];
 
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);
+    }
+
+    public function faculty(): BelongsTo
+    {
+        return $this->belongsTo(Faculty::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     /**
