@@ -21,6 +21,8 @@ class StaffProfileController extends Controller
         if (!$user) {
             return redirect()->route('login')->with('error', 'Please sign in again.');
         }
+        // Load relationships for profile display
+        $user->load(['institution', 'faculty', 'department', 'course']);
         return view('admin.profile.show', compact('user'));
     }
 

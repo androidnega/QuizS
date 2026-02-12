@@ -22,10 +22,34 @@
                 <div><dt class="text-gray-500">Username</dt><dd class="font-medium text-gray-900">{{ $user->username ?? '—' }}</dd></div>
                 <div><dt class="text-gray-500">Name</dt><dd class="font-medium text-gray-900">{{ $user->name ?? '—' }}</dd></div>
                 <div><dt class="text-gray-500">Role</dt><dd class="font-medium text-gray-900">{{ $user->role ? ucfirst(str_replace('_', ' ', $user->role)) : '—' }}</dd></div>
+                @if($user->institution)
+                <div><dt class="text-gray-500">Institution</dt><dd class="font-medium text-gray-900">{{ $user->institution->display_name }}</dd></div>
+                @endif
+                @if($user->faculty)
+                <div><dt class="text-gray-500">Faculty</dt><dd class="font-medium text-gray-900">{{ $user->faculty->name }}</dd></div>
+                @endif
+                @if($user->department)
+                <div><dt class="text-gray-500">Department</dt><dd class="font-medium text-gray-900">{{ $user->department->name }}</dd></div>
+                @endif
                 @if(isset($user->course) && $user->course)
                 <div><dt class="text-gray-500">Course</dt><dd class="font-medium text-gray-900">{{ $user->course->name }}</dd></div>
                 @endif
             </dl>
+            @if($user->isExaminer())
+            <div class="mt-3 flex items-center justify-between gap-2">
+                @if(!$user->faculty_id || !$user->department_id)
+                <div class="flex-1 p-2 rounded-md bg-orange-50 border border-orange-200">
+                    <p class="text-xs text-orange-800">
+                        <a href="{{ route('dashboard.users.edit', $user) }}" class="font-semibold underline hover:text-orange-900">Complete your profile</a> by selecting your faculty and department.
+                    </p>
+                </div>
+                @else
+                <a href="{{ route('dashboard.users.edit', $user) }}" class="text-xs text-primary-600 hover:text-primary-800 font-medium underline">
+                    Edit faculty/department →
+                </a>
+                @endif
+            </div>
+            @endif
             <form action="{{ route('dashboard.profile.update') }}" method="post" class="mt-3 space-y-2">
                 @csrf
                 @method('PUT')
