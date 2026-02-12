@@ -42,6 +42,7 @@
                     <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" class="input w-full max-w-full min-w-0 @error('name') border-danger-500 @enderror">
                     @error('name')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
+                @if(auth()->user()->isSuperAdmin())
                 <div>
                     <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
                     <select name="role" id="role" required class="input w-full max-w-full min-w-0 @error('role') border-danger-500 @enderror">
@@ -50,6 +51,10 @@
                     </select>
                     @error('role')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
+                @else
+                {{-- Examiners cannot change their role --}}
+                <input type="hidden" name="role" value="{{ $user->role }}">
+                @endif
                 @else
                 {{-- Hidden fields to preserve existing values --}}
                 <input type="hidden" name="username" value="{{ $user->username }}">

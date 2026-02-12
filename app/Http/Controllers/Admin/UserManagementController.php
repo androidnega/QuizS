@@ -226,10 +226,11 @@ class UserManagementController extends Controller
         }
         $user->name = $request->name ?: $user->username;
         
-        // Only Super Admin can change roles
-        if ($isSuperAdmin) {
+        // Only Super Admin can change roles - examiners keep their existing role
+        if ($isSuperAdmin && $request->has('role')) {
             $user->role = $request->role;
         }
+        // If examiner is updating, role is preserved via hidden input and not changed
         
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
