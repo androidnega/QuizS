@@ -1047,8 +1047,14 @@ class QuizManagementController extends Controller
         $examYear = $currentYear . '/' . $nextYear;
         
         // Check if PhpWord is available
+        // Try to load autoloader first in case it's installed but not loaded
+        $autoloadPath = base_path('vendor/autoload.php');
+        if (file_exists($autoloadPath)) {
+            require_once $autoloadPath;
+        }
+        
         if (!class_exists(\PhpOffice\PhpWord\PhpWord::class)) {
-            return redirect()->back()->with('error', 'DOCX export requires PhpWord library. Please run: composer require phpoffice/phpword');
+            return redirect()->back()->with('error', 'DOCX export requires PhpWord library. Please run: composer require phpoffice/phpword or use the install script at: /install-phpword.php');
         }
         
         try {

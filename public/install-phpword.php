@@ -7,7 +7,8 @@
  */
 
 // SECURITY: Set a secret key - change this to something random!
-$SECRET_KEY = 'change-this-to-random-string-' . date('Ymd');
+// IMPORTANT: Change this to a strong random string before using!
+$SECRET_KEY = 'QuizSnapPhpWord2026' . date('Ymd');
 
 // Check if key matches
 $providedKey = $_GET['key'] ?? '';
@@ -68,13 +69,58 @@ echo "<!DOCTYPE html>
 // Change to base directory
 chdir($baseDir);
 
-// Run composer require phpoffice/phpword
-echo "Running: {$composerCmd} require phpoffice/phpword --no-interaction --no-scripts\n";
+// First, try composer install to ensure all dependencies are installed
+echo "Step 1: Running composer install to ensure all dependencies are up to date...\n";
 echo str_repeat('=', 70) . "\n\n";
 
-$output = [];
-$returnVar = 0;
-exec("{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1", $output, $returnVar);
+$output1 = [];
+$returnVar1 = 0;
+exec("{$composerCmd} install --no-dev --optimize-autoloader 2>&1", $output1, $returnVar1);
+
+foreach ($output1 as $line) {
+    echo htmlspecialchars($line) . "\n";
+}
+
+echo "\n" . str_repeat('=', 70) . "\n\n";
+
+// If composer install worked or phpoffice/phpword is already in composer.json, we're done
+// Otherwise, run composer require
+if ($returnVar1 === 0) {
+    // Check if phpoffice/phpword is already installed
+    $vendorPath = $baseDir . '/vendor/phpoffice/phpword';
+    if (!file_exists($vendorPath)) {
+        echo "Step 2: PhpWord not found, running composer require phpoffice/phpword...\n";
+        echo str_repeat('=', 70) . "\n\n";
+        
+        $output = [];
+        $returnVar = 0;
+        exec("{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1", $output, $returnVar);
+        
+        foreach ($output as $line) {
+            echo htmlspecialchars($line) . "\n";
+        }
+        
+        echo "\n" . str_repeat('=', 70) . "\n";
+        $finalReturnVar = $returnVar;
+    } else {
+        echo "✓ PhpWord already installed!\n";
+        $finalReturnVar = 0;
+    }
+} else {
+    echo "\n<p class='error'>Composer install failed. Trying composer require directly...</p>\n";
+    echo str_repeat('=', 70) . "\n\n";
+    
+    $output = [];
+    $returnVar = 0;
+    exec("{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1", $output, $returnVar);
+    
+    foreach ($output as $line) {
+        echo htmlspecialchars($line) . "\n";
+    }
+    
+    echo "\n" . str_repeat('=', 70) . "\n";
+    $finalReturnVar = $returnVar;
+}
 
 foreach ($output as $line) {
     echo htmlspecialchars($line) . "\n";
@@ -82,7 +128,7 @@ foreach ($output as $line) {
 
 echo "\n" . str_repeat('=', 70) . "\n";
 
-if ($returnVar === 0) {
+if ($finalReturnVar === 0) {
     echo "\n<p class='success'><strong>✓ SUCCESS!</strong> PhpWord installed successfully.</p>\n";
     
     // Verify installation
