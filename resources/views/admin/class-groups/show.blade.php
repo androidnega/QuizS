@@ -76,20 +76,35 @@
     </div>
 
     {{-- Card: Student index list — link to full management page --}}
-    <a href="{{ route('dashboard.class-groups.students.index', $classGroup) }}" class="block rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:border-primary-300 hover:shadow-md transition-all group">
-        <div class="flex items-start justify-between gap-4">
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="flex items-start justify-between gap-4 mb-4">
             <div class="min-w-0">
-                <h2 class="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2 group-hover:text-primary-600">
+                <h2 class="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
                     <i class="fas fa-user-graduate text-primary-600"></i> Student index list
                 </h2>
                 <p class="text-sm text-gray-600">Manage student indices for this class group. Add, edit, remove, or upload from Excel. This list is used for all quizzes in this group.</p>
-                <p class="text-sm font-medium text-primary-600 mt-3 group-hover:underline">Open and manage indices →</p>
             </div>
             <div class="flex-shrink-0 rounded-lg bg-primary-50 px-4 py-2 text-center">
                 <span class="text-2xl font-bold tabular-nums text-primary-700">{{ $students->total() }}</span>
                 <span class="block text-xs font-medium text-primary-600">indices</span>
             </div>
         </div>
-    </a>
+        <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
+            <a href="{{ route('dashboard.class-groups.students.index', $classGroup) }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-800">
+                <i class="fas fa-external-link-alt"></i> Manage students
+            </a>
+            @if($students->total() > 0)
+                <span class="text-gray-300">|</span>
+                <a href="{{ route('dashboard.class-groups.students.export.excel', $classGroup) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300" download>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Download Excel
+                </a>
+                <a href="{{ route('dashboard.class-groups.students.export.pdf', $classGroup) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300" download>
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    Download PDF
+                </a>
+            @endif
+        </div>
+    </div>
 </div>
 @endsection
