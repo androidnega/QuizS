@@ -104,21 +104,24 @@ if ($code === 0) {
     echo "Done. Local changes were discarded and your files now match the remote.\n";
     echo "You can use cPanel Git \"Pull\" or \"Update\" from now on.\n";
     
-    // Always restore the protected version (with self-protection) after reset
-    // This ensures the script remains available even if remote version was older
+    // CRITICAL: Always restore THIS version (the protected one) after reset
+    // This ensures the script stays available even if remote version was old/deleted itself
     if (file_exists($scriptBackup)) {
+        // Restore the protected version we saved before reset
         file_put_contents($scriptPath, $scriptContent);
         @unlink($scriptBackup);
-        echo "\n[fix-git-pull.php has been restored and remains available for future use.]\n";
+        echo "\n[fix-git-pull.php has been restored with protection enabled.]\n";
+        echo "[The script will remain available for future use.]\n";
         echo "[You can run this script again anytime if conflicts occur.]\n";
     } else {
-        echo "\n[fix-git-pull.php should be available. If missing, re-upload from Git.]\n";
+        echo "\n[Warning: Backup not found. Script may have been deleted by old version.]\n";
+        echo "[Re-upload fix-git-pull.php from Git if needed.]\n";
     }
 } else {
     echo "Reset failed. Check that the remote branch is 'main' or 'master' and that Git can run on the server.\n";
     // Restore backup if reset failed
     if (file_exists($scriptBackup)) {
-        file_put_contents($scriptPath, file_get_contents($scriptBackup));
+        file_put_contents($scriptPath, $scriptContent);
         @unlink($scriptBackup);
         echo "[fix-git-pull.php has been restored.]\n";
     }
