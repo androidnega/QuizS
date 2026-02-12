@@ -36,16 +36,53 @@ echo "TTU Faculties and Departments Seeder\n";
 echo "=====================================\n\n";
 
 try {
-    // Run the seeder using Artisan
+    // Run the seeder directly (bypasses production mode restrictions)
     echo "Seeding TTU faculties and departments...\n\n";
     
-    Illuminate\Support\Facades\Artisan::call('db:seed', [
-        '--class' => 'TtuFacultiesDepartmentsSeeder'
-    ]);
+    // Check if institution exists first
+    $institution = \App\Models\Institution::where('name', 'Takoradi Technical University')->first();
+    if (!$institution) {
+        throw new \Exception('Takoradi Technical University not found. Please ensure the institution exists in the database.');
+    }
     
-    $output = Illuminate\Support\Facades\Artisan::output();
-    echo $output . "\n";
+    echo "Found institution: {$institution->name} (ID: {$institution->id})\n\n";
     
+    $seeder = new \Database\Seeders\TtuFacultiesDepartmentsSeeder();
+    
+    // Create a simple command output handler
+    $outputHandler = new class {
+        public function info($message) {
+            echo $message . "\n";
+        }
+        
+        public function line($message) {
+            echo $message . "\n";
+        }
+        
+        public function error($message) {
+            echo "ERROR: " . $message . "\n";
+        }
+    };
+    
+    // Use reflection to set the command property if it exists
+    $reflection = new ReflectionClass($seeder);
+    if ($reflection->hasProperty('command')) {
+        $property = $reflection->getProperty('command');
+        $property->setAccessible(true);
+        $property->setValue($seeder, $outputHandler);
+    }
+    
+    $seeder->run();
+    
+    // Verify the data was created
+    $facultyCount = \App\Models\Faculty::where('institution_id', $institution->id)->count();
+    $deptCount = \App\Models\Department::whereHas('faculty', function($q) use ($institution) {
+        $q->where('institution_id', $institution->id);
+    })->count();
+    
+    echo "\n📊 Verification:\n";
+    echo "   Faculties created: {$facultyCount}\n";
+    echo "   Departments created: {$deptCount}\n";
     echo "\n✅ Seeding completed successfully!\n";
     
     // Flush output buffer
