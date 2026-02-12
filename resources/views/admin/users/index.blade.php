@@ -33,6 +33,9 @@
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Role</th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-36">Institution</th>
                             <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase min-w-[120px] max-w-[200px]">Courses</th>
+                            @if(isset($isSuperAdmin) && $isSuperAdmin)
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-32">SMS</th>
+                            @endif
                             <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase min-w-[120px]">Actions</th>
                         </tr>
                     </thead>
@@ -52,6 +55,22 @@
                                         {{ $u->courses->isNotEmpty() ? $u->courses->pluck('name')->join(', ') : '—' }}
                                     </span>
                                 </td>
+                                @if(isset($isSuperAdmin) && $isSuperAdmin)
+                                <td class="px-3 py-2 text-sm">
+                                    @if($u->role === 'examiner')
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-600" id="sms-display-{{ $u->id }}">
+                                            {{ $u->sms_remaining ?? 0 }} / {{ $u->sms_allocation ?? 0 }}
+                                        </span>
+                                        <button type="button" onclick="openSmsModal({{ $u->id }}, '{{ $u->username }}', {{ $u->sms_allocation ?? 0 }}, {{ $u->sms_used ?? 0 }})" class="inline-flex p-1 rounded text-gray-500 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="Set SMS allocation">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                        </button>
+                                    </div>
+                                    @else
+                                    <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
+                                @endif
                                 <td class="px-3 py-2 text-right text-sm">
                                     <div class="flex justify-end gap-1">
                                         @if(isset($isSuperAdmin) && $isSuperAdmin)
@@ -86,7 +105,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-3 py-12 text-center text-gray-500">No staff users yet. Add an admin or examiner.</td>
+                                <td colspan="{{ isset($isSuperAdmin) && $isSuperAdmin ? '7' : '6' }}" class="px-3 py-12 text-center text-gray-500">No staff users yet. Add an admin or examiner.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -235,6 +254,126 @@ document.getElementById('createUserModal').addEventListener('click', function(e)
 @if($errors->any() && old('_token'))
     openCreateUserModal();
 @endif
+
+// SMS Allocation Modal
+function openSmsModal(userId, username, currentAllocation, currentUsed) {
+    const modal = document.getElementById('smsModal');
+    const form = document.getElementById('smsForm');
+    const display = document.getElementById('sms-display-' + userId);
+    
+    document.getElementById('smsUserId').value = userId;
+    document.getElementById('smsUsername').textContent = username;
+    document.getElementById('smsCurrent').textContent = currentAllocation;
+    document.getElementById('smsUsed').textContent = currentUsed;
+    document.getElementById('smsRemaining').textContent = Math.max(0, currentAllocation - currentUsed);
+    document.getElementById('smsAllocationInput').value = currentAllocation;
+    document.getElementById('smsError').classList.add('hidden');
+    document.getElementById('smsError').textContent = '';
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('smsAllocationInput').focus();
+}
+
+function closeSmsModal() {
+    const modal = document.getElementById('smsModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+}
+
+document.getElementById('smsForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const userId = document.getElementById('smsUserId').value;
+    const allocation = parseInt(document.getElementById('smsAllocationInput').value) || 0;
+    const errorEl = document.getElementById('smsError');
+    const submitBtn = document.getElementById('smsSubmitBtn');
+    
+    errorEl.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    
+    try {
+        const response = await fetch('{{ route("dashboard.users.update-sms") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ user_id: userId, sms_allocation: allocation })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update display
+            const display = document.getElementById('sms-display-' + userId);
+            display.textContent = data.remaining + ' / ' + data.allocation;
+            closeSmsModal();
+            
+            // Show success message (you could add a toast notification here)
+            if (window.showToast) {
+                showToast('SMS allocation updated successfully', 'success');
+            }
+        } else {
+            errorEl.textContent = data.message || 'Failed to update SMS allocation';
+            errorEl.classList.remove('hidden');
+        }
+    } catch (error) {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.remove('hidden');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update';
+    }
+});
+
+// Close SMS modal on escape or backdrop click
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeSmsModal();
+    }
+});
+
+document.getElementById('smsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeSmsModal();
+    }
+});
 </script>
 @endpush
+
+<!-- SMS Allocation Modal -->
+<div id="smsModal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-900">Set SMS Allocation</h2>
+            <button type="button" onclick="closeSmsModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="smsForm" class="p-6 space-y-4">
+            <input type="hidden" id="smsUserId" name="user_id">
+            <div>
+                <p class="text-sm text-gray-600 mb-4">
+                    Examiner: <strong id="smsUsername"></strong><br>
+                    Current: <span id="smsCurrent" class="font-semibold">0</span> | 
+                    Used: <span id="smsUsed" class="font-semibold">0</span> | 
+                    Remaining: <span id="smsRemaining" class="font-semibold text-green-600">0</span>
+                </p>
+            </div>
+            <div>
+                <label for="smsAllocationInput" class="block text-sm font-medium text-gray-700 mb-1">SMS Allocation</label>
+                <input type="number" id="smsAllocationInput" name="sms_allocation" min="0" step="1" required class="input w-full" placeholder="e.g. 20, 50, 100">
+                <p class="mt-1 text-xs text-gray-500">Number of SMS credits this examiner can use to send login tokens.</p>
+            </div>
+            <div id="smsError" class="hidden bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800"></div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" id="smsSubmitBtn" class="btn btn-primary flex-1">Update</button>
+                <button type="button" onclick="closeSmsModal()" class="btn btn-secondary flex-1">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

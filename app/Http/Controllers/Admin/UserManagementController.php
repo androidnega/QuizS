@@ -365,6 +365,47 @@ class UserManagementController extends Controller
     }
 
     /**
+     * Update SMS allocation for an examiner (AJAX).
+     */
+    public function updateSms(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $currentUser = $this->adminUser();
+        $isSuperAdmin = $currentUser && $currentUser->isSuperAdmin();
+
+        if (!$isSuperAdmin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only Super Administrators can set SMS allocation.',
+            ], 403);
+        }
+
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'sms_allocation' => 'required|integer|min:0',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        
+        if ($user->role !== User::ROLE_EXAMINER) {
+            return response()->json([
+                'success' => false,
+                'message' => 'SMS allocation can only be set for examiners.',
+            ], 422);
+        }
+
+        $user->sms_allocation = max(0, (int) $request->sms_allocation);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'allocation' => $user->sms_allocation,
+            'used' => $user->sms_used ?? 0,
+            'remaining' => $user->sms_remaining,
+            'message' => 'SMS allocation updated successfully.',
+        ]);
+    }
+
+    /**
      * Generate a secure temporary password.
      */
     private function generateTemporaryPassword(int $length = 12): string
