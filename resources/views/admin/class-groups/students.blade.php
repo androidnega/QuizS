@@ -98,14 +98,18 @@
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @forelse($students as $s)
                         @php
+                            // Get phone number from student account if available
                             $phone = $s->studentAccount?->phone_contact ?? null;
+                            $phone = $phone && trim($phone) !== '' ? trim($phone) : null;
+                            
                             // Priority: student account name > class group name > "—"
-                            $displayName = $s->studentAccount?->student_name ?? $s->student_name ?? '—';
+                            $displayName = $s->studentAccount?->student_name ?? $s->student_name ?? null;
+                            $displayName = $displayName && trim($displayName) !== '' ? trim($displayName) : '—';
                         @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $s->index_number }}</td>
                             <td class="px-4 py-3 text-sm text-gray-600">{{ $displayName }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-600">{{ $phone ?: '—' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ $phone ?? '—' }}</td>
                             @if(!$isSuperAdmin)
                                 <td class="px-4 py-3 text-right">
                                     <div class="inline-flex items-center justify-end gap-3">

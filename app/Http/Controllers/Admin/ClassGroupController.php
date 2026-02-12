@@ -255,14 +255,18 @@ class ClassGroupController extends Controller
         $this->authorize('view', $classGroup);
         $classGroup->load('examiner:id,username,name');
         $search = $request->input('search', '');
-        $query = $classGroup->students()->with('studentAccount')->orderBy('index_number');
+        // Eager load studentAccount with phone_contact and student_name fields
+        $query = $classGroup->students()->with(['studentAccount' => function ($q) {
+            $q->select('id', 'index_number', 'phone_contact', 'student_name');
+        }])->orderBy('index_number');
         if ($search !== '') {
             $term = '%' . preg_replace('/%/', '\\%', trim($search)) . '%';
             $query->where(function ($q) use ($term) {
                 $q->where('index_number', 'like', $term)
                     ->orWhere('student_name', 'like', $term)
                     ->orWhereHas('studentAccount', function ($q2) use ($term) {
-                        $q2->where('phone_contact', 'like', $term);
+                        $q2->where('phone_contact', 'like', $term)
+                            ->orWhere('student_name', 'like', $term);
                     });
             });
         }
