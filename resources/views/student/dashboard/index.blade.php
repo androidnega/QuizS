@@ -63,16 +63,16 @@
     </div>
 
     {{-- Device Testing Section --}}
-    <div class="rounded-lg border border-gray-200 bg-white p-3">
-        <h2 class="text-sm font-semibold text-gray-800 mb-2">Test Your Devices</h2>
-        <p class="text-xs text-gray-600 mb-3">Check your microphone and camera before starting a quiz.</p>
+    <div class="rounded-lg border border-gray-200 bg-white p-2">
+        <h2 class="text-xs font-semibold text-gray-800 mb-1">Test Your Devices</h2>
+        <p class="text-xs text-gray-600 mb-2">Check your microphone and camera before starting a quiz.</p>
         
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-2">
             {{-- Microphone Test --}}
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                <div class="flex items-center gap-1.5 mb-1.5">
+                    <div class="flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
                         </svg>
                     </div>
@@ -81,24 +81,24 @@
                     </div>
                 </div>
                 
-                <div id="mic-test-container" class="space-y-2">
-                    <div id="mic-visualizer" class="hidden bg-gray-200 rounded-lg p-2">
+                <div id="mic-test-container" class="space-y-1.5">
+                    <div id="mic-visualizer" class="hidden bg-gray-200 rounded-lg p-1.5">
                         <div class="flex flex-col gap-1" id="mic-bars-container">
                             <!-- Bars will be dynamically created -->
                         </div>
                     </div>
-                    <div id="mic-status" class="text-xs text-gray-600 min-h-[0.75rem]"></div>
-                    <button type="button" id="mic-test-btn" class="w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm">
+                    <div id="mic-status" class="text-xs text-gray-600 min-h-[0.5rem]"></div>
+                    <button type="button" id="mic-test-btn" style="background-color: #1e40af; color: #ffffff;" class="w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow">
                         Start Microphone Test
                     </button>
                 </div>
             </div>
 
             {{-- Camera Test --}}
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                <div class="flex items-center gap-1.5 mb-1.5">
+                    <div class="flex-shrink-0 w-6 h-6 rounded-lg bg-green-100 flex items-center justify-center">
+                        <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
                     </div>
@@ -107,12 +107,12 @@
                     </div>
                 </div>
                 
-                <div id="camera-test-container" class="space-y-2">
-                    <div id="camera-preview" class="hidden bg-gray-200 rounded-lg overflow-hidden" style="height: 80px;">
+                <div id="camera-test-container" class="space-y-1.5">
+                    <div id="camera-preview" class="hidden bg-gray-200 rounded-lg overflow-hidden" style="height: 60px;">
                         <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
                     </div>
-                    <div id="camera-status" class="text-xs text-gray-600 min-h-[0.75rem]"></div>
-                    <button type="button" id="camera-test-btn" class="w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm">
+                    <div id="camera-status" class="text-xs text-gray-600 min-h-[0.5rem]"></div>
+                    <button type="button" id="camera-test-btn" style="background-color: #15803d; color: #ffffff;" class="w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow">
                         Start Camera Test
                     </button>
                 </div>
@@ -262,7 +262,7 @@
                     
                     for (var row = 0; row < rowCount; row++) {
                         var rowDiv = document.createElement('div');
-                        rowDiv.className = 'flex items-end justify-center gap-0.5 h-5';
+                        rowDiv.className = 'flex items-end justify-center gap-0.5 h-4';
                         rowDiv.id = 'mic-row-' + row;
                         
                         var startIdx = row * barsPerRow;
@@ -273,7 +273,7 @@
                             bar.className = 'flex-1 bg-green-500 rounded-t transition-all duration-75 ease-out';
                             bar.style.minHeight = '2px';
                             bar.style.height = '2px';
-                            bar.style.maxHeight = '16px';
+                            bar.style.maxHeight = '12px';
                             rowDiv.appendChild(bar);
                         }
                         
@@ -283,9 +283,11 @@
                 
                 micVisualizer.classList.remove('hidden');
                 micStatus.textContent = 'Microphone is working! Speak to see the levels.';
-                micStatus.className = 'text-xs text-green-600 min-h-[0.75rem]';
+                micStatus.className = 'text-xs text-green-600 min-h-[0.5rem]';
                 micTestBtn.textContent = 'Stop Microphone Test';
-                micTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm';
+                micTestBtn.style.backgroundColor = '#b91c1c';
+                micTestBtn.style.color = '#ffffff';
+                micTestBtn.className = 'w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow';
                 isMicTesting = true;
                 
                 function updateVisualizer() {
@@ -299,7 +301,7 @@
                         var normalizedValue = value / 255;
                         // Reduce max height - use 50% of container
                         var heightPercent = Math.min(50, normalizedValue * 50);
-                        var heightPx = Math.max(2, (heightPercent / 100) * 16); // Max 16px height
+                        var heightPx = Math.max(2, (heightPercent / 100) * 12); // Max 12px height
                         bar.style.height = heightPx + 'px';
                         
                         // Color intensity based on level
@@ -343,7 +345,9 @@
         micVisualizer.classList.add('hidden');
         micStatus.textContent = '';
         micTestBtn.textContent = 'Start Microphone Test';
-        micTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm';
+        micTestBtn.style.backgroundColor = '#1e40af';
+        micTestBtn.style.color = '#ffffff';
+        micTestBtn.className = 'w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow';
         audioContext = null;
         analyser = null;
         microphone = null;
@@ -383,7 +387,9 @@
                 cameraStatus.textContent = 'Camera is working! You can see yourself.';
                 cameraStatus.className = 'text-xs text-green-600 min-h-[1rem]';
                 cameraTestBtn.textContent = 'Stop Camera Test';
-                cameraTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm';
+                cameraTestBtn.style.backgroundColor = '#b91c1c';
+                cameraTestBtn.style.color = '#ffffff';
+                cameraTestBtn.className = 'w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow';
                 isCameraTesting = true;
             })
             .catch(function(err) {
@@ -405,7 +411,9 @@
         cameraPreview.classList.add('hidden');
         cameraStatus.textContent = '';
         cameraTestBtn.textContent = 'Start Camera Test';
-        cameraTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm';
+        cameraTestBtn.style.backgroundColor = '#15803d';
+        cameraTestBtn.style.color = '#ffffff';
+        cameraTestBtn.className = 'w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow';
         isCameraTesting = false;
     }
 
