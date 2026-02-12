@@ -62,6 +62,21 @@ echo "Git: $git\n\n";
 list($out, $code) = $run('fetch origin');
 echo "git fetch origin (exit $code):\n$out\n\n";
 
+// Discard ALL local changes to specific files that commonly conflict
+$conflictFiles = [
+    'resources/views/layouts/dashboard.blade.php',
+    'resources/views/layouts/examiner.blade.php',
+    '.env.example',
+];
+foreach ($conflictFiles as $file) {
+    if (file_exists($baseDir . '/' . $file)) {
+        list($out, $code) = $run('checkout -- ' . escapeshellarg($file));
+        if ($code === 0) {
+            echo "Discarded local changes to: $file\n";
+        }
+    }
+}
+
 // Discard ALL local changes and match remote main (fixes "would be overwritten by merge")
 list($out, $code) = $run('reset --hard origin/main');
 echo "git reset --hard origin/main (exit $code):\n$out\n\n";
