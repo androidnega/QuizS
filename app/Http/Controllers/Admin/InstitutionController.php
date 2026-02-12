@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\Concerns\InteractsWithAdminSession;
 use App\Models\Institution;
+use App\Models\Faculty;
 use App\Services\CloudinaryService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -37,6 +38,7 @@ class InstitutionController extends Controller
      */
     public function edit(Institution $institution): View
     {
+        $institution->load(['faculties.departments']);
         return view('admin.institutions.edit', compact('institution'));
     }
 

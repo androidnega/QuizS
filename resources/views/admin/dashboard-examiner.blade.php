@@ -13,44 +13,21 @@
     
     {{-- Faculty/Department Notice --}}
     @if(isset($needsFacultyDepartment) && $needsFacultyDepartment)
-    <div id="faculty-department-notice" class="rounded-lg border border-yellow-300 bg-yellow-50 p-4 mb-6" role="alert">
-        <div class="flex items-start gap-3">
-            <div class="flex-shrink-0 mt-0.5">
-                <svg class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-yellow-900">Complete Your Profile</p>
-                <p class="mt-1 text-sm text-yellow-800">Please select your faculty and department to continue. This information is required for your account.</p>
-                <form id="faculty-department-form" class="mt-4 space-y-3" onsubmit="updateFacultyDepartment(event)">
-                    @csrf
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label for="faculty_select" class="block text-xs font-medium text-yellow-900 mb-1">Faculty</label>
-                            <select name="faculty_id" id="faculty_select" required class="input w-full text-sm @error('faculty_id') border-red-500 @enderror" onchange="loadDepartments(this.value)">
-                                <option value="">— Select Faculty —</option>
-                                @if($examiner && $examiner->institution_id)
-                                    @foreach(\App\Models\Faculty::where('institution_id', $examiner->institution_id)->orderBy('name')->get() as $faculty)
-                                        <option value="{{ $faculty->id }}" {{ old('faculty_id', $examiner->faculty_id) == $faculty->id ? 'selected' : '' }}>{{ $faculty->name }}</option>
-                                    @endforeach
-                                @endif
-                            </select>
-                        </div>
-                        <div>
-                            <label for="department_select" class="block text-xs font-medium text-yellow-900 mb-1">Department</label>
-                            <select name="department_id" id="department_select" required class="input w-full text-sm @error('department_id') border-red-500 @enderror" disabled>
-                                <option value="">— Select Department —</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="submit" class="btn btn-primary text-sm px-4 py-2">Save</button>
-                        <span id="faculty-dept-error" class="text-xs text-red-600 hidden"></span>
-                    </div>
-                </form>
-            </div>
+    <div id="faculty-department-notice" class="rounded-lg border border-yellow-200 bg-yellow-50 p-4 flex items-start gap-3" role="alert">
+        <div class="flex-shrink-0 mt-0.5">
+            <svg class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
         </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-yellow-900">Complete Your Profile</p>
+            <p class="mt-1 text-sm text-yellow-800">Please select your faculty and department to continue. <a href="{{ route('dashboard.users.edit', $examiner) }}" class="font-semibold underline hover:text-yellow-900">Update your profile here</a>.</p>
+        </div>
+        <button type="button" onclick="dismissFacultyDepartmentNotice()" class="flex-shrink-0 text-yellow-600 hover:text-yellow-800 transition-colors" aria-label="Dismiss">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
     </div>
     @endif
     
@@ -172,94 +149,36 @@
         warning.style.display = 'none';
     }
     
-    // Make dismiss function global
-    window.dismissLowSmsWarning = dismissLowSmsWarning;
-})();
-
-// Faculty/Department form handling
-function loadDepartments(facultyId) {
-    const deptSelect = document.getElementById('department_select');
-    deptSelect.innerHTML = '<option value="">Loading...</option>';
-    deptSelect.disabled = true;
+    // Faculty/Department Notice Dismissal (12-18 hours)
+    const FACULTY_NOTICE_KEY = 'faculty_department_notice_dismissed';
+    const FACULTY_DISMISS_HOURS = 15;
     
-    if (!facultyId) {
-        deptSelect.innerHTML = '<option value="">— Select Department —</option>';
-        return;
+    function dismissFacultyDepartmentNotice() {
+        const notice = document.getElementById('faculty-department-notice');
+        if (notice) {
+            notice.style.display = 'none';
+            const dismissUntil = Date.now() + (FACULTY_DISMISS_HOURS * 60 * 60 * 1000);
+            localStorage.setItem(FACULTY_NOTICE_KEY, dismissUntil.toString());
+        }
     }
     
-    fetch(`{{ route('dashboard.departments.by-faculty', ['faculty' => '__FACULTY_ID__']) }}`.replace('__FACULTY_ID__', facultyId), {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        deptSelect.innerHTML = '<option value="">— Select Department —</option>';
-        data.forEach(dept => {
-            const option = document.createElement('option');
-            option.value = dept.id;
-            option.textContent = dept.name;
-            deptSelect.appendChild(option);
-        });
-        deptSelect.disabled = false;
-    })
-    .catch(error => {
-        console.error('Error loading departments:', error);
-        deptSelect.innerHTML = '<option value="">Error loading departments</option>';
-    });
-}
-
-function updateFacultyDepartment(event) {
-    event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
-    const errorEl = document.getElementById('faculty-dept-error');
-    const submitBtn = form.querySelector('button[type="submit"]');
+    function shouldShowFacultyNotice() {
+        const dismissed = localStorage.getItem(FACULTY_NOTICE_KEY);
+        if (!dismissed) return true;
+        const dismissUntil = parseInt(dismissed, 10);
+        return Date.now() > dismissUntil;
+    }
     
-    errorEl.classList.add('hidden');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving...';
+    // Hide notice if dismissed and still valid
+    const facultyNotice = document.getElementById('faculty-department-notice');
+    if (facultyNotice && !shouldShowFacultyNotice()) {
+        facultyNotice.style.display = 'none';
+    }
     
-    fetch('{{ route("dashboard.examiner.update-faculty-department") }}', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Hide notice and reload page
-            document.getElementById('faculty-department-notice').style.display = 'none';
-            window.location.reload();
-        } else {
-            errorEl.textContent = data.message || 'Failed to update. Please try again.';
-            errorEl.classList.remove('hidden');
-        }
-    })
-    .catch(error => {
-        errorEl.textContent = 'Network error. Please try again.';
-        errorEl.classList.remove('hidden');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Save';
-    });
-}
-
-// Load departments if faculty is pre-selected
-@if($examiner && $examiner->faculty_id)
-    document.addEventListener('DOMContentLoaded', function() {
-        loadDepartments({{ $examiner->faculty_id }});
-        @if($examiner->department_id)
-            setTimeout(() => {
-                document.getElementById('department_select').value = {{ $examiner->department_id }};
-            }, 500);
-        @endif
-    });
-@endif
+    // Make dismiss functions global
+    window.dismissLowSmsWarning = dismissLowSmsWarning;
+    window.dismissFacultyDepartmentNotice = dismissFacultyDepartmentNotice;
+})();
 </script>
 @endpush
 @endsection

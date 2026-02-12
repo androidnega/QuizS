@@ -51,17 +51,22 @@
                                 </td>
                                 <td class="px-3 py-2 text-sm text-gray-600 break-words" title="{{ $u->institution?->name ?? '—' }}">{{ $u->institution?->name ?? '—' }}</td>
                                 <td class="px-3 py-2 text-sm text-gray-600">
-                                    @if($u->courses->isNotEmpty())
-                                        <div class="flex flex-wrap gap-1.5">
-                                            @foreach($u->courses as $course)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200 whitespace-nowrap">
+                                    <div class="flex flex-wrap gap-1.5 min-w-0">
+                                        @if($u->courses->isNotEmpty())
+                                            @foreach($u->courses->take(3) as $course)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 truncate max-w-[140px]" title="{{ $course->name }}">
                                                     {{ $course->name }}
                                                 </span>
                                             @endforeach
-                                        </div>
-                                    @else
-                                        <span class="text-gray-400">—</span>
-                                    @endif
+                                            @if($u->courses->count() > 3)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                                                    +{{ $u->courses->count() - 3 }}
+                                                </span>
+                                            @endif
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 @if(isset($isSuperAdmin) && $isSuperAdmin)
                                 <td class="px-3 py-2 text-sm">

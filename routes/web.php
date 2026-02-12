@@ -232,6 +232,12 @@ Route::middleware('admin.auth')->group(function () {
             Route::get('/institutions', [\App\Http\Controllers\Admin\InstitutionController::class, 'index'])->name('institutions.index');
             Route::get('/institutions/{institution}/edit', [\App\Http\Controllers\Admin\InstitutionController::class, 'edit'])->name('institutions.edit');
             Route::put('/institutions/{institution}', [\App\Http\Controllers\Admin\InstitutionController::class, 'update'])->name('institutions.update');
+            // Faculty and Department management
+            Route::post('/faculties', [\App\Http\Controllers\Admin\FacultyController::class, 'store'])->name('faculties.store');
+            Route::delete('/faculties/{faculty}', [\App\Http\Controllers\Admin\FacultyController::class, 'destroy'])->name('faculties.destroy');
+            Route::post('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'store'])->name('departments.store');
+            Route::delete('/departments/{department}', [\App\Http\Controllers\Admin\DepartmentController::class, 'destroy'])->name('departments.destroy');
+            Route::get('/faculties/{faculty}/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'byFaculty'])->name('departments.by-faculty');
             Route::post('/settings/update-mode', [SettingsController::class, 'toggleUpdateMode'])->name('settings.update-mode');
             Route::post('/settings/update-estimated-end', [SettingsController::class, 'setUpdateEstimatedEnd'])->name('settings.update-estimated-end');
             Route::get('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'index'])->name('system.reset.index');
@@ -254,21 +260,6 @@ Route::middleware('admin.auth')->group(function () {
             Route::post('/users/update-sms', [\App\Http\Controllers\Admin\UserManagementController::class, 'updateSms'])->name('users.update-sms');
             Route::post('/users/{user}/revoke', [\App\Http\Controllers\Admin\UserManagementController::class, 'revoke'])->name('users.revoke');
             Route::delete('/users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])->name('users.destroy');
-            
-            // Faculties and Departments
-            Route::get('/faculties', [\App\Http\Controllers\Admin\FacultyController::class, 'index'])->name('faculties.index');
-            Route::post('/faculties', [\App\Http\Controllers\Admin\FacultyController::class, 'store'])->name('faculties.store');
-            Route::put('/faculties/{faculty}', [\App\Http\Controllers\Admin\FacultyController::class, 'update'])->name('faculties.update');
-            Route::delete('/faculties/{faculty}', [\App\Http\Controllers\Admin\FacultyController::class, 'destroy'])->name('faculties.destroy');
-            
-            Route::get('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'index'])->name('departments.index');
-            Route::post('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'store'])->name('departments.store');
-            Route::put('/departments/{department}', [\App\Http\Controllers\Admin\DepartmentController::class, 'update'])->name('departments.update');
-            Route::delete('/departments/{department}', [\App\Http\Controllers\Admin\DepartmentController::class, 'destroy'])->name('departments.destroy');
-            Route::get('/departments/by-faculty/{faculty}', [\App\Http\Controllers\Admin\DepartmentController::class, 'getByFaculty'])->name('departments.by-faculty');
         });
-        
-        // Examiner faculty/department update
-        Route::post('/examiner/update-faculty-department', [\App\Http\Controllers\Admin\ExaminerProfileController::class, 'updateFacultyDepartment'])->name('examiner.update-faculty-department');
     });
 });

@@ -51,13 +51,35 @@
                 </div>
                 <div id="institution-field">
                     <label for="institution_id" class="block text-sm font-medium text-gray-700 mb-1">Institution (for Examiner)</label>
-                    <select name="institution_id" id="institution_id" class="input w-full max-w-full min-w-0 @error('institution_id') border-danger-500 @enderror">
+                    <select name="institution_id" id="institution_id" class="input w-full max-w-full min-w-0 @error('institution_id') border-danger-500 @enderror" onchange="loadFaculties()">
                         <option value="">— Select institution —</option>
                         @foreach($institutions ?? [] as $inst)
                             <option value="{{ $inst->id }}" {{ old('institution_id', $user->institution_id) == $inst->id ? 'selected' : '' }}>{{ $inst->display_name }}</option>
                         @endforeach
                     </select>
                     @error('institution_id')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+                </div>
+                @endif
+                @if($user->isExaminer() || (auth()->user()->isSuperAdmin() && $user->isExaminer()))
+                <div id="faculty-field">
+                    <label for="faculty_id" class="block text-sm font-medium text-gray-700 mb-1">Faculty</label>
+                    <select name="faculty_id" id="faculty_id" class="input w-full max-w-full min-w-0 @error('faculty_id') border-danger-500 @enderror" onchange="loadDepartments()">
+                        <option value="">— Select faculty —</option>
+                        @foreach($faculties ?? [] as $faculty)
+                            <option value="{{ $faculty->id }}" {{ old('faculty_id', $user->faculty_id) == $faculty->id ? 'selected' : '' }}>{{ $faculty->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('faculty_id')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
+                </div>
+                <div id="department-field">
+                    <label for="department_id" class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                    <select name="department_id" id="department_id" class="input w-full max-w-full min-w-0 @error('department_id') border-danger-500 @enderror">
+                        <option value="">— Select department —</option>
+                        @foreach($departments ?? [] as $dept)
+                            <option value="{{ $dept->id }}" {{ old('department_id', $user->department_id) == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('department_id')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
                 @endif
                 <div id="course-field" class="min-w-0">
@@ -94,4 +116,86 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+const currentInstitutionId = {{ $user->institution_id ?? 'null' }};
+const currentFacultyId = {{ $user->faculty_id ?? 'null' }};
+
+function loadFaculties() {
+    const institutionId = document.getElementById('institution_id').value;
+    const facultySelect = document.getElementById('faculty_id');
+    const departmentSelect = document.getElementById('department_id');
+    
+    // Clear options
+    facultySelect.innerHTML = '<option value="">— Select faculty —</option>';
+    departmentSelect.innerHTML = '<option value="">— Select department —</option>';
+    
+    if (!institutionId) {
+        return;
+    }
+    
+    // Fetch faculties for this institution
+    fetch(`/dashboard/institutions/${institutionId}/edit`)
+        .then(response => response.text())
+        .then(html => {
+            // Parse faculties from the institution edit page or use API
+            // For now, we'll reload the page with the new institution
+            // In a real implementation, you'd have an API endpoint
+            if (currentInstitutionId != institutionId) {
+                // Reset faculty and department
+                facultySelect.value = '';
+                departmentSelect.value = '';
+            }
+        })
+        .catch(error => console.error('Error loading faculties:', error));
+    
+    // Load faculties via AJAX (we'll need to add an endpoint or use existing data)
+    // For now, reload page to get fresh data
+    if (currentInstitutionId != institutionId) {
+        window.location.href = `{{ route('dashboard.users.edit', $user) }}?institution_id=${institutionId}`;
+    }
+}
+
+function loadDepartments() {
+    const facultyId = document.getElementById('faculty_id').value;
+    const departmentSelect = document.getElementById('department_id');
+    
+    // Clear options
+    departmentSelect.innerHTML = '<option value="">— Select department —</option>';
+    
+    if (!facultyId) {
+        return;
+    }
+    
+    // Fetch departments for this faculty
+    fetch(`{{ route('dashboard.departments.by-faculty', '') }}/${facultyId}`, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.departments) {
+                data.departments.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept.id;
+                    option.textContent = dept.name;
+                    if (currentFacultyId == facultyId && dept.id == {{ $user->department_id ?? 'null' }}) {
+                        option.selected = true;
+                    }
+                    departmentSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Error loading departments:', error));
+}
+
+// Load departments on page load if faculty is selected
+@if($user->faculty_id)
+    loadDepartments();
+@endif
+</script>
+@endpush
 @endsection

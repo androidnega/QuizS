@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\Concerns\InteractsWithAdminSession;
 use App\Models\Course;
 use App\Models\Institution;
+use App\Models\Faculty;
+use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -140,14 +142,27 @@ class UserManagementController extends Controller
             abort(403, 'You can only edit your own profile.');
         }
         
-        $user->load(['courses', 'institution']);
+        $user->load(['courses', 'institution', 'faculty', 'department']);
         $courseIds = $currentUser ? $currentUser->assignedCourseIds() : [];
         $courses = Course::where('is_archived', false)
             ->whereIn('id', $courseIds)
             ->orderBy('name')
             ->get();
         $institutions = Institution::orderBy('name')->get();
-        return view('admin.users.edit', compact('user', 'courses', 'institutions', 'isSuperAdmin'));
+        
+        // Load faculties and departments for examiner
+        $faculties = collect();
+        $departments = collect();
+        $institutionIdForFaculties = $request->get('institution_id', $user->institution_id);
+        if ($institutionIdForFaculties) {
+            $faculties = Faculty::where('institution_id', $institutionIdForFaculties)->orderBy('name')->get();
+            $facultyIdForDepartments = $request->get('faculty_id', $user->faculty_id);
+            if ($facultyIdForDepartments) {
+                $departments = Department::where('faculty_id', $facultyIdForDepartments)->orderBy('name')->get();
+            }
+        }
+        
+        return view('admin.users.edit', compact('user', 'courses', 'institutions', 'faculties', 'departments', 'isSuperAdmin'));
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -218,6 +233,35 @@ class UserManagementController extends Controller
                 $user->sms_allocation = max(0, (int) $request->sms_allocation);
             }
         }
+        
+        // Handle faculty and department (both Super Admin and Examiners can set)
+        if ($request->filled('faculty_id')) {
+            $user->faculty_id = $request->faculty_id;
+            // Reset department if faculty changes and new department doesn't belong to new faculty
+            if ($request->filled('department_id')) {
+                $department = Department::find($request->department_id);
+                if ($department && $department->faculty_id == $request->faculty_id) {
+                    $user->department_id = $request->department_id;
+                } else {
+                    $user->department_id = null;
+                }
+            } else {
+                $user->department_id = null;
+            }
+        } elseif ($request->has('faculty_id') && $request->faculty_id === '') {
+            $user->faculty_id = null;
+            $user->department_id = null;
+        }
+        
+        if ($request->filled('department_id') && $user->faculty_id) {
+            $department = Department::find($request->department_id);
+            if ($department && $department->faculty_id == $user->faculty_id) {
+                $user->department_id = $request->department_id;
+            }
+        } elseif ($request->has('department_id') && $request->department_id === '') {
+            $user->department_id = null;
+        }
+        
         $user->save();
 
         if ($isSuperAdmin && $user->isExaminer() && $request->filled('course_ids')) {
