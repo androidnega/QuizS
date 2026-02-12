@@ -34,6 +34,25 @@ class DepartmentController extends Controller
         ]);
     }
 
+    public function update(Request $request, Department $department): JsonResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $department->update([
+            'name' => trim($request->name),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'department' => [
+                'id' => $department->id,
+                'name' => $department->name,
+            ],
+        ]);
+    }
+
     public function destroy(Department $department): JsonResponse
     {
         $department->delete();

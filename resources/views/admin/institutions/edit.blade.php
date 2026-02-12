@@ -49,43 +49,97 @@
     </div>
 
     {{-- Faculties and Departments Management --}}
-    <div class="card p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Faculties and Departments</h2>
+    <div class="card p-4 md:p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <svg class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                Faculties and Departments
+            </h2>
+            <button type="button" onclick="openAddFacultyModal()" class="btn btn-sm btn-primary flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Faculty
+            </button>
+        </div>
         
-        {{-- Faculties Section --}}
-        <div class="mb-6">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-medium text-gray-700">Faculties</h3>
-                <button type="button" onclick="openAddFacultyModal()" class="btn btn-sm btn-primary">Add Faculty</button>
-            </div>
-            <div id="faculties-list" class="space-y-2">
-                @forelse($institution->faculties as $faculty)
-                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg" data-faculty-id="{{ $faculty->id }}">
-                        <div class="flex-1">
-                            <span class="font-medium text-gray-900">{{ $faculty->name }}</span>
-                            <span class="text-xs text-gray-500 ml-2">({{ $faculty->departments->count() }} departments)</span>
+        {{-- Faculties List --}}
+        <div id="faculties-list" class="space-y-3">
+            @forelse($institution->faculties as $faculty)
+                <div class="border border-gray-200 rounded-lg overflow-hidden hover:border-gray-300 transition-colors" data-faculty-id="{{ $faculty->id }}">
+                    {{-- Faculty Header --}}
+                    <div class="bg-gray-50 px-3 py-2.5 flex items-center justify-between gap-3">
+                        <div class="flex-1 min-w-0 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            <span class="font-medium text-gray-900 truncate" id="faculty-name-{{ $faculty->id }}">{{ $faculty->name }}</span>
+                            <span class="text-xs text-gray-500 flex-shrink-0">({{ $faculty->departments->count() }})</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="openAddDepartmentModal({{ $faculty->id }}, '{{ $faculty->name }}')" class="text-xs px-2 py-1 text-primary-600 hover:bg-primary-50 rounded">Add Department</button>
-                            <button type="button" onclick="deleteFaculty({{ $faculty->id }})" class="text-xs px-2 py-1 text-danger-600 hover:bg-danger-50 rounded">Delete</button>
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                            <button type="button" onclick="openEditFacultyModal({{ $faculty->id }}, '{{ addslashes($faculty->name) }}')" 
+                                class="p-1.5 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors" 
+                                title="Edit Faculty">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </button>
+                            <button type="button" onclick="openAddDepartmentModal({{ $faculty->id }}, '{{ addslashes($faculty->name) }}')" 
+                                class="p-1.5 text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded transition-colors" 
+                                title="Add Department">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                            </button>
+                            <button type="button" onclick="deleteFaculty({{ $faculty->id }})" 
+                                class="p-1.5 text-danger-600 hover:text-danger-700 hover:bg-danger-50 rounded transition-colors" 
+                                title="Delete Faculty">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
                         </div>
-                        @if($faculty->departments->isNotEmpty())
-                            <div class="w-full mt-2 pt-2 border-t border-gray-100">
-                                <div class="flex flex-wrap gap-1.5">
-                                    @foreach($faculty->departments as $dept)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">
-                                            {{ $dept->name }}
-                                            <button type="button" onclick="deleteDepartment({{ $dept->id }})" class="ml-1.5 text-danger-600 hover:text-danger-800">×</button>
-                                        </span>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
                     </div>
-                @empty
-                    <p class="text-sm text-gray-500 py-2">No faculties added yet.</p>
-                @endforelse
-            </div>
+                    
+                    {{-- Departments List --}}
+                    @if($faculty->departments->isNotEmpty())
+                        <div class="px-3 py-2 bg-white">
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach($faculty->departments as $dept)
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors group" id="dept-badge-{{ $dept->id }}">
+                                        <span id="dept-name-{{ $dept->id }}">{{ $dept->name }}</span>
+                                        <button type="button" onclick="openEditDepartmentModal({{ $dept->id }}, '{{ addslashes($dept->name) }}', {{ $faculty->id }})" 
+                                            class="opacity-0 group-hover:opacity-100 text-primary-600 hover:text-primary-700 transition-opacity" 
+                                            title="Edit">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                        </button>
+                                        <button type="button" onclick="deleteDepartment({{ $dept->id }})" 
+                                            class="opacity-0 group-hover:opacity-100 text-danger-600 hover:text-danger-700 transition-opacity" 
+                                            title="Delete">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <div class="px-3 py-2 bg-white text-xs text-gray-400 italic">No departments yet</div>
+                    @endif
+                </div>
+            @empty
+                <div class="text-center py-8 text-gray-500">
+                    <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <p class="text-sm">No faculties added yet.</p>
+                </div>
+            @endforelse
         </div>
     </div>
 </div>
@@ -136,6 +190,67 @@
             <div class="flex gap-3 pt-2">
                 <button type="submit" class="btn btn-primary flex-1">Add Department</button>
                 <button type="button" onclick="closeAddDepartmentModal()" class="btn btn-secondary flex-1">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Edit Faculty Modal --}}
+<div id="editFacultyModal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit Faculty
+            </h2>
+            <button type="button" onclick="closeEditFacultyModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="editFacultyForm" class="p-6 space-y-4">
+            <div>
+                <label for="edit_faculty_name" class="block text-sm font-medium text-gray-700 mb-1">Faculty Name</label>
+                <input type="text" id="edit_faculty_name" name="name" required class="input w-full" placeholder="e.g. Faculty of Engineering">
+            </div>
+            <input type="hidden" id="edit_faculty_id" name="faculty_id">
+            <div id="editFacultyError" class="hidden bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800"></div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="btn btn-primary flex-1">Update Faculty</button>
+                <button type="button" onclick="closeEditFacultyModal()" class="btn btn-secondary flex-1">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Edit Department Modal --}}
+<div id="editDepartmentModal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit Department
+            </h2>
+            <button type="button" onclick="closeEditDepartmentModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <form id="editDepartmentForm" class="p-6 space-y-4">
+            <div>
+                <p class="text-sm text-gray-600 mb-2">Faculty: <strong id="edit_department_faculty_name"></strong></p>
+            </div>
+            <div>
+                <label for="edit_department_name" class="block text-sm font-medium text-gray-700 mb-1">Department Name</label>
+                <input type="text" id="edit_department_name" name="name" required class="input w-full" placeholder="e.g. Computer Science">
+            </div>
+            <input type="hidden" id="edit_department_id" name="department_id">
+            <div id="editDepartmentError" class="hidden bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800"></div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="btn btn-primary flex-1">Update Department</button>
+                <button type="button" onclick="closeEditDepartmentModal()" class="btn btn-secondary flex-1">Cancel</button>
             </div>
         </form>
     </div>
@@ -288,6 +403,108 @@ async function deleteDepartment(departmentId) {
         alert('Network error. Please try again.');
     }
 }
+
+function openEditFacultyModal(facultyId, facultyName) {
+    document.getElementById('editFacultyModal').classList.remove('hidden');
+    document.getElementById('editFacultyModal').classList.add('flex');
+    document.getElementById('edit_faculty_id').value = facultyId;
+    document.getElementById('edit_faculty_name').value = facultyName;
+    document.getElementById('edit_faculty_name').focus();
+    document.getElementById('editFacultyError').classList.add('hidden');
+}
+
+function closeEditFacultyModal() {
+    document.getElementById('editFacultyModal').classList.add('hidden');
+    document.getElementById('editFacultyModal').classList.remove('flex');
+    document.getElementById('editFacultyForm').reset();
+    document.getElementById('editFacultyError').classList.add('hidden');
+}
+
+function openEditDepartmentModal(departmentId, departmentName, facultyId) {
+    document.getElementById('editDepartmentModal').classList.remove('hidden');
+    document.getElementById('editDepartmentModal').classList.add('flex');
+    document.getElementById('edit_department_id').value = departmentId;
+    document.getElementById('edit_department_name').value = departmentName;
+    const facultyName = document.querySelector(`[data-faculty-id="${facultyId}"] .font-medium`).textContent;
+    document.getElementById('edit_department_faculty_name').textContent = facultyName;
+    document.getElementById('edit_department_name').focus();
+    document.getElementById('editDepartmentError').classList.add('hidden');
+}
+
+function closeEditDepartmentModal() {
+    document.getElementById('editDepartmentModal').classList.add('hidden');
+    document.getElementById('editDepartmentModal').classList.remove('flex');
+    document.getElementById('editDepartmentForm').reset();
+    document.getElementById('editDepartmentError').classList.add('hidden');
+}
+
+document.getElementById('editFacultyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const facultyId = document.getElementById('edit_faculty_id').value;
+    const name = document.getElementById('edit_faculty_name').value.trim();
+    const errorEl = document.getElementById('editFacultyError');
+    
+    errorEl.classList.add('hidden');
+    
+    try {
+        const response = await fetch(`{{ route('dashboard.faculties.update', '') }}/${facultyId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                name: name
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            location.reload();
+        } else {
+            errorEl.textContent = data.message || 'Failed to update faculty';
+            errorEl.classList.remove('hidden');
+        }
+    } catch (error) {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.remove('hidden');
+    }
+});
+
+document.getElementById('editDepartmentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const departmentId = document.getElementById('edit_department_id').value;
+    const name = document.getElementById('edit_department_name').value.trim();
+    const errorEl = document.getElementById('editDepartmentError');
+    
+    errorEl.classList.add('hidden');
+    
+    try {
+        const response = await fetch(`{{ route('dashboard.departments.update', '') }}/${departmentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                name: name
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            location.reload();
+        } else {
+            errorEl.textContent = data.message || 'Failed to update department';
+            errorEl.classList.remove('hidden');
+        }
+    } catch (error) {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.remove('hidden');
+    }
+});
 </script>
 @endpush
 @endsection

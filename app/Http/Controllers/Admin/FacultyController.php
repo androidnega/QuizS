@@ -35,6 +35,25 @@ class FacultyController extends Controller
         ]);
     }
 
+    public function update(Request $request, Faculty $faculty): JsonResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $faculty->update([
+            'name' => trim($request->name),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'faculty' => [
+                'id' => $faculty->id,
+                'name' => $faculty->name,
+            ],
+        ]);
+    }
+
     public function destroy(Faculty $faculty): JsonResponse
     {
         $faculty->delete();
