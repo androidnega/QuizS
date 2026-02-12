@@ -1158,13 +1158,16 @@ class QuizManagementController extends Controller
                 throw new \Exception('Failed to create DOCX file');
             }
             
+            // Generate filename with class name
+            $classSlug = $classGroupName !== '—' ? \Illuminate\Support\Str::slug($classGroupName) : 'class';
             $courseSlug = \Illuminate\Support\Str::slug($courseName ?: 'course');
             $dateStr = now()->format('Y-m-d');
-            $filename = 'questions-' . $courseSlug . '-' . $dateStr . '.docx';
+            $filename = $classSlug . '-' . $courseSlug . '-questions-' . $dateStr . '.docx';
             
-            // Return download with proper headers
+            // Return download with proper headers to force .docx download
             return response()->download($tempFile, $filename, [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ])->deleteFileAfterSend(true);
             
         } catch (\Throwable $e) {
