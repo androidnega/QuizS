@@ -27,9 +27,6 @@ use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\Shared\Html;
-use PhpOffice\PhpWord\Style\Font;
-use PhpOffice\PhpWord\Style\Paragraph;
 
 class QuizManagementController extends Controller
 {
@@ -1050,8 +1047,8 @@ class QuizManagementController extends Controller
         $examYear = $currentYear . '/' . $nextYear;
         
         // Check if PhpWord is available
-        if (!class_exists(PhpWord::class)) {
-            abort(500, 'PhpWord library is not installed. Please run: composer require phpoffice/phpword');
+        if (!class_exists(\PhpOffice\PhpWord\PhpWord::class)) {
+            return redirect()->back()->with('error', 'DOCX export requires PhpWord library. Please run: composer require phpoffice/phpword');
         }
         
         try {
