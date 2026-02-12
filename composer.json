@@ -6,17 +6,17 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "barryvdh/laravel-dompdf": "^3.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^11.0",
-        "smalot/pdfparser": "^2.0",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.8",
-        "barryvdh/laravel-dompdf": "^3.0",
         "maatwebsite/excel": "^3.1",
+        "openai-php/client": "^0.6",
         "phpoffice/phpspreadsheet": "^1.24",
-        "phpoffice/phpword": "^1.2",
-        "openai-php/client": "^0.6"
+        "phpoffice/phpword": "^1.4",
+        "smalot/pdfparser": "^2.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
