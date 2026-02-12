@@ -3,8 +3,9 @@
  * TTU Faculties and Departments Seeder Script
  * 
  * This script seeds faculties and departments for Takoradi Technical University (TTU)
+ * Auto-deletes after successful execution.
  * 
- * Access via: https://quizsnap.ausweblabs.com/seed-ttu-data.php?key=QuizSnapMigrations2026&run=yes
+ * Access via: https://quizsnap.ausweblabs.com/seed-ttu-faculties-depts.php?key=QuizSnapMigrations2026&run=yes
  * 
  * SECURITY: Uses the same key as migration script
  */
@@ -24,6 +25,9 @@ if ($key !== $secret || $run !== 'yes') {
 
 // Set execution time limit
 set_time_limit(300);
+
+// Store script path for deletion
+$scriptPath = __FILE__;
 
 // Bootstrap Laravel
 require __DIR__ . '/../vendor/autoload.php';
@@ -88,6 +92,12 @@ try {
     // Flush output buffer
     ob_end_flush();
     
+    // Auto-delete this script after successful execution
+    if (file_exists($scriptPath)) {
+        @unlink($scriptPath);
+        echo "\n🗑️  Script auto-deleted.\n";
+    }
+    
 } catch (Exception $e) {
     // Clean any buffered output
     ob_end_clean();
@@ -98,4 +108,6 @@ try {
     // Output plain text error
     echo "\n❌ Error: " . $e->getMessage() . "\n";
     echo "\nStack trace:\n" . $e->getTraceAsString() . "\n";
+    
+    // Don't delete on error - let user see the error and retry
 }

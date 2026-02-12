@@ -28,6 +28,9 @@ if ($key !== $secret || $run !== 'yes') {
 // Set execution time limit
 set_time_limit(300);
 
+// Store script path for deletion
+$scriptPath = __FILE__;
+
 // Bootstrap Laravel
 require __DIR__ . '/../vendor/autoload.php';
 $app = require_once __DIR__ . '/../bootstrap/app.php';
@@ -79,6 +82,12 @@ try {
     
     // Flush output buffer
     ob_end_flush();
+    
+    // Auto-delete this script after successful execution
+    if (file_exists($scriptPath)) {
+        @unlink($scriptPath);
+        echo "\n🗑️  Script auto-deleted.\n";
+    }
     
 } catch (Exception $e) {
     // Clean any buffered output (including potential HTML from Ignition)
