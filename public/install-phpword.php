@@ -155,12 +155,6 @@ if ($returnVar1 === 0) {
     $finalReturnVar = $returnVar;
 }
 
-foreach ($output as $line) {
-    echo htmlspecialchars($line) . "\n";
-}
-
-echo "\n" . str_repeat('=', 70) . "\n";
-
 if ($finalReturnVar === 0) {
     echo "\n<p class='success'><strong>✓ SUCCESS!</strong> PhpWord installed successfully.</p>\n";
     
@@ -182,7 +176,7 @@ if ($finalReturnVar === 0) {
     
     echo "<p class='info'><strong>IMPORTANT:</strong> Delete this file (install-phpword.php) now for security!</p>\n";
 } else {
-    echo "\n<p class='error'><strong>✗ ERROR:</strong> Composer command failed with exit code {$returnVar}</p>\n";
+    echo "\n<p class='error'><strong>✗ ERROR:</strong> Composer command failed with exit code {$finalReturnVar}</p>\n";
     echo "<p class='info'>Try running composer manually or check server logs.</p>\n";
 }
 
