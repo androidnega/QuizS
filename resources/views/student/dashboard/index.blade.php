@@ -88,7 +88,7 @@
                         </div>
                     </div>
                     <div id="mic-status" class="text-xs text-gray-600 min-h-[0.75rem]"></div>
-                    <button type="button" id="mic-test-btn" class="w-full px-2 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">
+                    <button type="button" id="mic-test-btn" class="w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm">
                         Start Microphone Test
                     </button>
                 </div>
@@ -112,7 +112,7 @@
                         <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
                     </div>
                     <div id="camera-status" class="text-xs text-gray-600 min-h-[0.75rem]"></div>
-                    <button type="button" id="camera-test-btn" class="w-full px-2 py-1.5 rounded-lg text-xs font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">
+                    <button type="button" id="camera-test-btn" class="w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm">
                         Start Camera Test
                     </button>
                 </div>
@@ -285,7 +285,7 @@
                 micStatus.textContent = 'Microphone is working! Speak to see the levels.';
                 micStatus.className = 'text-xs text-green-600 min-h-[0.75rem]';
                 micTestBtn.textContent = 'Stop Microphone Test';
-                micTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis';
+                micTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm';
                 isMicTesting = true;
                 
                 function updateVisualizer() {
@@ -343,7 +343,7 @@
         micVisualizer.classList.add('hidden');
         micStatus.textContent = '';
         micTestBtn.textContent = 'Start Microphone Test';
-        micTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis';
+        micTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm';
         audioContext = null;
         analyser = null;
         microphone = null;
@@ -383,7 +383,7 @@
                 cameraStatus.textContent = 'Camera is working! You can see yourself.';
                 cameraStatus.className = 'text-xs text-green-600 min-h-[1rem]';
                 cameraTestBtn.textContent = 'Stop Camera Test';
-                cameraTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis';
+                cameraTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm';
                 isCameraTesting = true;
             })
             .catch(function(err) {
@@ -405,7 +405,7 @@
         cameraPreview.classList.add('hidden');
         cameraStatus.textContent = '';
         cameraTestBtn.textContent = 'Start Camera Test';
-        cameraTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis';
+        cameraTestBtn.className = 'w-full px-2 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors whitespace-nowrap overflow-hidden text-ellipsis shadow-sm';
         isCameraTesting = false;
     }
 
