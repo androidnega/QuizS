@@ -997,16 +997,20 @@ class QuizManagementController extends Controller
             $examDate = now()->format('F j, Y');
         }
         
-        // Format duration properly
+        // Format duration properly - show as MINUTES if less than 60, otherwise HOURS
         $durationMinutes = $quiz->duration_minutes ?? 120;
-        $hours = floor($durationMinutes / 60);
-        $minutes = $durationMinutes % 60;
-        if ($hours > 0 && $minutes > 0) {
-            $duration = $hours . ' HOUR' . ($hours > 1 ? 'S' : '') . ' ' . $minutes . ' MINUTE' . ($minutes > 1 ? 'S' : '');
-        } elseif ($hours > 0) {
-            $duration = $hours . ' HOUR' . ($hours > 1 ? 'S' : '');
+        if ($durationMinutes < 60) {
+            $duration = $durationMinutes . ' MINUTE' . ($durationMinutes > 1 ? 'S' : '');
         } else {
-            $duration = $minutes . ' MINUTE' . ($minutes > 1 ? 'S' : '');
+            $hours = floor($durationMinutes / 60);
+            $minutes = $durationMinutes % 60;
+            if ($hours > 0 && $minutes > 0) {
+                $duration = $hours . ' HOUR' . ($hours > 1 ? 'S' : '') . ' ' . $minutes . ' MINUTE' . ($minutes > 1 ? 'S' : '');
+            } elseif ($hours > 0) {
+                $duration = $hours . ' HOUR' . ($hours > 1 ? 'S' : '');
+            } else {
+                $duration = $minutes . ' MINUTE' . ($minutes > 1 ? 'S' : '');
+            }
         }
         
         $institutionName = Setting::getValue(Setting::KEY_INSTITUTION_NAME, 'TAKORADI TECHNICAL UNIVERSITY');
