@@ -95,6 +95,7 @@
                     @error('institution_id')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
                 @endif
+                @endif
                 @if($user->isExaminer())
                 @if(!$user->faculty_id || (isset($isProfileCompletion) && $isProfileCompletion))
                 <div id="faculty-field">
@@ -119,7 +120,6 @@
                     </select>
                     @error('department_id')<p class="mt-1 text-sm text-danger-600">{{ $message }}</p>@enderror
                 </div>
-                @endif
                 @endif
                 @endif
                 @if(!isset($isProfileCompletion) || !$isProfileCompletion)
