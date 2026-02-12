@@ -7,7 +7,7 @@
  * - User faculty/department columns
  * - Course name uppercase migration
  * 
- * Access via: https://yourdomain.com/run-all-migrations.php?key=QuizSnapMigrations2026&run=yes
+ * Access via: https://quizsnap.ausweblabs.com/run-all-migrations.php?key=QuizSnapMigrations2026&run=yes
  * 
  * SECURITY: Change the key below before deploying!
  */
@@ -50,7 +50,7 @@ try {
     
     echo "\n✅ All migrations completed successfully!\n";
     echo "\nNext steps:\n";
-    echo "1. Go to Dashboard → Institutions → Edit an institution\n";
+    echo "1. Go to https://quizsnap.ausweblabs.com/dashboard/institutions → Edit an institution\n";
     echo "2. Add faculties and departments for each institution\n";
     echo "3. Examiners can then select their faculty/department from their profile\n";
     
