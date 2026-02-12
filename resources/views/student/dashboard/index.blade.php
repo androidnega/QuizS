@@ -108,9 +108,6 @@
                 </div>
                 
                 <div id="camera-test-container" class="space-y-1.5">
-                    <div id="camera-preview" class="hidden bg-gray-200 rounded-lg overflow-hidden" style="height: 60px;">
-                        <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
-                    </div>
                     <div id="camera-status" class="text-xs text-gray-700 min-h-[0.5rem] font-medium"></div>
                     <button type="button" id="camera-test-btn" style="background-color: #15803d; color: #ffffff;" class="w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow">
                         Start Camera Test
@@ -211,6 +208,33 @@
                     <button type="submit" id="enter-token-submit-btn" disabled class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600">Start Quiz →</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+{{-- Camera Test Modal --}}
+<div id="camera-test-modal" class="fixed inset-0 z-50 hidden" aria-modal="true" aria-labelledby="camera-test-modal-title" role="dialog">
+    <div class="fixed inset-0 bg-black/50" id="camera-test-modal-backdrop"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 pointer-events-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="camera-test-modal-title" class="text-lg font-semibold text-gray-900">Camera Test</h2>
+                <button type="button" id="camera-test-modal-close-btn" class="p-1 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="camera-test-modal-content" class="space-y-4">
+                <div id="camera-preview" class="hidden bg-gray-200 rounded-lg overflow-hidden" style="aspect-ratio: 16/9;">
+                    <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
+                </div>
+                <div id="camera-status" class="text-sm text-gray-700 min-h-[1rem] font-medium text-center"></div>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" id="camera-test-stop-btn" class="hidden px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
+                        Stop Camera Test
+                    </button>
+                    <button type="button" id="camera-test-modal-close-btn-2" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -355,18 +379,37 @@
         });
     }
 
-    // Camera Test
+    // Camera Test Modal
     var cameraTestBtn = document.getElementById('camera-test-btn');
+    var cameraTestModal = document.getElementById('camera-test-modal');
+    var cameraTestModalBackdrop = document.getElementById('camera-test-modal-backdrop');
+    var cameraTestModalCloseBtn = document.getElementById('camera-test-modal-close-btn');
+    var cameraTestModalCloseBtn2 = document.getElementById('camera-test-modal-close-btn-2');
     var cameraPreview = document.getElementById('camera-preview');
     var cameraVideo = document.getElementById('camera-video');
     var cameraStatus = document.getElementById('camera-status');
+    var cameraTestStopBtn = document.getElementById('camera-test-stop-btn');
     var cameraStream = null;
     var isCameraTesting = false;
+
+    function openCameraModal() {
+        if (!cameraTestModal) return;
+        cameraTestModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        initCameraTest();
+    }
+
+    function closeCameraModal() {
+        if (!cameraTestModal) return;
+        stopCameraTest();
+        cameraTestModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
 
     function initCameraTest() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             cameraStatus.textContent = 'Camera access not supported in this browser.';
-            cameraStatus.className = 'text-xs text-red-700 min-h-[0.5rem] font-medium';
+            cameraStatus.className = 'text-sm text-red-700 min-h-[1rem] font-medium text-center';
             return;
         }
 
@@ -376,16 +419,15 @@
                 cameraVideo.srcObject = stream;
                 cameraPreview.classList.remove('hidden');
                 cameraStatus.textContent = 'Camera is working! You can see yourself.';
-                cameraStatus.className = 'text-xs text-green-700 min-h-[0.5rem] font-medium';
-                cameraTestBtn.textContent = 'Stop Camera Test';
-                cameraTestBtn.style.backgroundColor = '#b91c1c';
-                cameraTestBtn.style.color = '#ffffff';
-                cameraTestBtn.className = 'w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow';
+                cameraStatus.className = 'text-sm text-green-700 min-h-[1rem] font-medium text-center';
+                if (cameraTestStopBtn) {
+                    cameraTestStopBtn.classList.remove('hidden');
+                }
                 isCameraTesting = true;
             })
             .catch(function(err) {
                 cameraStatus.textContent = 'Could not access camera: ' + (err.message || 'Permission denied');
-                cameraStatus.className = 'text-xs text-red-700 min-h-[0.5rem] font-medium';
+                cameraStatus.className = 'text-sm text-red-700 min-h-[1rem] font-medium text-center';
             });
     }
 
@@ -401,22 +443,32 @@
         }
         cameraPreview.classList.add('hidden');
         cameraStatus.textContent = '';
-        cameraTestBtn.textContent = 'Start Camera Test';
-        cameraTestBtn.style.backgroundColor = '#15803d';
-        cameraTestBtn.style.color = '#ffffff';
-        cameraTestBtn.className = 'w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow';
+        if (cameraTestStopBtn) {
+            cameraTestStopBtn.classList.add('hidden');
+        }
         isCameraTesting = false;
     }
 
     if (cameraTestBtn) {
-        cameraTestBtn.addEventListener('click', function() {
-            if (isCameraTesting) {
-                stopCameraTest();
-            } else {
-                initCameraTest();
-            }
-        });
+        cameraTestBtn.addEventListener('click', openCameraModal);
     }
+    if (cameraTestModalBackdrop) {
+        cameraTestModalBackdrop.addEventListener('click', closeCameraModal);
+    }
+    if (cameraTestModalCloseBtn) {
+        cameraTestModalCloseBtn.addEventListener('click', closeCameraModal);
+    }
+    if (cameraTestModalCloseBtn2) {
+        cameraTestModalCloseBtn2.addEventListener('click', closeCameraModal);
+    }
+    if (cameraTestStopBtn) {
+        cameraTestStopBtn.addEventListener('click', stopCameraTest);
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && cameraTestModal && !cameraTestModal.classList.contains('hidden')) {
+            closeCameraModal();
+        }
+    });
 
     // Cleanup on page unload
     window.addEventListener('beforeunload', function() {
