@@ -58,6 +58,13 @@ $run = function ($cmd) use ($git) {
 echo "Repo root: $baseDir\n";
 echo "Git: $git\n\n";
 
+// Protect this script from being overwritten during reset
+$scriptPath = __FILE__;
+$scriptBackup = $scriptPath . '.backup';
+$scriptContent = file_get_contents($scriptPath);
+file_put_contents($scriptBackup, $scriptContent);
+echo "Protected fix-git-pull.php from being overwritten.\n\n";
+
 // Fetch latest from remote
 list($out, $code) = $run('fetch origin');
 echo "git fetch origin (exit $code):\n$out\n\n";
@@ -93,12 +100,32 @@ if ($code !== 0) {
 if ($code === 0) {
     echo "Done. Local changes were discarded and your files now match the remote.\n";
     echo "You can use cPanel Git \"Pull\" or \"Update\" from now on.\n";
+    
+    // Restore this script if it was overwritten (it should remain available)
+    if (file_exists($scriptBackup)) {
+        $backupContent = file_get_contents($scriptBackup);
+        $currentContent = file_exists($scriptPath) ? file_get_contents($scriptPath) : '';
+        // Only restore if current version is different (was overwritten) or missing
+        if ($currentContent !== $scriptContent || !file_exists($scriptPath)) {
+            file_put_contents($scriptPath, $scriptContent);
+            echo "\n[fix-git-pull.php has been restored and remains available for future use.]\n";
+        } else {
+            echo "\n[fix-git-pull.php remains available for future use.]\n";
+        }
+        @unlink($scriptBackup); // Clean up backup
+    } else {
+        echo "\n[fix-git-pull.php remains available for future use.]\n";
+    }
+    echo "[You can run this script again anytime if conflicts occur.]\n";
 } else {
     echo "Reset failed. Check that the remote branch is 'main' or 'master' and that Git can run on the server.\n";
+    // Restore backup if reset failed
+    if (file_exists($scriptBackup)) {
+        file_put_contents($scriptPath, file_get_contents($scriptBackup));
+        @unlink($scriptBackup);
+        echo "[fix-git-pull.php has been restored.]\n";
+    }
 }
-
-echo "\n[fix-git-pull.php remains available for future use.]\n";
-echo "[You can run this script again anytime if conflicts occur.]\n";
 
 $body = ob_get_clean();
 header('Content-Type: text/plain; charset=utf-8');
