@@ -121,6 +121,7 @@
                 </div>
                 @endif
                 @endif
+                @endif
                 @if(!isset($isProfileCompletion) || !$isProfileCompletion)
                 <div id="course-field" class="min-w-0">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Assigned courses (for Examiner)</label>
