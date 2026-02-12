@@ -8,6 +8,7 @@ use App\Models\Faculty;
 use App\Models\Institution;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
 
 class FacultyController extends Controller
 {
@@ -41,6 +42,19 @@ class FacultyController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Faculty deleted successfully.',
+        ]);
+    }
+
+    public function byInstitution(Institution $institution): JsonResponse
+    {
+        $faculties = $institution->faculties()->orderBy('name')->get();
+
+        return response()->json([
+            'success' => true,
+            'faculties' => $faculties->map(fn($f) => [
+                'id' => $f->id,
+                'name' => $f->name,
+            ]),
         ]);
     }
 }

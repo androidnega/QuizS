@@ -238,6 +238,7 @@ Route::middleware('admin.auth')->group(function () {
             Route::post('/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'store'])->name('departments.store');
             Route::delete('/departments/{department}', [\App\Http\Controllers\Admin\DepartmentController::class, 'destroy'])->name('departments.destroy');
             Route::get('/faculties/{faculty}/departments', [\App\Http\Controllers\Admin\DepartmentController::class, 'byFaculty'])->name('departments.by-faculty');
+            Route::get('/institutions/{institution}/faculties', [\App\Http\Controllers\Admin\FacultyController::class, 'byInstitution'])->name('faculties.by-institution');
             Route::post('/settings/update-mode', [SettingsController::class, 'toggleUpdateMode'])->name('settings.update-mode');
             Route::post('/settings/update-estimated-end', [SettingsController::class, 'setUpdateEstimatedEnd'])->name('settings.update-estimated-end');
             Route::get('/system/reset', [\App\Http\Controllers\Admin\SystemResetController::class, 'index'])->name('system.reset.index');

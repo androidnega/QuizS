@@ -122,6 +122,7 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 const currentInstitutionId = {{ $user->institution_id ?? 'null' }};
 const currentFacultyId = {{ $user->faculty_id ?? 'null' }};
+const currentDepartmentId = {{ $user->department_id ?? 'null' }};
 
 function loadFaculties() {
     const institutionId = document.getElementById('institution_id').value;
@@ -137,25 +138,28 @@ function loadFaculties() {
     }
     
     // Fetch faculties for this institution
-    fetch(`/dashboard/institutions/${institutionId}/edit`)
-        .then(response => response.text())
-        .then(html => {
-            // Parse faculties from the institution edit page or use API
-            // For now, we'll reload the page with the new institution
-            // In a real implementation, you'd have an API endpoint
-            if (currentInstitutionId != institutionId) {
-                // Reset faculty and department
-                facultySelect.value = '';
-                departmentSelect.value = '';
+    fetch(`{{ route('dashboard.faculties.by-institution', '') }}/${institutionId}`, {
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.faculties) {
+                data.faculties.forEach(faculty => {
+                    const option = document.createElement('option');
+                    option.value = faculty.id;
+                    option.textContent = faculty.name;
+                    if (currentInstitutionId == institutionId && faculty.id == currentFacultyId) {
+                        option.selected = true;
+                        // Load departments for selected faculty
+                        setTimeout(() => loadDepartments(), 100);
+                    }
+                    facultySelect.appendChild(option);
+                });
             }
         })
         .catch(error => console.error('Error loading faculties:', error));
-    
-    // Load faculties via AJAX (we'll need to add an endpoint or use existing data)
-    // For now, reload page to get fresh data
-    if (currentInstitutionId != institutionId) {
-        window.location.href = `{{ route('dashboard.users.edit', $user) }}?institution_id=${institutionId}`;
-    }
 }
 
 function loadDepartments() {
@@ -182,7 +186,7 @@ function loadDepartments() {
                     const option = document.createElement('option');
                     option.value = dept.id;
                     option.textContent = dept.name;
-                    if (currentFacultyId == facultyId && dept.id == {{ $user->department_id ?? 'null' }}) {
+                    if (currentFacultyId == facultyId && dept.id == currentDepartmentId) {
                         option.selected = true;
                     }
                     departmentSelect.appendChild(option);
@@ -192,9 +196,14 @@ function loadDepartments() {
         .catch(error => console.error('Error loading departments:', error));
 }
 
+// Load faculties on page load if institution is selected
+@if($user->institution_id)
+    loadFaculties();
+@endif
+
 // Load departments on page load if faculty is selected
 @if($user->faculty_id)
-    loadDepartments();
+    setTimeout(() => loadDepartments(), 200);
 @endif
 </script>
 @endpush

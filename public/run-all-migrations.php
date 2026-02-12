@@ -37,16 +37,16 @@ echo "==========================\n\n";
 try {
     // Run migrations
     echo "Running migrations...\n";
-    Artisan::call('migrate', ['--force' => true]);
-    $output = Artisan::output();
+    Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    $output = Illuminate\Support\Facades\Artisan::output();
     echo $output . "\n";
     
     // Clear caches
     echo "\nClearing caches...\n";
-    Artisan::call('config:clear');
-    Artisan::call('route:clear');
-    Artisan::call('cache:clear');
-    Artisan::call('view:clear');
+    Illuminate\Support\Facades\Artisan::call('config:clear');
+    Illuminate\Support\Facades\Artisan::call('route:clear');
+    Illuminate\Support\Facades\Artisan::call('cache:clear');
+    Illuminate\Support\Facades\Artisan::call('view:clear');
     
     echo "\n✅ All migrations completed successfully!\n";
     echo "\nNext steps:\n";
