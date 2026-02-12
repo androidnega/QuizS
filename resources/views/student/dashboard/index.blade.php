@@ -82,12 +82,12 @@
                 </div>
                 
                 <div id="mic-test-container" class="space-y-1.5">
-                    <div id="mic-visualizer" class="hidden bg-gray-200 rounded-lg p-2" style="min-height: 40px;">
-                        <div class="flex flex-wrap items-end justify-center gap-0.5" id="mic-bars-container" style="min-height: 36px;">
+                    <div id="mic-visualizer" class="hidden bg-gray-200 rounded-lg p-2">
+                        <div class="flex items-center justify-center gap-1" id="mic-bars-container" style="height: 24px;">
                             <!-- Bars will be dynamically created -->
                         </div>
                     </div>
-                    <div id="mic-status" class="text-xs text-gray-600 min-h-[0.5rem]"></div>
+                    <div id="mic-status" class="text-xs text-gray-700 min-h-[0.5rem] font-medium"></div>
                     <button type="button" id="mic-test-btn" style="background-color: #1e40af; color: #ffffff;" class="w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow">
                         Start Microphone Test
                     </button>
@@ -111,7 +111,7 @@
                     <div id="camera-preview" class="hidden bg-gray-200 rounded-lg overflow-hidden" style="height: 60px;">
                         <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
                     </div>
-                    <div id="camera-status" class="text-xs text-gray-600 min-h-[0.5rem]"></div>
+                    <div id="camera-status" class="text-xs text-gray-700 min-h-[0.5rem] font-medium"></div>
                     <button type="button" id="camera-test-btn" style="background-color: #15803d; color: #ffffff;" class="w-full px-2 py-1 rounded-lg text-xs font-bold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-all whitespace-nowrap shadow">
                         Start Camera Test
                     </button>
@@ -236,7 +236,7 @@
     function initMicrophoneTest() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             micStatus.textContent = 'Microphone access not supported in this browser.';
-            micStatus.className = 'text-xs text-red-600 min-h-[1rem]';
+            micStatus.className = 'text-xs text-red-700 min-h-[0.5rem] font-medium';
             return;
         }
 
@@ -252,20 +252,22 @@
                 var bufferLength = analyser.frequencyBinCount;
                 dataArray = new Uint8Array(bufferLength);
                 
-                // Create visualizer bars dynamically
+                // Create visualizer bars dynamically - horizontal bars
                 var barsContainer = document.getElementById('mic-bars-container');
                 if (barsContainer) {
                     barsContainer.innerHTML = '';
-                    var barCount = 16;
-                    var barWidth = '3px';
+                    var barCount = 20;
+                    var barHeight = '20px';
+                    var minWidth = '2px';
+                    var maxWidth = '12px';
                     
                     for (var i = 0; i < barCount; i++) {
                         var bar = document.createElement('div');
-                        bar.className = 'bg-green-500 rounded-t transition-all duration-75 ease-out';
-                        bar.style.width = barWidth;
-                        bar.style.minHeight = '4px';
-                        bar.style.height = '4px';
-                        bar.style.maxHeight = '32px';
+                        bar.className = 'bg-green-500 rounded transition-all duration-75 ease-out';
+                        bar.style.height = barHeight;
+                        bar.style.minWidth = minWidth;
+                        bar.style.width = minWidth;
+                        bar.style.maxWidth = maxWidth;
                         bar.style.display = 'inline-block';
                         barsContainer.appendChild(bar);
                     }
@@ -273,7 +275,7 @@
                 
                 micVisualizer.classList.remove('hidden');
                 micStatus.textContent = 'Microphone is working! Speak to see the levels.';
-                micStatus.className = 'text-xs text-green-600 min-h-[0.5rem]';
+                micStatus.className = 'text-xs text-green-700 min-h-[0.5rem] font-medium';
                 micTestBtn.textContent = 'Stop Microphone Test';
                 micTestBtn.style.backgroundColor = '#b91c1c';
                 micTestBtn.style.color = '#ffffff';
@@ -289,17 +291,17 @@
                     allBars.forEach(function(bar, index) {
                         var value = dataArray[Math.floor((index / allBars.length) * bufferLength)] || 0;
                         var normalizedValue = value / 255;
-                        // Calculate height with better range
-                        var heightPx = Math.max(4, normalizedValue * 32); // Max 32px height
-                        bar.style.height = heightPx + 'px';
+                        // Calculate width for horizontal bars - standard height, variable width
+                        var widthPx = Math.max(2, normalizedValue * 12); // Max 12px width
+                        bar.style.width = widthPx + 'px';
                         
                         // Color intensity based on level
                         if (normalizedValue > 0.7) {
-                            bar.className = 'bg-red-500 rounded-t transition-all duration-75 ease-out';
+                            bar.className = 'bg-red-500 rounded transition-all duration-75 ease-out';
                         } else if (normalizedValue > 0.4) {
-                            bar.className = 'bg-yellow-500 rounded-t transition-all duration-75 ease-out';
+                            bar.className = 'bg-yellow-500 rounded transition-all duration-75 ease-out';
                         } else {
-                            bar.className = 'bg-green-500 rounded-t transition-all duration-75 ease-out';
+                            bar.className = 'bg-green-500 rounded transition-all duration-75 ease-out';
                         }
                     });
                     
@@ -309,7 +311,7 @@
             })
             .catch(function(err) {
                 micStatus.textContent = 'Could not access microphone: ' + (err.message || 'Permission denied');
-                micStatus.className = 'text-xs text-red-600 min-h-[1rem]';
+                micStatus.className = 'text-xs text-red-700 min-h-[0.5rem] font-medium';
             });
     }
 
@@ -364,7 +366,7 @@
     function initCameraTest() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             cameraStatus.textContent = 'Camera access not supported in this browser.';
-            cameraStatus.className = 'text-xs text-red-600 min-h-[1rem]';
+            cameraStatus.className = 'text-xs text-red-700 min-h-[0.5rem] font-medium';
             return;
         }
 
@@ -374,7 +376,7 @@
                 cameraVideo.srcObject = stream;
                 cameraPreview.classList.remove('hidden');
                 cameraStatus.textContent = 'Camera is working! You can see yourself.';
-                cameraStatus.className = 'text-xs text-green-600 min-h-[1rem]';
+                cameraStatus.className = 'text-xs text-green-700 min-h-[0.5rem] font-medium';
                 cameraTestBtn.textContent = 'Stop Camera Test';
                 cameraTestBtn.style.backgroundColor = '#b91c1c';
                 cameraTestBtn.style.color = '#ffffff';
@@ -383,7 +385,7 @@
             })
             .catch(function(err) {
                 cameraStatus.textContent = 'Could not access camera: ' + (err.message || 'Permission denied');
-                cameraStatus.className = 'text-xs text-red-600 min-h-[1rem]';
+                cameraStatus.className = 'text-xs text-red-700 min-h-[0.5rem] font-medium';
             });
     }
 
