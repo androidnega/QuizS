@@ -133,7 +133,7 @@ class StudentLoginController extends Controller
         if (!$examiner || !$examiner->isExaminer() || $examiner->sms_remaining <= 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Your examiner has no SMS balance. Contact your examiner to receive a login code.',
+                'message' => 'We\'re unable to send your login code right now. Please contact your lecturer or course administrator for assistance.',
             ], 422);
         }
 
