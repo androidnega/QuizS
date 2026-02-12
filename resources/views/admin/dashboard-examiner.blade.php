@@ -21,7 +21,7 @@
         </div>
         <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-orange-900">Complete Your Profile</p>
-            <p class="mt-1 text-sm text-orange-800">Please select your faculty and department to continue. <a href="{{ route('dashboard.users.edit', $examiner) }}" class="font-semibold underline hover:text-orange-900">Update your profile here</a>.</p>
+            <p class="mt-1 text-sm text-orange-800">Please select your faculty and department to continue. <a href="{{ route('dashboard.users.edit', ['user' => $examiner, 'complete_profile' => 1]) }}" class="font-semibold underline hover:text-orange-900">Update your profile here</a>.</p>
         </div>
         <button type="button" onclick="dismissFacultyDepartmentNotice()" class="flex-shrink-0 text-orange-600 hover:text-orange-800 transition-colors" aria-label="Dismiss">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

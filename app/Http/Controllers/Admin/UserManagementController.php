@@ -162,7 +162,14 @@ class UserManagementController extends Controller
             }
         }
         
-        return view('admin.users.edit', compact('user', 'courses', 'institutions', 'faculties', 'departments', 'isSuperAdmin'));
+        // Check if this is a profile completion flow (examiner editing themselves and missing faculty/department)
+        $isProfileCompletion = $request->has('complete_profile') && 
+                               !$isSuperAdmin && 
+                               $currentUser && 
+                               $currentUser->id === $user->id &&
+                               (!$user->faculty_id || !$user->department_id);
+        
+        return view('admin.users.edit', compact('user', 'courses', 'institutions', 'faculties', 'departments', 'isSuperAdmin', 'isProfileCompletion'));
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -268,9 +275,9 @@ class UserManagementController extends Controller
             $user->courses()->sync($request->input('course_ids', []));
         }
 
-        // If examiner is updating their own profile, redirect to dashboard
+        // If examiner is updating their own profile, redirect to profile page
         if (!$isSuperAdmin && $currentUser && $currentUser->id === $user->id) {
-            return redirect()->route('dashboard')
+            return redirect()->route('dashboard.profile.show')
                 ->with('success', 'Profile updated successfully.');
         }
 
