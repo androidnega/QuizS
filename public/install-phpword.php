@@ -72,26 +72,48 @@ chdir($baseDir);
 // Set HOME environment variable for composer (required for composer to run)
 $homeDir = getenv('HOME');
 if (empty($homeDir)) {
-    // Try to use a temp directory or the base directory
-    $homeDir = sys_get_temp_dir();
-    // Or try common home directory locations
+    // Try common home directory locations based on the base directory path
+    $username = get_current_user();
     $possibleHomes = [
-        '/home/' . get_current_user(),
-        '/home2/' . get_current_user(),
+        '/home2/' . $username,
+        '/home/' . $username,
         $baseDir . '/.composer',
-        sys_get_temp_dir() . '/composer-home',
+        sys_get_temp_dir() . '/composer-home-' . $username,
     ];
     foreach ($possibleHomes as $possibleHome) {
-        if (is_dir(dirname($possibleHome)) || @mkdir(dirname($possibleHome), 0755, true)) {
-            $homeDir = $possibleHome;
-            break;
+        $parentDir = dirname($possibleHome);
+        if (is_dir($parentDir) || @mkdir($parentDir, 0755, true)) {
+            if (!is_dir($possibleHome)) {
+                @mkdir($possibleHome, 0755, true);
+            }
+            if (is_dir($possibleHome)) {
+                $homeDir = $possibleHome;
+                break;
+            }
         }
     }
+    // Fallback to temp directory
+    if (empty($homeDir)) {
+        $homeDir = sys_get_temp_dir();
+    }
 }
+
+// Set environment variables
 putenv('HOME=' . $homeDir);
 putenv('COMPOSER_HOME=' . $homeDir);
 
+// Build environment string for exec command
+$envVars = [
+    'HOME' => $homeDir,
+    'COMPOSER_HOME' => $homeDir,
+];
+$envString = '';
+foreach ($envVars as $key => $value) {
+    $envString .= escapeshellarg($key) . '=' . escapeshellarg($value) . ' ';
+}
+
 echo "Setting HOME environment variable to: {$homeDir}\n";
+echo "Environment: {$envString}\n";
 echo str_repeat('=', 70) . "\n\n";
 
 // First, try composer install to ensure all dependencies are installed
@@ -100,15 +122,17 @@ echo str_repeat('=', 70) . "\n\n";
 
 $output1 = [];
 $returnVar1 = 0;
-$env = [
-    'HOME' => $homeDir,
-    'COMPOSER_HOME' => $homeDir,
-];
-$envString = '';
-foreach ($env as $key => $value) {
-    $envString .= escapeshellarg($key) . '=' . escapeshellarg($value) . ' ';
-}
-exec("{$envString}{$composerCmd} install --no-dev --optimize-autoloader 2>&1", $output1, $returnVar1);
+
+// Set environment variables using putenv (for current process)
+putenv('HOME=' . $homeDir);
+putenv('COMPOSER_HOME=' . $homeDir);
+
+// Also build environment string for exec command
+$envString = 'HOME=' . escapeshellarg($homeDir) . ' COMPOSER_HOME=' . escapeshellarg($homeDir) . ' ';
+
+// Use shell_exec with explicit environment variable setting
+$fullCommand = "cd " . escapeshellarg($baseDir) . " && {$envString}{$composerCmd} install --no-dev --optimize-autoloader 2>&1";
+exec($fullCommand, $output1, $returnVar1);
 
 foreach ($output1 as $line) {
     echo htmlspecialchars($line) . "\n";
@@ -127,7 +151,8 @@ if ($returnVar1 === 0) {
         
         $output = [];
         $returnVar = 0;
-        exec("{$envString}{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1", $output, $returnVar);
+        $fullCommand = "cd " . escapeshellarg($baseDir) . " && {$envString}{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1";
+        exec($fullCommand, $output, $returnVar);
         
         foreach ($output as $line) {
             echo htmlspecialchars($line) . "\n";
@@ -145,7 +170,8 @@ if ($returnVar1 === 0) {
     
     $output = [];
     $returnVar = 0;
-    exec("{$envString}{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1", $output, $returnVar);
+    $fullCommand = "cd " . escapeshellarg($baseDir) . " && {$envString}{$composerCmd} require phpoffice/phpword --no-interaction --no-scripts 2>&1";
+    exec($fullCommand, $output, $returnVar);
     
     foreach ($output as $line) {
         echo htmlspecialchars($line) . "\n";
