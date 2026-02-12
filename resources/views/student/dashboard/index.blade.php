@@ -10,66 +10,6 @@
         <p class="text-sm text-gray-600 mt-1">Your quiz history and scheduled quizzes.</p>
     </div>
 
-    {{-- Device Testing Section --}}
-    <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <h2 class="text-sm font-semibold text-gray-800 mb-3">Test Your Devices</h2>
-        <p class="text-xs text-gray-600 mb-4">Check your microphone and camera before starting a quiz.</p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {{-- Microphone Test --}}
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                        </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-semibold text-gray-900">Microphone</h3>
-                        <p class="text-xs text-gray-600">Test your microphone</p>
-                    </div>
-                </div>
-                
-                <div id="mic-test-container" class="space-y-3">
-                    <div id="mic-visualizer" class="hidden h-16 bg-gray-200 rounded-lg flex items-center justify-center px-3">
-                        <div class="flex-1 h-12 flex items-end justify-center gap-1" id="mic-bars-container">
-                            <!-- Bars will be dynamically created -->
-                        </div>
-                    </div>
-                    <div id="mic-status" class="text-xs text-gray-600 min-h-[1rem]"></div>
-                    <button type="button" id="mic-test-btn" class="w-full px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-                        Start Microphone Test
-                    </button>
-                </div>
-            </div>
-
-            {{-- Camera Test --}}
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-semibold text-gray-900">Camera</h3>
-                        <p class="text-xs text-gray-600">Test your camera</p>
-                    </div>
-                </div>
-                
-                <div id="camera-test-container" class="space-y-3">
-                    <div id="camera-preview" class="hidden aspect-video bg-gray-200 rounded-lg overflow-hidden">
-                        <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
-                    </div>
-                    <div id="camera-status" class="text-xs text-gray-600 min-h-[1rem]"></div>
-                    <button type="button" id="camera-test-btn" class="w-full px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
-                        Start Camera Test
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="flex flex-row flex-wrap gap-3">
         <a href="{{ route('dashboard.my-quizzes') }}" class="flex-1 min-w-[180px] rounded-lg border border-yellow-300 bg-yellow-100 p-4 block">
             <p class="text-xs font-medium text-yellow-800">Quizzes taken</p>
@@ -120,6 +60,66 @@
             <span class="mt-2 inline-block text-xs font-medium text-gray-600">Go →</span>
         </button>
         @endif
+    </div>
+
+    {{-- Device Testing Section --}}
+    <div class="rounded-lg border border-gray-200 bg-white p-4">
+        <h2 class="text-sm font-semibold text-gray-800 mb-3">Test Your Devices</h2>
+        <p class="text-xs text-gray-600 mb-4">Check your microphone and camera before starting a quiz.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{-- Microphone Test --}}
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm font-semibold text-gray-900">Microphone</h3>
+                        <p class="text-xs text-gray-600">Test your microphone</p>
+                    </div>
+                </div>
+                
+                <div id="mic-test-container" class="space-y-3">
+                    <div id="mic-visualizer" class="hidden bg-gray-200 rounded-lg p-3">
+                        <div class="flex flex-col gap-2" id="mic-bars-container">
+                            <!-- Bars will be dynamically created -->
+                        </div>
+                    </div>
+                    <div id="mic-status" class="text-xs text-gray-600 min-h-[1rem]"></div>
+                    <button type="button" id="mic-test-btn" class="w-full px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        Start Microphone Test
+                    </button>
+                </div>
+            </div>
+
+            {{-- Camera Test --}}
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm font-semibold text-gray-900">Camera</h3>
+                        <p class="text-xs text-gray-600">Test your camera</p>
+                    </div>
+                </div>
+                
+                <div id="camera-test-container" class="space-y-3">
+                    <div id="camera-preview" class="hidden aspect-video bg-gray-200 rounded-lg overflow-hidden">
+                        <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
+                    </div>
+                    <div id="camera-status" class="text-xs text-gray-600 min-h-[1rem]"></div>
+                    <button type="button" id="camera-test-btn" class="w-full px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+                        Start Camera Test
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if(isset($lastQuiz) && $lastQuiz && $lastQuiz->quiz && $lastQuiz->result)
@@ -259,12 +259,27 @@
                 if (barsContainer) {
                     barsContainer.innerHTML = '';
                     var barCount = 20;
-                    for (var i = 0; i < barCount; i++) {
-                        var bar = document.createElement('div');
-                        bar.className = 'flex-1 bg-green-500 rounded-t transition-all duration-75 ease-out';
-                        bar.style.minHeight = '4px';
-                        bar.style.height = '4px';
-                        barsContainer.appendChild(bar);
+                    var barsPerRow = 10;
+                    var rowCount = Math.ceil(barCount / barsPerRow);
+                    
+                    for (var row = 0; row < rowCount; row++) {
+                        var rowDiv = document.createElement('div');
+                        rowDiv.className = 'flex items-end justify-center gap-1 h-8';
+                        rowDiv.id = 'mic-row-' + row;
+                        
+                        var startIdx = row * barsPerRow;
+                        var endIdx = Math.min(startIdx + barsPerRow, barCount);
+                        
+                        for (var i = startIdx; i < endIdx; i++) {
+                            var bar = document.createElement('div');
+                            bar.className = 'flex-1 bg-green-500 rounded-t transition-all duration-75 ease-out';
+                            bar.style.minHeight = '4px';
+                            bar.style.height = '4px';
+                            bar.style.maxHeight = '24px';
+                            rowDiv.appendChild(bar);
+                        }
+                        
+                        barsContainer.appendChild(rowDiv);
                     }
                 }
                 
@@ -278,14 +293,16 @@
                 function updateVisualizer() {
                     if (!isMicTesting) return;
                     analyser.getByteFrequencyData(dataArray);
-                    var bars = barsContainer ? barsContainer.querySelectorAll('div') : [];
+                    var allBars = barsContainer ? barsContainer.querySelectorAll('[id^="mic-row-"] > div') : [];
                     var max = Math.max.apply(null, Array.from(dataArray));
                     
-                    bars.forEach(function(bar, index) {
-                        var value = dataArray[Math.floor((index / bars.length) * bufferLength)] || 0;
+                    allBars.forEach(function(bar, index) {
+                        var value = dataArray[Math.floor((index / allBars.length) * bufferLength)] || 0;
                         var normalizedValue = value / 255;
-                        var height = Math.max(8, normalizedValue * 100);
-                        bar.style.height = height + '%';
+                        // Reduce max height - use 60% of container instead of 100%
+                        var heightPercent = Math.min(60, normalizedValue * 60);
+                        var heightPx = Math.max(4, (heightPercent / 100) * 24); // Max 24px height
+                        bar.style.height = heightPx + 'px';
                         
                         // Color intensity based on level
                         if (normalizedValue > 0.7) {
