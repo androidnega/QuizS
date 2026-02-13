@@ -68,6 +68,11 @@
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <span>Scores &amp; Export</span>
                 </a>
+                <a href="{{ route('dashboard.quizzes.show', ['quiz' => $quiz, 'tab' => 'analytics']) }}" data-quiz-tab="analytics"
+                   class="quiz-tab-link py-3 px-4 text-sm font-semibold whitespace-nowrap border-b-3 transition-all flex items-center gap-2 {{ $activeTab === 'analytics' ? 'border-primary-500 text-primary-700 bg-white shadow-sm' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-white/70' }}">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <span>Question analytics</span>
+                </a>
                 <a href="{{ route('dashboard.quizzes.live-proctor', $quiz) }}" target="_blank" rel="noopener"
                    class="py-3 px-4 text-sm font-semibold whitespace-nowrap border-b-3 border-transparent text-gray-600 hover:text-gray-900 hover:bg-white/70 flex items-center gap-2">
                     <i class="fas fa-video"></i>
@@ -123,6 +128,13 @@
             .then(function(r) { return r.text(); })
             .then(function(html) {
                 container.innerHTML = html;
+                var scripts = container.querySelectorAll('script');
+                scripts.forEach(function(oldScript) {
+                    var newScript = document.createElement('script');
+                    if (oldScript.src) { newScript.src = oldScript.src; newScript.async = false; }
+                    else { newScript.textContent = oldScript.textContent; }
+                    container.appendChild(newScript);
+                });
                 var tab = (url.match(/[?&]tab=([^&]+)/) || [])[1] || 'overview';
                 setActiveTab(tab);
                 if (typeof history !== 'undefined' && history.pushState) {

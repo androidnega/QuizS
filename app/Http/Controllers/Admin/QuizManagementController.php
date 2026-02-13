@@ -251,18 +251,69 @@ class QuizManagementController extends Controller
             'students_with_violations' => $completedSessions->filter(fn ($s) => $s->violations->count() > 0)->count(),
         ];
 
-        $data = compact('quiz', 'unapprovedPools', 'unapprovedPoolsTotal', 'approvedQuestions', 'approvedQuestionsTotal', 'sessionsPaginator', 'sessionsStats');
+        // Question analytics: per-question answered count and correct count (from completed sessions only)
+        $questionStats = $this->computeQuestionStats($quiz, $completedSessions);
+
+        $data = compact('quiz', 'unapprovedPools', 'unapprovedPoolsTotal', 'approvedQuestions', 'approvedQuestionsTotal', 'sessionsPaginator', 'sessionsStats', 'questionStats');
 
         // Live tab/pagination: return only the tab HTML fragment for AJAX requests
         if ($request->ajax()) {
             $tab = $request->get('tab');
-            if (! in_array($tab, ['overview', 'sessions', 'scores'], true)) {
+            if (! in_array($tab, ['overview', 'sessions', 'scores', 'analytics'], true)) {
                 $tab = 'overview'; // default so pagination (e.g. questions_page=2) returns overview partial, not full page
             }
             return response()->view('admin.quizzes.partials.' . $tab, $data);
         }
 
         return view('admin.quizzes.show', $data);
+    }
+
+    /**
+     * Compute per-question stats: answered count and correct count from completed sessions.
+     *
+     * @return array<int, array{question_id: int, label: string, answered: int, correct: int, percentage: float|null}>
+     */
+    private function computeQuestionStats(Quiz $quiz, \Illuminate\Support\Collection $completedSessions): array
+    {
+        $questionMap = $quiz->questions->keyBy('id');
+        $aggregate = [];
+        $sessionsWithAnswers = $quiz->sessions()
+            ->whereNotNull('ended_at')
+            ->whereIn('id', $completedSessions->pluck('id'))
+            ->with('answers')
+            ->get();
+        foreach ($sessionsWithAnswers as $session) {
+            $correctMap = $session->assigned_correct_answers ?? [];
+            foreach ($session->answers as $answer) {
+                $qid = $answer->question_id;
+                if (! isset($aggregate[$qid])) {
+                    $aggregate[$qid] = ['answered' => 0, 'correct' => 0];
+                }
+                $aggregate[$qid]['answered']++;
+                $sessionCorrect = $correctMap[$qid] ?? $correctMap[(string) $qid] ?? null;
+                if ($sessionCorrect !== null && trim((string) $answer->student_answer) === trim((string) $sessionCorrect)) {
+                    $aggregate[$qid]['correct']++;
+                }
+            }
+        }
+        $order = $quiz->questions->pluck('id')->values()->all();
+        $result = [];
+        foreach ($order as $idx => $qid) {
+            $answered = $aggregate[$qid]['answered'] ?? 0;
+            $correct = $aggregate[$qid]['correct'] ?? 0;
+            $question = $questionMap->get($qid);
+            $textSnippet = $question ? \Illuminate\Support\Str::limit(strip_tags((string) $question->text), 60) : '';
+            $label = 'Q' . ($idx + 1) . ($textSnippet ? ' — ' . $textSnippet : '');
+            $result[] = [
+                'question_id' => $qid,
+                'label' => $label,
+                'short_label' => 'Q' . ($idx + 1),
+                'answered' => $answered,
+                'correct' => $correct,
+                'percentage' => $answered > 0 ? round(100.0 * $correct / $answered, 1) : null,
+            ];
+        }
+        return $result;
     }
 
     /**
@@ -1074,6 +1125,52 @@ class QuizManagementController extends Controller
         $filename = $groupSlug . '-' . $courseSlug . '-' . $dateStr . '.pdf';
 
         if (request()->routeIs('*scores.export.pdf.preview')) {
+            return $pdf->stream($filename);
+        }
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export question analytics as PDF (preview or download).
+     */
+    public function exportAnalyticsPdf(Quiz $quiz, Request $request): Response
+    {
+        $this->authorize('view', $quiz);
+        $quiz->load(['classGroup', 'course', 'questions']);
+        $completedSessions = $quiz->sessions()->whereNotNull('ended_at')->with(['result', 'violations'])->get();
+        $questionStats = $this->computeQuestionStats($quiz, $completedSessions);
+
+        $courseName = '—';
+        if ($quiz->course) {
+            $code = trim($quiz->course->code ?? '');
+            $name = trim($quiz->course->name ?? '');
+            $courseName = $code && $name ? $code . ' – ' . $name : ($name ?: $code ?: '—');
+        }
+        $reportDate = $quiz->ended_at ? $quiz->ended_at->format('F j, Y') : now()->format('F j, Y');
+        $institutionName = Setting::getValue(Setting::KEY_INSTITUTION_NAME, '');
+        $classGroupName = $quiz->classGroup ? $quiz->classGroup->name : '—';
+        $logoPath = Setting::getValue(Setting::KEY_INSTITUTION_LOGO, '');
+        $institutionLogoPath = null;
+        if ($logoPath && ! str_starts_with($logoPath, 'http')) {
+            $fullPath = storage_path('app/public/' . $logoPath);
+            if (file_exists($fullPath)) {
+                $mime = @mime_content_type($fullPath) ?: 'image/png';
+                $institutionLogoPath = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fullPath));
+            }
+        }
+
+        $pdf = Pdf::loadView('admin.quizzes.analytics-export-pdf', [
+            'quiz' => $quiz,
+            'questionStats' => $questionStats,
+            'courseName' => $courseName,
+            'reportDate' => $reportDate,
+            'institutionName' => $institutionName,
+            'classGroupName' => $classGroupName,
+            'institutionLogoPath' => $institutionLogoPath,
+        ])->setPaper('a4', 'portrait')->setWarnings(false);
+
+        $filename = \Illuminate\Support\Str::slug($classGroupName ?: 'group') . '-' . \Illuminate\Support\Str::slug($quiz->title) . '-analytics-' . now()->format('Y-m-d') . '.pdf';
+        if (request()->routeIs('*analytics.export.pdf.preview')) {
             return $pdf->stream($filename);
         }
         return $pdf->download($filename);
