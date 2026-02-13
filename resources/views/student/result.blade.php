@@ -12,20 +12,42 @@
             <p class="text-sm text-gray-500 mt-0.5">Index: {{ $session->student_index }}</p>
         </div>
 
-        {{-- Student feedback: clear summary after exam --}}
+        {{-- Student feedback: clear performance verdict based on score --}}
         @if($session->result)
             @if($session->quiz->canShowScore())
-            <div class="mb-8 rounded-xl border-2 border-primary-200 bg-primary-50 p-6 sm:p-8">
+            @php
+                $score = (float) $session->result->score;
+                $performance = $score >= 85 ? 'excellent' : ($score >= 70 ? 'good' : ($score >= 50 ? 'fair' : 'needs_improvement'));
+            @endphp
+            <div class="mb-8 rounded-xl border-2 p-6 sm:p-8
+                @if($performance === 'excellent') border-success-300 bg-success-50
+                @elseif($performance === 'good') border-success-200 bg-success-50/70
+                @elseif($performance === 'fair') border-warning-300 bg-warning-50
+                @else border-danger-200 bg-danger-50 @endif">
                 <h2 class="text-lg font-bold text-gray-900 mb-2">Your exam result</h2>
-                @if($session->result->score >= 70)
-                    <p class="text-success-700 font-medium">Well done. You passed this assessment.</p>
-                    <p class="text-sm text-gray-700 mt-1">You got {{ $session->result->correct_count }} out of {{ $session->result->total_questions }} questions correct. Keep it up.</p>
-                @elseif($session->result->score >= 50)
-                    <p class="text-warning-700 font-medium">You completed the exam. There’s room to improve.</p>
-                    <p class="text-sm text-gray-700 mt-1">You got {{ $session->result->correct_count }} out of {{ $session->result->total_questions }} correct. Review the feedback below to do better next time.</p>
+                {{-- Clear performance verdict --}}
+                <p class="font-semibold text-lg
+                    @if($performance === 'excellent') text-success-800
+                    @elseif($performance === 'good') text-success-700
+                    @elseif($performance === 'fair') text-warning-800
+                    @else text-danger-800 @endif">
+                    @if($performance === 'excellent')
+                        You performed very well.
+                    @elseif($performance === 'good')
+                        You performed well.
+                    @elseif($performance === 'fair')
+                        You did okay — there’s room to improve.
+                    @else
+                        You did not perform well this time.
+                    @endif
+                </p>
+                <p class="text-sm text-gray-700 mt-2">You got {{ $session->result->correct_count }} out of {{ $session->result->total_questions }} questions correct ({{ round($score, 0) }}%).</p>
+                @if($performance === 'excellent' || $performance === 'good')
+                    <p class="text-sm text-gray-600 mt-1">Keep up the good work.</p>
+                @elseif($performance === 'fair')
+                    <p class="text-sm text-gray-600 mt-1">Review the feedback below and the topics you missed to do better next time.</p>
                 @else
-                    <p class="text-danger-700 font-medium">You completed the exam. We recommend reviewing the material.</p>
-                    <p class="text-sm text-gray-700 mt-1">You got {{ $session->result->correct_count }} out of {{ $session->result->total_questions }} correct. Check the review below and focus on the topics you missed.</p>
+                    <p class="text-sm text-gray-600 mt-1">We recommend reviewing the material and the questions you got wrong so you’re ready next time.</p>
                 @endif
             </div>
             @endif
@@ -91,18 +113,25 @@
             </div>
             @endif
 
-            {{-- Performance reflection --}}
+            {{-- Performance reflection (uses $performance from above) --}}
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8 mb-6
-                @if($session->result->score >= 70) border-l-4 border-l-success-500
-                @elseif($session->result->score >= 50) border-l-4 border-l-warning-500
+                @if(isset($performance) && $performance === 'excellent') border-l-4 border-l-success-500
+                @elseif(isset($performance) && $performance === 'good') border-l-4 border-l-success-400
+                @elseif(isset($performance) && $performance === 'fair') border-l-4 border-l-warning-500
                 @else border-l-4 border-l-danger-500 @endif">
                 <h2 class="text-sm font-semibold text-gray-900 mb-2">How you did</h2>
-                @if($session->result->score >= 70)
-                    <p class="text-sm text-gray-700">Strong performance. You showed good understanding of the material.</p>
-                @elseif($session->result->score >= 50)
-                    <p class="text-sm text-gray-700">Decent effort. Review the questions you missed and the topics below to improve next time.</p>
+                @if(isset($performance))
+                @if($performance === 'excellent')
+                    <p class="text-sm text-gray-700">Excellent performance. You showed strong understanding of the material.</p>
+                @elseif($performance === 'good')
+                    <p class="text-sm text-gray-700">Good performance. You showed solid understanding. Keep it up.</p>
+                @elseif($performance === 'fair')
+                    <p class="text-sm text-gray-700">Fair performance. Review the questions you missed and the topics below to improve next time.</p>
                 @else
                     <p class="text-sm text-gray-700">Review the material and the questions you got wrong. Focus on the correct answers and topics so you’re ready next time.</p>
+                @endif
+                @else
+                    <p class="text-sm text-gray-700">Review your answers below to see where you did well and where to improve.</p>
                 @endif
                 @php
                     $wrongCount = $session->result->total_questions - $session->result->correct_count;

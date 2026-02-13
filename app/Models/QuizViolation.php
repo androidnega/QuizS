@@ -10,7 +10,7 @@ class QuizViolation extends Model
     public const SEVERITY_WARNING = 'warning';
     public const SEVERITY_CRITICAL = 'critical';
 
-    protected $fillable = ['quiz_session_id', 'type', 'severity', 'metadata', 'occurred_at'];
+    protected $fillable = ['quiz_session_id', 'type', 'severity', 'metadata', 'image_url', 'occurred_at'];
 
     protected function casts(): array
     {
@@ -24,7 +24,15 @@ class QuizViolation extends Model
 
     public static function types(): array
     {
-        return ['blur', 'multiple_ip', 'copy_paste', 'right_click', 'face_mismatch', 'tab_switch', 'window_resize', 'screenshot_attempt', 'other'];
+        return [
+            'blur', 'multiple_ip', 'copy_paste', 'right_click', 'face_mismatch', 'tab_switch', 
+            'window_resize', 'screenshot_attempt', 'camera_disconnected', 'no_face', 
+            'multiple_faces', 'multiple_faces_pre_quiz', 'multiple_faces_during_quiz',
+            'random_snapshot', 'phone_detected', 'external_audio', 'no_blink', 'head_turn', 
+            'brief_face_loss', 'challenge_failed', 'static_face_detected', 'no_face_during_quiz',
+            'face_out_of_frame',
+            'face_lost_repeatedly', 'other'
+        ];
     }
 
     /**
@@ -35,8 +43,15 @@ class QuizViolation extends Model
      */
     public static function severityForType(string $type): string
     {
-        return in_array($type, ['copy_paste', 'multiple_ip', 'screenshot_attempt'], true)
-            ? self::SEVERITY_CRITICAL
-            : self::SEVERITY_WARNING;
+        // Critical violations
+        if (in_array($type, ['copy_paste', 'multiple_ip', 'screenshot_attempt', 'camera_disconnected', 'face_lost_repeatedly'], true)) {
+            return self::SEVERITY_CRITICAL;
+        }
+        // Major violations
+        if (in_array($type, ['multiple_faces', 'phone_detected', 'external_audio', 'tab_switch', 'blur', 'window_resize'], true)) {
+            return self::SEVERITY_CRITICAL; // Using CRITICAL for major to match backend expectations
+        }
+        // Minor violations (default to warning)
+        return self::SEVERITY_WARNING;
     }
 }

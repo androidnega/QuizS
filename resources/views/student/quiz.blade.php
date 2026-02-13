@@ -4,7 +4,16 @@
 @section('body_class', 'bg-offwhite')
 
 @push('styles')
-<style>.quiz-timer-green{color:#059669}.quiz-timer-blue{color:#2563eb}.quiz-timer-red{color:#dc2626}.quiz-side-num.quiz-side-answered{border-color:#22c55e;background-color:#f0fdf4;color:#15803d}</style>
+<style>
+.quiz-timer-green{color:#059669}.quiz-timer-blue{color:#2563eb}.quiz-timer-red{color:#dc2626}.quiz-side-num.quiz-side-answered{border-color:#22c55e;background-color:#f0fdf4;color:#15803d}
+/* Pulsing AI invigilator badge when camera is active */
+#ai-invigilator-badge{display:none;align-items:center;justify-content:center;gap:0.5rem;padding:0.5rem 1rem;background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 100%);color:#e2e8f0;font-size:0.75rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;border:1px solid rgba(148,163,184,0.3);border-radius:9999px;box-shadow:0 0 0 2px rgba(59,130,246,0.2)}
+#ai-invigilator-badge.visible{display:flex}
+#ai-invigilator-badge .pulse-dot{width:6px;height:6px;background:#22c55e;border-radius:50%;animation:ai-invigilator-pulse 1.5s ease-in-out infinite}
+#ai-invigilator-badge .text{animation:ai-invigilator-glow 2s ease-in-out infinite}
+@keyframes ai-invigilator-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.2)}}
+@keyframes ai-invigilator-glow{0%,100%{opacity:1;text-shadow:0 0 8px rgba(34,197,94,0.4)}50%{opacity:0.9;text-shadow:0 0 14px rgba(34,197,94,0.6)}}
+</style>
 @endpush
 
 @section('content')
@@ -16,6 +25,12 @@
         </div>
     </header>
 
+    {{-- Pulsing "AI INVIGILATOR WATCHING" when camera is active --}}
+    <div id="ai-invigilator-badge" class="fixed left-4 bottom-4 z-40 pointer-events-none" aria-hidden="true">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span class="text">AI Invigilator Watching</span>
+    </div>
+
     {{-- Timer: simple square card, right side, sticky, minimal, no extra text --}}
     @if($remainingSeconds > 0)
     <div id="quiz-timer-card" class="fixed right-4 top-24 z-50 w-16 h-16 sm:w-20 sm:h-20 bg-white border border-gray-200 rounded-lg flex items-center justify-center shadow-sm pointer-events-none overflow-hidden min-w-0">
@@ -24,31 +39,81 @@
     @endif
 
     {{-- Single major violation warning (max once per session): calm, non-accusatory --}}
-    <div id="blur-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 px-4">
+    <div id="blur-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 px-4">
         <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-lg max-w-md w-full text-center">
-            <p class="text-sm text-gray-700 mb-4">Please stay on the quiz page. Further violations will submit your quiz automatically.</p>
+            <p class="text-sm text-white mb-4">Please stay on the quiz page. Further violations will submit your quiz automatically.</p>
             <button type="button" onclick="this.closest('#blur-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>
-    <div id="right-click-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 px-4">
+    <div id="right-click-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 px-4">
         <div class="bg-warning-50 border border-warning-300 rounded-lg p-4 shadow-lg max-w-md w-full">
             <h4 class="font-semibold text-warning-800 mb-1">Do not right-click</h4>
-            <p class="text-sm text-gray-700 mb-3">Stay on this tab. Right-click is not allowed; your attempt has been noted.</p>
+            <p class="text-sm text-white mb-3">Stay on this tab. Right-click is not allowed; your attempt has been noted.</p>
             <button type="button" onclick="this.closest('#right-click-warning').classList.add('hidden')" class="btn btn-secondary py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>
-    <div id="new-tab-zone-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 px-4">
+    <div id="new-tab-zone-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 px-4">
         <div class="bg-amber-50 border border-amber-300 rounded-lg p-4 shadow-lg max-w-md w-full">
             <h4 class="font-semibold text-amber-800 mb-1">Stay in the quiz</h4>
-            <p class="text-sm text-gray-700 mb-3">If you open a new tab or switch to another tab, that will be detected as leaving the page and may result in your quiz being auto-submitted. Stay on this tab and keep your cursor in the quiz area.</p>
+            <p class="text-sm text-white mb-3">If you open a new tab or switch to another tab, that will be detected as leaving the page and may result in your quiz being auto-submitted. Stay on this tab and keep your cursor in the quiz area.</p>
             <button type="button" onclick="this.closest('#new-tab-zone-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
         </div>
     </div>
-    <div id="tab-switch-once-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 px-4">
+    <div id="tab-switch-once-warning" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 px-4">
         <div class="bg-amber-50 border border-amber-400 rounded-lg p-4 shadow-lg max-w-md w-full">
             <h4 class="font-semibold text-amber-800 mb-1">You left this tab</h4>
-            <p class="text-sm text-gray-700 mb-3">If you switch tabs again, your quiz will be auto-submitted immediately with no further warning. Stay on this tab to continue.</p>
+            <p class="text-sm text-white mb-3">If you switch tabs again, your quiz will be auto-submitted immediately with no further warning. Stay on this tab to continue.</p>
             <button type="button" onclick="this.closest('#tab-switch-once-warning').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">OK</button>
+        </div>
+    </div>
+
+    {{-- Face loss warning system (max 4 warnings, 5th = auto-submit) --}}
+    <div id="face-loss-warning-first" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 px-4">
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6 shadow-lg max-w-md w-full text-center">
+            <h4 class="font-semibold text-yellow-800 mb-2">⚠️ Keep your face visible</h4>
+            <p class="text-sm text-yellow-900 mb-4">We couldn't see your face just now. Please stay in front of the camera at all times. <strong>4 more warnings remaining</strong> before auto-submission.</p>
+            <button type="button" onclick="this.closest('#face-loss-warning-first').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">I understand</button>
+        </div>
+    </div>
+    <div id="face-loss-warning-second" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 px-4">
+        <div class="bg-orange-50 border-2 border-orange-500 rounded-xl p-6 shadow-lg max-w-md w-full text-center">
+            <h4 class="font-semibold text-orange-800 mb-2">⚠️ Second Warning!</h4>
+            <p class="text-sm text-orange-900 mb-4">Your face was not visible again. <strong>3 more warnings remaining</strong> before your quiz is auto-submitted.</p>
+            <button type="button" onclick="this.closest('#face-loss-warning-second').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">I understand</button>
+        </div>
+    </div>
+    <div id="face-loss-warning-third" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 px-4">
+        <div class="bg-orange-100 border-2 border-orange-600 rounded-xl p-6 shadow-lg max-w-md w-full text-center">
+            <h4 class="font-semibold text-orange-900 mb-2">⚠️ Third Warning!</h4>
+            <p class="text-sm text-orange-900 mb-4">Your face was not visible again. <strong>2 more warnings remaining</strong> before auto-submission.</p>
+            <button type="button" onclick="this.closest('#face-loss-warning-third').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">I understand</button>
+        </div>
+    </div>
+    <div id="face-loss-warning-fourth" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 px-4">
+        <div class="bg-red-50 border-2 border-red-500 rounded-xl p-6 shadow-lg max-w-md w-full text-center">
+            <h4 class="font-semibold text-red-800 mb-2">⚠️ Fourth Warning!</h4>
+            <p class="text-sm text-red-900 mb-4">Your face was not visible again. <strong>1 more warning will auto-submit your quiz.</strong> Please keep your face in the camera at all times.</p>
+            <button type="button" onclick="this.closest('#face-loss-warning-fourth').classList.add('hidden')" class="btn btn-action py-2.5 px-5 text-sm font-semibold">I understand</button>
+        </div>
+    </div>
+    <div id="face-loss-warning-final" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 px-4">
+        <div class="bg-red-50 border-2 border-red-600 rounded-xl p-6 shadow-lg max-w-md w-full text-center">
+            <h4 class="font-semibold text-red-800 mb-2">🚨 Auto-submitting</h4>
+            <p class="text-sm text-red-900 mb-4">This is your <strong>fifth face-out-of-frame violation</strong>. Your quiz will be <strong>automatically submitted now</strong> to protect exam integrity.</p>
+            <button type="button" onclick="this.closest('#face-loss-warning-final').classList.add('hidden')" class="btn btn-danger py-2.5 px-5 text-sm font-semibold">I understand</button>
+        </div>
+    </div>
+    <div id="object-detection-warning" class="hidden fixed top-20 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-md z-[60] px-4 py-3 rounded-lg shadow-lg border bg-red-50 border-red-400 text-red-800">
+        <p id="object-detection-warning-text" class="text-sm font-semibold">Prohibited object detected in frame.</p>
+        <button type="button" onclick="this.closest('#object-detection-warning').classList.add('hidden')" class="mt-3 btn btn-secondary py-2 px-4 text-xs font-semibold">I understand</button>
+    </div>
+
+    {{-- Camera off overlay: block quiz until user allows camera --}}
+    <div id="camera-off-overlay" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-gray-900 px-4 pointer-events-auto" aria-hidden="true">
+        <div class="bg-white border border-gray-200 rounded-xl p-6 max-w-md w-full shadow-lg text-center">
+            <h4 class="font-semibold text-gray-800 mb-2">Camera is required</h4>
+            <p class="text-sm text-gray-600 mb-4">Your camera must stay on throughout the quiz. Please allow camera access to continue.</p>
+            <button type="button" id="camera-off-allow-btn" class="btn btn-action py-2.5 px-5 text-sm font-semibold">Allow camera &amp; continue</button>
         </div>
     </div>
 
@@ -105,7 +170,13 @@
                     <div id="quiz-submit-block" class="bg-white border border-gray-200 rounded-xl p-5 min-w-0">
                         <p id="quiz-answered-summary" class="text-sm text-gray-700 mb-2" data-total="{{ $questions->count() }}">{{ $answeredCount ?? 0 }} of {{ $questions->count() }} questions answered.</p>
                         <p class="text-sm text-gray-600 mb-4">When you finish, you will go to a final photo screen to complete your submission.</p>
-                        <button type="button" class="btn btn-action w-full sm:w-auto py-2.5 px-5 text-sm font-semibold" id="post-face-btn">
+                        <button
+                            type="button"
+                            class="btn btn-action w-full sm:w-auto py-2.5 px-5 text-sm font-semibold"
+                            id="post-face-btn"
+                            data-final-url="{{ route('student.final-photo.capture') }}"
+                            onclick="window.location.href=this.dataset.finalUrl"
+                        >
                             Finish quiz
                         </button>
                     </div>
@@ -137,24 +208,66 @@
 </div>
 
 @push('scripts')
+<!-- TensorFlow.js + BlazeFace for Face Detection -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.umd.js" crossorigin="anonymous"></script>
+
+<!-- TensorFlow.js for Object Detection -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js" crossorigin="anonymous"></script>
+
 <script src="{{ asset('js/quiz-window-state.js') }}"></script>
 <script src="{{ asset('js/quiz-proctoring.js') }}" defer></script>
+<script src="{{ asset('js/proctoring/intelligentFaceMonitor.js') }}" defer></script>
+<script src="{{ asset('js/proctoring/objectMonitor.js') }}" defer></script>
+<script src="{{ asset('js/proctoring/audioMonitor.js') }}" defer></script>
 <script>
 window.QuizSnapQuiz = {
     saveAnswerUrl: "{{ route('student.quiz.save') }}",
     saveAnswersBatchUrl: "{{ route('student.quiz.save.batch') }}",
     violationUrl: "{{ route('student.quiz.violation') }}",
+    violationCaptureUrl: "{{ route('student.quiz.violation.capture') }}",
     heartbeatUrl: "{{ route('student.quiz.heartbeat') }}",
+    proctorFeedUrl: "{{ route('student.quiz.proctor-feed') }}",
     finalPhotoUrl: "{{ route('student.final-photo.capture') }}",
     timeSyncUrl: "{{ route('student.quiz.time-sync') }}",
     csrfToken: "{{ csrf_token() }}",
+    sessionId: {{ $session->id ?? 0 }},
     storagePrefix: "quizsnap_answers_{{ $session->id ?? 0 }}",
     durationSeconds: {{ $durationSeconds }},
     remainingSeconds: {{ $remainingSeconds }},
     totalPages: {{ $totalPages }},
     perPage: {{ $perPage }},
-    windowResizeLimit: 3
+    windowResizeLimit: 3,
+    cameraRequired: {{ ($proctoringCameraRequired ?? true) ? 'true' : 'false' }},
+    proctoringFaceMonitor: {{ ($proctoringFaceMonitor ?? true) ? 'true' : 'false' }},
+    proctoringTabSwitch: {{ ($proctoringTabSwitch ?? true) ? 'true' : 'false' }},
+    proctoringObjectDetect: {{ ($proctoringObjectDetect ?? true) ? 'true' : 'false' }},
+    proctoringBlockRightClick: {{ ($proctoringBlockRightClick ?? true) ? 'true' : 'false' }},
+    proctoringBlockCopyPaste: {{ ($proctoringBlockCopyPaste ?? true) ? 'true' : 'false' }}
 };
+
+// Configure intelligent face monitor for quiz monitoring
+window.QuizSnapIntelligentFaceMonitor = window.QuizSnapIntelligentFaceMonitor || {};
+window.QuizSnapIntelligentFaceMonitor.config = window.QuizSnapIntelligentFaceMonitor.config || {};
+window.QuizSnapIntelligentFaceMonitor.config.violationUrl = "{{ route('student.quiz.violation') }}";
+window.QuizSnapIntelligentFaceMonitor.config.violationCaptureUrl = "{{ route('student.quiz.violation.capture') }}";
+window.QuizSnapIntelligentFaceMonitor.config.autoSubmitUrl = "{{ route('student.quiz.auto-submit') }}";
+window.QuizSnapIntelligentFaceMonitor.config.csrfToken = "{{ csrf_token() }}";
+window.QuizSnapIntelligentFaceMonitor.config.sessionId = {{ $session->id ?? 0 }};
+
+// Configure object monitor
+window.QuizSnapObjectMonitor = window.QuizSnapObjectMonitor || {};
+window.QuizSnapObjectMonitor.config = window.QuizSnapObjectMonitor.config || {};
+window.QuizSnapObjectMonitor.config.violationCaptureUrl = "{{ route('student.quiz.violation.capture') }}";
+window.QuizSnapObjectMonitor.config.csrfToken = "{{ csrf_token() }}";
+window.QuizSnapObjectMonitor.config.sessionId = {{ $session->id ?? 0 }};
+
+// Configure audio monitor
+window.QuizSnapAudioMonitor = window.QuizSnapAudioMonitor || {};
+window.QuizSnapAudioMonitor.config = window.QuizSnapAudioMonitor.config || {};
+window.QuizSnapAudioMonitor.config.violationCaptureUrl = "{{ route('student.quiz.violation.capture') }}";
+window.QuizSnapAudioMonitor.config.csrfToken = "{{ csrf_token() }}";
+window.QuizSnapAudioMonitor.config.sessionId = {{ $session->id ?? 0 }};
 document.addEventListener('DOMContentLoaded', function() {
     window.QuizSnapQuiz.showRightClickWarning = function() {
         var el = document.getElementById('right-click-warning');

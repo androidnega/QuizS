@@ -11,7 +11,7 @@
 
         <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
             <p class="text-xs text-primary-600 font-medium mb-2">Align face in frame</p>
-            <div class="relative bg-gray-900 rounded-lg overflow-hidden border border-gray-200 mx-auto" style="max-width: 280px; aspect-ratio: 4/3;">
+            <div id="video-container" class="relative bg-gray-900 rounded-lg overflow-hidden border-2 border-gray-200 mx-auto transition-all duration-300" style="max-width: 280px; aspect-ratio: 4/3;">
                 <video 
                     id="camera-video" 
                     autoplay 
@@ -53,6 +53,10 @@
             </div>
         </div>
 
+        <div id="face-check-status" class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <p id="face-check-status-text" class="text-xs text-blue-700">Initializing face verification...</p>
+        </div>
+
         <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 mb-4 cursor-pointer">
             <input type="checkbox" id="face-confirm-checkbox" class="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500">
             <span class="text-sm font-medium text-gray-800">I confirm my face is clearly visible in the frame above</span>
@@ -75,6 +79,9 @@ window.addEventListener('pageshow', function(e) {
     if (e.persisted) window.location.reload();
 });
 </script>
+<!-- TensorFlow.js + BlazeFace for Face Detection -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.umd.js" crossorigin="anonymous"></script>
 <script src="{{ asset('js/final-photo-capture.js') }}" defer></script>
 <script>
 window.QuizSnapFinalPhoto = {

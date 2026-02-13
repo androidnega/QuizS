@@ -49,6 +49,12 @@
         {{-- Face Capture: profile-style small images --}}
         <section class="min-w-0 bg-white rounded-lg border border-gray-200 p-3" id="face-capture">
             <h2 class="text-sm font-semibold text-gray-900 mb-2">Face Capture</h2>
+            @php
+                $violationSnapshots = $session->violations
+                    ->filter(fn ($v) => !empty($v->image_url))
+                    ->take(5)
+                    ->values();
+            @endphp
             <div class="flex flex-wrap gap-4">
                 <div class="flex flex-col items-center">
                     <span class="text-xs text-gray-500 mb-1">1. At start</span>
@@ -86,6 +92,25 @@
                         <div class="w-20 h-20 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 text-xs">No image</div>
                     @endif
                 </div>
+                <div class="flex flex-col items-start">
+                    <span class="text-xs text-gray-500 mb-1">3. During quiz (max 5)</span>
+                    @if($violationSnapshots->isNotEmpty())
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($violationSnapshots as $snap)
+                                @php
+                                    $img = $snap->image_url;
+                                    $imgUrl = (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) ? $img : asset('storage/' . ltrim($img, '/'));
+                                @endphp
+                                <button type="button" class="session-img-thumb rounded-lg border border-gray-200 overflow-hidden bg-gray-50 hover:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1" data-session-full-img="{{ $imgUrl }}" data-session-img-alt="Violation capture {{ $loop->iteration }}" aria-label="View full size">
+                                    <img src="{{ $imgUrl }}" alt="Violation capture {{ $loop->iteration }}" class="w-16 h-16 object-cover object-top" loading="lazy" onerror="this.style.display='none';">
+                                </button>
+                            @endforeach
+                        </div>
+                        <span class="text-xs text-gray-500 mt-1">Auto-captured when face left frame.</span>
+                    @else
+                        <div class="text-xs text-gray-400">No in-quiz captures.</div>
+                    @endif
+                </div>
             </div>
         </section>
 
@@ -104,6 +129,7 @@
                                 <th scope="col" class="px-2 py-1.5 text-left font-semibold text-gray-700">Type</th>
                                 <th scope="col" class="px-2 py-1.5 text-left font-semibold text-gray-700">Severity</th>
                                 <th scope="col" class="px-2 py-1.5 text-left font-semibold text-gray-700">Details</th>
+                                <th scope="col" class="px-2 py-1.5 text-left font-semibold text-gray-700">Image</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
@@ -118,6 +144,9 @@
                                         'screenshot_attempt' => 'Screenshot key pressed',
                                         'multiple_ip' => 'Different IP address used',
                                         'face_mismatch' => 'Face mismatch',
+                                        'no_face_during_quiz' => 'No face during quiz',
+                                        'face_out_of_frame' => 'Face out of frame',
+                                        'multiple_faces_during_quiz' => 'Multiple faces during quiz',
                                         'other' => 'Other',
                                     ];
                                     $label = $typeLabels[$v->type] ?? ucfirst(str_replace('_', ' ', $v->type));
@@ -153,6 +182,19 @@
                                         @endif
                                     </td>
                                     <td class="px-2 py-1.5 text-gray-600 max-w-[200px] sm:max-w-xs break-words">{{ $details ?: '—' }}</td>
+                                    <td class="px-2 py-1.5">
+                                        @if(!empty($v->image_url))
+                                            @php
+                                                $img = $v->image_url;
+                                                $imgUrl = (str_starts_with($img, 'http://') || str_starts_with($img, 'https://')) ? $img : asset('storage/' . ltrim($img, '/'));
+                                            @endphp
+                                            <button type="button" class="session-img-thumb rounded border border-gray-200 overflow-hidden" data-session-full-img="{{ $imgUrl }}" data-session-img-alt="Violation image {{ $idx + 1 }}" aria-label="Open violation image">
+                                                <img src="{{ $imgUrl }}" alt="Violation image {{ $idx + 1 }}" class="w-10 h-10 object-cover" loading="lazy" onerror="this.style.display='none';">
+                                            </button>
+                                        @else
+                                            <span class="text-gray-400">—</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

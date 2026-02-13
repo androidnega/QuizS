@@ -12,6 +12,7 @@
     const timeSyncUrl = c.timeSyncUrl;
     const csrfToken = c.csrfToken;
     const storagePrefix = c.storagePrefix || 'quizsnap_quiz';
+    const cameraRequired = c.cameraRequired !== false;
     let remainingSeconds = c.remainingSeconds || 0;
     let endTimeMs = null;
     let timerInterval = null;
@@ -20,6 +21,109 @@
     const BLUR_RECORD_DELAY_MS = 2500;
     let blurRecordTimer = null;
     let isUnloading = false;
+    let cameraStream = null;
+    let cameraCheckInterval = null;
+    let wakeLock = null;
+    let cameraProtectionInterval = null;
+    let cameraWarningShown = false;
+    let proctorFeedInterval = null;
+
+    /**
+     * Request screen wake lock to prevent dimming
+     */
+    async function requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Screen wake lock acquired');
+                wakeLock.addEventListener('release', function() {
+                    console.log('Screen wake lock released, re-requesting...');
+                    // Re-request if released (e.g., user switches tabs)
+                    setTimeout(requestWakeLock, 1000);
+                });
+            } catch (err) {
+                console.warn('Wake lock request failed:', err);
+            }
+        }
+    }
+
+    /**
+     * Release screen wake lock
+     */
+    function releaseWakeLock() {
+        if (wakeLock) {
+            wakeLock.release().then(function() {
+                wakeLock = null;
+                console.log('Screen wake lock released');
+            }).catch(function(err) {
+                console.warn('Wake lock release failed:', err);
+            });
+        }
+    }
+
+    /**
+     * Protect camera stream from being canceled
+     */
+    function startCameraProtection() {
+        if (cameraProtectionInterval) return;
+        cameraProtectionInterval = setInterval(function() {
+            if (!cameraStream) return;
+            const videoTrack = cameraStream.getVideoTracks()[0];
+            if (!videoTrack || videoTrack.readyState === 'ended') {
+                console.warn('Camera stream ended during quiz.');
+                if (cameraRequired && typeof showCameraOffOverlay === 'function') {
+                    showCameraOffOverlay();
+                } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                        .then(function(newStream) {
+                            cameraStream = newStream;
+                            if (typeof hideCameraOffOverlay === 'function') hideCameraOffOverlay();
+                            const monitorVideo = document.getElementById('face-monitor-video');
+                            if (monitorVideo) monitorVideo.srcObject = newStream;
+                        })
+                        .catch(function(err) {
+                            console.error('Failed to restart camera:', err);
+                            if (cameraRequired && typeof showCameraOffOverlay === 'function') showCameraOffOverlay();
+                        });
+                }
+            }
+        }, 2000);
+    }
+
+    /**
+     * Stop camera protection monitoring
+     */
+    function stopCameraProtection() {
+        if (cameraProtectionInterval) {
+            clearInterval(cameraProtectionInterval);
+            cameraProtectionInterval = null;
+        }
+    }
+
+    function showCameraReconnectWarning() {
+        if (cameraWarningShown) return;
+        cameraWarningShown = true;
+        setTimeout(function () {
+            cameraWarningShown = false;
+        }, 5000);
+        alert('Camera connection was interrupted. Please keep camera on and face centered.');
+    }
+
+    function showCameraOffOverlay() {
+        var el = document.getElementById('camera-off-overlay');
+        if (el) {
+            el.classList.remove('hidden');
+            el.setAttribute('aria-hidden', 'false');
+        }
+    }
+
+    function hideCameraOffOverlay() {
+        var el = document.getElementById('camera-off-overlay');
+        if (el) {
+            el.classList.add('hidden');
+            el.setAttribute('aria-hidden', 'true');
+        }
+    }
 
     const timerEl = document.getElementById('quiz-timer');
     const timerStickyEl = document.getElementById('quiz-timer-sticky');
@@ -278,6 +382,9 @@
     }
 
     function submitQuiz(doPostFace) {
+        // Release wake lock and stop camera protection when quiz ends
+        releaseWakeLock();
+        stopCameraProtection();
         if (doPostFace) {
             goToFinalPhoto();
         } else {
@@ -305,7 +412,10 @@
     }
 
     window.addEventListener('pagehide', function () { isUnloading = true; });
+    // Cleanup on quiz end
     window.addEventListener('beforeunload', function (e) {
+        releaseWakeLock();
+        stopCameraProtection();
         isUnloading = true;
         if (window.QuizSnapQuiz && window.QuizSnapQuiz.navigatingToFinalPhoto) return;
         flushSavePending();
@@ -337,7 +447,8 @@
 
     function recordBlurAfterDelay() {
         if (isUnloading || remainingSeconds <= 0) return;
-        recordViolation('blur');
+        if (c.proctoringTabSwitch === false) return;
+        recordViolation('tab_switch');
     }
 
     document.addEventListener('visibilitychange', function () {
@@ -354,7 +465,23 @@
             sendHeartbeat();
         }
     });
-    window.addEventListener('focus', sendHeartbeat);
+    
+    // Also detect window blur events
+    window.addEventListener('blur', function () {
+        if (isUnloading || remainingSeconds <= 0) return;
+        if (c.proctoringTabSwitch === false) return;
+        if (blurRecordTimer) clearTimeout(blurRecordTimer);
+        blurRecordTimer = setTimeout(function () {
+            blurRecordTimer = null;
+            if (isUnloading) return;
+            recordViolation('blur');
+        }, BLUR_RECORD_DELAY_MS);
+    });
+    
+    window.addEventListener('focus', function () {
+        if (blurRecordTimer) { clearTimeout(blurRecordTimer); blurRecordTimer = null; }
+        sendHeartbeat();
+    });
 
     function sendHeartbeat() {
         if (!heartbeatUrl) return;
@@ -389,21 +516,25 @@
         });
     })();
 
-    // Right-click: block only (no context menu). Log violation silently; no popup, no auto-submit.
+    // Right-click: block only when proctoring allows
     document.addEventListener('contextmenu', function (e) {
+        if (c.proctoringBlockRightClick === false) return;
         e.preventDefault();
         e.stopPropagation();
         recordViolation('right_click');
     }, true);
     document.addEventListener('copy', function (e) {
+        if (c.proctoringBlockCopyPaste === false) return;
         e.preventDefault();
         recordViolation('copy_paste');
     });
     document.addEventListener('cut', function (e) {
+        if (c.proctoringBlockCopyPaste === false) return;
         e.preventDefault();
         recordViolation('copy_paste');
     });
     document.addEventListener('paste', function (e) {
+        if (c.proctoringBlockCopyPaste === false) return;
         e.preventDefault();
         recordViolation('copy_paste');
     });
@@ -513,15 +644,20 @@
         }
     }
 
-    if (resizeBlurOverlay) {
+    var cameraOffOverlay = document.getElementById('camera-off-overlay');
+    function isBlockingOverlayVisible() {
+        return (resizeBlurOverlay && !resizeBlurOverlay.classList.contains('hidden')) ||
+            (cameraOffOverlay && !cameraOffOverlay.classList.contains('hidden'));
+    }
+    if (resizeBlurOverlay || cameraOffOverlay) {
         document.addEventListener('keydown', function (e) {
-            if (resizeBlurOverlay && !resizeBlurOverlay.classList.contains('hidden')) {
+            if (isBlockingOverlayVisible()) {
                 e.preventDefault();
                 e.stopPropagation();
             }
         }, true);
         document.addEventListener('keypress', function (e) {
-            if (resizeBlurOverlay && !resizeBlurOverlay.classList.contains('hidden')) {
+            if (isBlockingOverlayVisible()) {
                 e.preventDefault();
                 e.stopPropagation();
             }
@@ -556,4 +692,178 @@
     window.addEventListener('focus', checkWindowState);
 
     setInterval(checkWindowState, 500);
+
+    // --- Camera monitoring during quiz (single background camera stream) ---
+    if (cameraRequired) {
+        function handleCameraDisconnection() {
+            if (remainingSeconds <= 0 || isUnloading) return;
+            var invigilatorBadge = document.getElementById('ai-invigilator-badge');
+            if (invigilatorBadge) invigilatorBadge.classList.remove('visible');
+            showCameraOffOverlay();
+        }
+
+        function checkCameraStatus() {
+            if (remainingSeconds <= 0 || isUnloading) return;
+            if (!cameraStream) {
+                handleCameraDisconnection();
+                return;
+            }
+            const videoTrack = cameraStream.getVideoTracks()[0];
+            if (!videoTrack || videoTrack.readyState === 'ended') {
+                handleCameraDisconnection();
+            }
+        }
+
+        function requestCameraAndContinue() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Camera is not supported in this browser.');
+                return;
+            }
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                .then(function (stream) {
+                    hideCameraOffOverlay();
+                    setupMonitoringWithStream(stream);
+                })
+                .catch(function (err) {
+                    alert('Could not access camera. Please allow camera permission in your browser settings and click "Allow camera & continue" again.');
+                });
+        }
+
+        function setupMonitoringWithStream(stream) {
+            hideCameraOffOverlay();
+            var invigilatorBadge = document.getElementById('ai-invigilator-badge');
+            if (invigilatorBadge) invigilatorBadge.classList.add('visible');
+            cameraStream = stream;
+            const videoTrack = stream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.onended = function () {
+                    handleCameraDisconnection();
+                };
+            }
+
+            let monitorVideo = document.getElementById('face-monitor-video');
+            if (!monitorVideo) {
+                monitorVideo = document.createElement('video');
+                monitorVideo.id = 'face-monitor-video';
+                monitorVideo.autoplay = true;
+                monitorVideo.playsinline = true;
+                monitorVideo.muted = true;
+                monitorVideo.style.display = 'none';
+                monitorVideo.width = 640;
+                monitorVideo.height = 480;
+                document.body.appendChild(monitorVideo);
+            }
+            monitorVideo.srcObject = stream;
+
+            function startTfMonitoring() {
+                if (monitorVideo.readyState < 2 || monitorVideo.videoWidth <= 0) {
+                    setTimeout(startTfMonitoring, 400);
+                    return;
+                }
+
+                if (c.proctoringFaceMonitor !== false && window.QuizSnapIntelligentFaceMonitor) {
+                    window.QuizSnapIntelligentFaceMonitor.config = window.QuizSnapIntelligentFaceMonitor.config || {};
+                    window.QuizSnapIntelligentFaceMonitor.config.videoElement = monitorVideo;
+                    window.QuizSnapIntelligentFaceMonitor.config.violationUrl = violationUrl;
+                    window.QuizSnapIntelligentFaceMonitor.config.violationCaptureUrl = c.violationCaptureUrl || '/quiz/violation/capture';
+                    window.QuizSnapIntelligentFaceMonitor.config.csrfToken = csrfToken;
+                    window.QuizSnapIntelligentFaceMonitor.config.sessionId = c.sessionId || 0;
+                    if (window.QuizSnapIntelligentFaceMonitor.start) {
+                        window.QuizSnapIntelligentFaceMonitor.start();
+                    }
+                    if (window.QuizSnapIntelligentFaceMonitor.startQuizMonitoring) {
+                        window.QuizSnapIntelligentFaceMonitor.startQuizMonitoring();
+                    }
+                }
+
+                if (c.proctoringObjectDetect !== false && window.QuizSnapObjectMonitor) {
+                    window.QuizSnapObjectMonitor.config = window.QuizSnapObjectMonitor.config || {};
+                    window.QuizSnapObjectMonitor.config.videoElement = monitorVideo;
+                    window.QuizSnapObjectMonitor.config.violationCaptureUrl = c.violationCaptureUrl || '/quiz/violation/capture';
+                    window.QuizSnapObjectMonitor.config.csrfToken = csrfToken;
+                    window.QuizSnapObjectMonitor.config.sessionId = c.sessionId || 0;
+                    window.QuizSnapObjectMonitor.config.onViolation = function (violation) {
+                        recordViolation(violation.type || 'other', violation.metadata || {});
+                    };
+                    if (window.QuizSnapObjectMonitor.start) {
+                        window.QuizSnapObjectMonitor.start();
+                    }
+                }
+
+                // Proctor feed: send camera frame to examiner every 4 seconds
+                var proctorFeedUrl = c.proctorFeedUrl;
+                if (proctorFeedUrl && monitorVideo.videoWidth > 0) {
+                    var proctorCanvas = document.createElement('canvas');
+                    var proctorCtx = proctorCanvas.getContext('2d');
+                    function sendProctorFrame() {
+                        if (remainingSeconds <= 0 || isUnloading || !cameraStream) return;
+                        var track = cameraStream.getVideoTracks()[0];
+                        if (!track || track.readyState !== 'live') return;
+                        if (monitorVideo.readyState < 2 || monitorVideo.videoWidth <= 0) return;
+                        try {
+                            proctorCanvas.width = monitorVideo.videoWidth;
+                            proctorCanvas.height = monitorVideo.videoHeight;
+                            proctorCtx.drawImage(monitorVideo, 0, 0);
+                            var dataUrl = proctorCanvas.toDataURL('image/jpeg', 0.7);
+                            fetch(proctorFeedUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' },
+                                body: JSON.stringify({ image_base64: dataUrl }),
+                            }).catch(function () {});
+                        } catch (e) {}
+                    }
+                    if (proctorFeedInterval) clearInterval(proctorFeedInterval);
+                    proctorFeedInterval = setInterval(sendProctorFrame, 4000);
+                    sendProctorFrame();
+                }
+            }
+
+            monitorVideo.play().then(startTfMonitoring).catch(function () {
+                setTimeout(startTfMonitoring, 800);
+            });
+            monitorVideo.addEventListener('loadeddata', startTfMonitoring, { once: true });
+            monitorVideo.addEventListener('canplay', startTfMonitoring, { once: true });
+
+            startCameraProtection();
+            requestWakeLock();
+            cameraCheckInterval = setInterval(checkCameraStatus, 2000);
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(function (stream) {
+                setupMonitoringWithStream(stream);
+            })
+            .catch(function (err) {
+                if (remainingSeconds > 0 && !isUnloading) showCameraOffOverlay();
+            });
+
+        var cameraOffAllowBtn = document.getElementById('camera-off-allow-btn');
+        if (cameraOffAllowBtn) {
+            cameraOffAllowBtn.addEventListener('click', requestCameraAndContinue);
+        }
+
+        if (navigator.mediaDevices && navigator.mediaDevices.ondevicechange !== undefined) {
+            navigator.mediaDevices.addEventListener('devicechange', checkCameraStatus);
+        }
+
+        window.addEventListener('beforeunload', function () {
+            var invigilatorBadge = document.getElementById('ai-invigilator-badge');
+            if (invigilatorBadge) invigilatorBadge.classList.remove('visible');
+            releaseWakeLock();
+            stopCameraProtection();
+            if (cameraCheckInterval) clearInterval(cameraCheckInterval);
+            if (proctorFeedInterval) { clearInterval(proctorFeedInterval); proctorFeedInterval = null; }
+            if (window.QuizSnapObjectMonitor && window.QuizSnapObjectMonitor.stop) {
+                window.QuizSnapObjectMonitor.stop();
+            }
+            if (window.QuizSnapIntelligentFaceMonitor && window.QuizSnapIntelligentFaceMonitor.stop) {
+                window.QuizSnapIntelligentFaceMonitor.stop();
+            }
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(function (track) {
+                    track.stop();
+                });
+            }
+        });
+    }
 })();

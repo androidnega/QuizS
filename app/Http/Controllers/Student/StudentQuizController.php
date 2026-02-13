@@ -18,11 +18,13 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class StudentQuizController extends Controller
 {
+    private const MAX_QUIZ_VIOLATION_CAPTURES = 5;
     /**
-     * System readiness screen: course name, duration, tab warning, Start Quiz button.
+     * System readiness screen after pre-quiz face capture.
      */
     public function ready(Request $request): View|\Illuminate\Http\RedirectResponse
     {
@@ -37,10 +39,14 @@ class StudentQuizController extends Controller
         if ($session->start_time !== null) {
             return redirect()->route('student.quiz.show');
         }
+        $questionCount = is_array($session->assigned_question_ids)
+            ? count($session->assigned_question_ids)
+            : 0;
         return view('student.quiz-ready', [
             'session' => $session,
             'courseName' => $session->quiz->course->name ?? $session->quiz->title,
             'durationMinutes' => $session->quiz->duration_minutes,
+            'questionCount' => $questionCount,
         ]);
     }
 
@@ -48,30 +54,45 @@ class StudentQuizController extends Controller
      * Start quiz session with camera verification.
      * Marks camera_verified = true and camera_started_at = now().
      */
-    public function startSession(Request $request): JsonResponse
+    public function startSession(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $token = session('quiz_session_token');
         if (!$token) {
-            return response()->json(['success' => false, 'message' => 'No active quiz session.'], 401);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'No active quiz session.'], 401);
+            }
+            return redirect()->route('student.landing')->with('error', 'Error');
         }
         $session = QuizSession::where('session_token', $token)->first();
         if (!$session) {
-            return response()->json(['success' => false, 'message' => 'Session not found.'], 404);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Session not found.'], 404);
+            }
+            return redirect()->route('student.landing')->with('error', 'Error');
         }
         if ($session->ended_at) {
-            return response()->json(['success' => false, 'message' => 'Session already ended.'], 403);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Session already ended.'], 403);
+            }
+            return redirect()->to($this->quizCompleteUrl());
         }
         if ($session->start_time !== null) {
-            return response()->json(['success' => true, 'redirect' => route('student.quiz.show')]);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'redirect' => route('student.quiz.show')]);
+            }
+            return redirect()->route('student.quiz.show');
         }
         $session->update([
             'camera_verified' => true,
             'camera_started_at' => now(),
         ]);
-        return response()->json([
-            'success' => true,
-            'redirect' => route('student.quiz.show'),
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'redirect' => route('student.quiz.show'),
+            ]);
+        }
+        return redirect()->route('student.quiz.show');
     }
 
     /**
@@ -79,7 +100,7 @@ class StudentQuizController extends Controller
      * Session token resolved from session (not URL). Timer starts on first load (start_time set here if null).
      * Requires camera_verified = true before allowing quiz to start.
      */
-    public function show(Request $request): View|JsonResponse|\Illuminate\Http\Response
+    public function show(Request $request): View|JsonResponse|\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
     {
         $token = session('quiz_session_token');
         if (!$token) {
@@ -89,9 +110,9 @@ class StudentQuizController extends Controller
         if ($session->ended_at) {
             return redirect()->to($this->quizCompleteUrl());
         }
-        // Enforce camera verification before quiz starts
+        // Enforce pre-capture gate only; do not use legacy /quiz/ready screen.
         if (!$session->camera_verified) {
-            return redirect()->route('student.quiz.ready')->with('error', 'Error');
+            return redirect()->route('student.proctoring.capture')->with('error', 'Error');
         }
         if ($session->start_time === null) {
             $session->update(['start_time' => now()]);
@@ -131,6 +152,13 @@ class StudentQuizController extends Controller
         })->count();
         $perPage = $totalQuestions <= 20 ? 10 : 20;
         $totalPages = $totalQuestions > 0 ? (int) ceil($totalQuestions / $perPage) : 1;
+        $proctoringCameraRequired = Setting::getValue(Setting::KEY_PROCTORING_CAMERA_REQUIRED, '1') === '1';
+        $proctoringFaceMonitor = Setting::getValue(Setting::KEY_PROCTORING_FACE_MONITOR, '1') === '1';
+        $proctoringTabSwitch = Setting::getValue(Setting::KEY_PROCTORING_TAB_SWITCH, '1') === '1';
+        $proctoringObjectDetect = Setting::getValue(Setting::KEY_PROCTORING_OBJECT_DETECT, '1') === '1';
+        $proctoringBlockRightClick = Setting::getValue(Setting::KEY_PROCTORING_BLOCK_RIGHT_CLICK, '1') === '1';
+        $proctoringBlockCopyPaste = Setting::getValue(Setting::KEY_PROCTORING_BLOCK_COPY_PASTE, '1') === '1';
+
         return response()
             ->view('student.quiz', [
                 'session' => $session,
@@ -142,6 +170,12 @@ class StudentQuizController extends Controller
                 'remainingSeconds' => $remaining,
                 'perPage' => $perPage,
                 'totalPages' => $totalPages,
+                'proctoringCameraRequired' => $proctoringCameraRequired,
+                'proctoringFaceMonitor' => $proctoringFaceMonitor,
+                'proctoringTabSwitch' => $proctoringTabSwitch,
+                'proctoringObjectDetect' => $proctoringObjectDetect,
+                'proctoringBlockRightClick' => $proctoringBlockRightClick,
+                'proctoringBlockCopyPaste' => $proctoringBlockCopyPaste,
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache');
@@ -272,29 +306,50 @@ class StudentQuizController extends Controller
             return response()->json(['success' => false, 'message' => 'Session already ended.'], 403);
         }
 
+        $violationType = (string) $request->violation_type;
+        $faceLossTypes = ['no_face_during_quiz', 'face_out_of_frame'];
+        $isFaceLossCapture = in_array($violationType, $faceLossTypes, true);
+        $capturedCount = $isFaceLossCapture
+            ? $session->violations()->whereNotNull('image_url')->whereIn('type', $faceLossTypes)->count()
+            : $session->violations()->whereNotNull('image_url')->count();
+        if ($isFaceLossCapture && $capturedCount >= self::MAX_QUIZ_VIOLATION_CAPTURES) {
+            return response()->json([
+                'success' => true,
+                'image_url' => null,
+                'captured' => false,
+                'limit_reached' => true,
+                'max_captures' => self::MAX_QUIZ_VIOLATION_CAPTURES,
+            ]);
+        }
+
         $imageUrl = null;
         $data = $request->image_base64;
 
-        // Upload to Cloudinary
-        if (Str::startsWith($data, 'data:image')) {
-            try {
-                if (CloudinaryService::isConfigured()) {
-                    $imageUrl = CloudinaryService::uploadFromDataUrl(
-                        $data,
-                        'violation_s' . $session->id . '_' . time() . '_' . Str::random(8)
-                    );
-                }
-            } catch (\Throwable $e) {
-                report($e);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to upload image.',
-                ], 500);
+        if (!Str::startsWith($data, 'data:image')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid capture payload.',
+            ], 422);
+        }
+
+        try {
+            if (CloudinaryService::isConfigured()) {
+                $imageUrl = CloudinaryService::uploadFromDataUrl(
+                    $data,
+                    'violation_s' . $session->id . '_' . time() . '_' . Str::random(8)
+                );
+            } else {
+                $imageUrl = $this->storeViolationCaptureLocally($session->id, $data);
             }
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload image.',
+            ], 500);
         }
 
         // Create or update violation record
-        $violationType = $request->violation_type;
         $severity = QuizViolation::severityForType($violationType);
 
         QuizViolation::create([
@@ -312,6 +367,11 @@ class StudentQuizController extends Controller
         return response()->json([
             'success' => true,
             'image_url' => $imageUrl,
+            'captured' => true,
+            'remaining_captures' => max(
+                0,
+                self::MAX_QUIZ_VIOLATION_CAPTURES - ($capturedCount + 1)
+            ),
         ]);
     }
 
@@ -326,7 +386,7 @@ class StudentQuizController extends Controller
             return response()->json(['success' => false], 401);
         }
         $request->validate([
-            'type' => 'required|string|in:blur,tab_switch,copy_paste,right_click,window_resize,screenshot_attempt,camera_disconnected,no_face,multiple_faces,random_snapshot,phone_detected,external_audio,no_blink,head_turn,brief_face_loss,other',
+            'type' => 'required|string|in:blur,tab_switch,copy_paste,right_click,window_resize,screenshot_attempt,camera_disconnected,no_face,multiple_faces,multiple_faces_pre_quiz,multiple_faces_during_quiz,random_snapshot,phone_detected,external_audio,no_blink,head_turn,brief_face_loss,challenge_failed,static_face_detected,no_face_during_quiz,face_out_of_frame,face_lost_repeatedly,other',
         ]);
         $session = QuizSession::where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
@@ -352,8 +412,8 @@ class StudentQuizController extends Controller
             $this->finalizeQuiz($session);
             $autoSubmitted = true;
         }
-        // Major violations (blur, tab_switch, window_resize, camera_disconnected, no_face, multiple_faces): max 1 warning per session, then auto-submit
-        $majorTypes = ['blur', 'tab_switch', 'window_resize', 'camera_disconnected', 'no_face', 'multiple_faces'];
+        // Major violations (blur, tab_switch, window_resize, camera_disconnected, no_face, multiple_faces, static_face, challenge_failed): max 1 warning per session, then auto-submit
+        $majorTypes = ['blur', 'tab_switch', 'window_resize', 'camera_disconnected', 'no_face', 'multiple_faces', 'multiple_faces_during_quiz', 'static_face_detected', 'challenge_failed'];
         if (!$autoSubmitted && in_array($type, $majorTypes, true)) {
             $majorCount = $session->violations()->whereIn('type', $majorTypes)->count();
             if ($majorCount >= 2) {
@@ -474,11 +534,60 @@ class StudentQuizController extends Controller
             return response()->json(['success' => true]);
         }
         $hadScheduledSubmit = $session->auto_submit_after !== null;
-        $session->update(['auto_submit_after' => null]);
+        $session->update([
+            'auto_submit_after' => null,
+            'last_heartbeat_at' => now(),
+        ]);
         return response()->json([
             'success' => true,
             'show_tab_switch_warning' => $hadScheduledSubmit,
         ]);
+    }
+
+    /**
+     * Proctor feed: student sends a camera frame for the examiner's live view. Updates last_heartbeat_at.
+     */
+    public function proctorFeed(Request $request): JsonResponse
+    {
+        $token = session('quiz_session_token');
+        if (!$token) {
+            return response()->json(['success' => false, 'message' => 'No active session.'], 401);
+        }
+
+        $session = QuizSession::where('session_token', $token)->first();
+        if (!$session || $session->ended_at) {
+            return response()->json(['success' => false, 'message' => 'Session not found or ended.'], 403);
+        }
+
+        $request->validate([
+            'image_base64' => 'required|string',
+        ]);
+
+        $data = $request->image_base64;
+        if (!Str::startsWith($data, 'data:image')) {
+            return response()->json(['success' => false, 'message' => 'Invalid image.'], 422);
+        }
+
+        $parts = explode(',', $data, 2);
+        if (count($parts) !== 2) {
+            return response()->json(['success' => false, 'message' => 'Invalid image.'], 422);
+        }
+        $binary = base64_decode($parts[1], true);
+        if ($binary === false || strlen($binary) > 2 * 1024 * 1024) {
+            return response()->json(['success' => false, 'message' => 'Invalid or oversized image.'], 422);
+        }
+
+        try {
+            $path = 'proctor_feed/' . $session->id . '.jpg';
+            Storage::disk('local')->put($path, $binary);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json(['success' => false, 'message' => 'Failed to save frame.'], 500);
+        }
+
+        $session->update(['last_heartbeat_at' => now()]);
+
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -529,6 +638,7 @@ class StudentQuizController extends Controller
 
         return view('student.quiz-complete', [
             'isLoggedIn' => (bool) $student,
+            'resultUrl' => $session ? route('student.result', ['token' => $token]) : null,
         ]);
     }
 
@@ -616,6 +726,24 @@ class StudentQuizController extends Controller
         return Setting::getValue(Setting::KEY_DISABLE_IP_DEVICE_RESTRICTIONS, '0') !== '1';
     }
 
+    private function storeViolationCaptureLocally(int $sessionId, string $dataUrl): string
+    {
+        $parts = explode(',', $dataUrl, 2);
+        if (count($parts) !== 2) {
+            throw new \RuntimeException('Invalid data URL');
+        }
+        $binary = base64_decode($parts[1], true);
+        if ($binary === false) {
+            throw new \RuntimeException('Failed to decode image');
+        }
+
+        $fileName = now()->format('Ymd_His_u') . '_' . Str::random(8) . '.jpg';
+        $path = 'violations/session_' . $sessionId . '/' . $fileName;
+        Storage::disk('public')->put($path, $binary);
+
+        return asset('storage/' . $path);
+    }
+
     /**
      * Result page. Marks and review are shown only when the visitor is logged in as the student who took the quiz.
      * Otherwise show "log in to see results". Session token from session or query (?token=).
@@ -634,9 +762,13 @@ class StudentQuizController extends Controller
         $studentId = session('student_id');
         $student = $studentId ? Student::find($studentId) : null;
         $isOwner = $student && strtoupper(trim((string) $student->index_number)) === strtoupper(trim((string) $session->student_index));
+        $sessionToken = session('quiz_session_token');
+        $isSameBrowserSession = is_string($sessionToken) && hash_equals($sessionToken, (string) $token);
 
-        if (!$isOwner) {
-            return view('student.quiz-complete');
+        if (!$isOwner && !$isSameBrowserSession) {
+            return view('student.quiz-complete', [
+                'isLoggedIn' => (bool) $student,
+            ]);
         }
 
         if (!session('quiz_session_token')) {

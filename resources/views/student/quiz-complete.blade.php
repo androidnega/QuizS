@@ -11,7 +11,17 @@
                 <span class="text-3xl" aria-hidden="true">✓</span>
             </div>
             <h1 class="text-xl font-bold text-gray-900 mb-2">Quiz submitted</h1>
-            @if(!empty($isLoggedIn))
+            @if(!empty($resultUrl))
+            <p class="text-gray-600 text-sm mb-6">Your answers have been recorded. You can view your result now.</p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="{{ $resultUrl }}" class="btn btn-action py-2.5 px-5 text-sm font-semibold inline-flex items-center justify-center gap-2">
+                    See your result
+                </a>
+                <a href="{{ route('student.landing') }}" class="btn btn-secondary py-2.5 px-5 text-sm font-medium inline-flex items-center justify-center">
+                    Back to home
+                </a>
+            </div>
+            @elseif(!empty($isLoggedIn))
             <p class="text-gray-600 text-sm mb-6">Your answers have been recorded. See your result in My Quizzes.</p>
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 <a href="{{ route('dashboard.my-quizzes') }}" class="btn btn-action py-2.5 px-5 text-sm font-semibold inline-flex items-center justify-center gap-2">

@@ -107,6 +107,14 @@ class Setting extends Model
     public const KEY_OTP_ARKESEL_API_KEY = 'otp_arkesel_api_key';
     public const KEY_OTP_ARKESEL_SENDER_ID = 'otp_arkesel_sender_id';
 
+    /** Quiz proctoring (Super Admin): enable/disable features. 1 = enabled, 0 = disabled. */
+    public const KEY_PROCTORING_CAMERA_REQUIRED = 'proctoring_camera_required';
+    public const KEY_PROCTORING_FACE_MONITOR = 'proctoring_face_monitor';
+    public const KEY_PROCTORING_TAB_SWITCH = 'proctoring_tab_switch';
+    public const KEY_PROCTORING_OBJECT_DETECT = 'proctoring_object_detect';
+    public const KEY_PROCTORING_BLOCK_RIGHT_CLICK = 'proctoring_block_right_click';
+    public const KEY_PROCTORING_BLOCK_COPY_PASTE = 'proctoring_block_copy_paste';
+
     /** Keys whose values are stored encrypted (API keys, secrets, mail password). */
     private const ENCRYPTED_KEYS = [
         self::KEY_GEMINI_API,

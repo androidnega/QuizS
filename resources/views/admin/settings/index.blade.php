@@ -43,6 +43,12 @@
                             <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                             OTP (SMS)
                         </button>
+                        @if(session('admin_role') === 'super_admin')
+                        <button type="button" class="settings-tab-btn px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm" data-tab="proctoring" id="tab-btn-proctoring">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            Proctoring
+                        </button>
+                        @endif
                     </nav>
                 </div>
 
@@ -296,6 +302,85 @@
                     </div>
                 </div>
                 </div>
+
+                @if(session('admin_role') === 'super_admin')
+                <!-- Tab: Proctoring (Super Admin only) -->
+                <div class="settings-tab-content p-6 hidden" data-tab-content="proctoring" id="tab-content-proctoring">
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">Quiz Proctoring</h2>
+                <p class="text-sm text-gray-600 mb-4">Enable or disable quiz proctoring features. When disabled, the system will not enforce that feature during exams. All options are on by default.</p>
+                <div class="space-y-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="proctoring_camera_required" value="1" {{ old('proctoring_camera_required', $proctoring_camera_required ?? true) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm font-medium text-gray-700">Camera required</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer ml-6">
+                        <input type="radio" name="proctoring_camera_required" value="0" {{ old('proctoring_camera_required', $proctoring_camera_required ?? true) ? '' : 'checked' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm text-gray-600">Camera not required</span>
+                    </label>
+                    <p class="text-xs text-gray-500 ml-6 -mt-2">When on, students must keep the camera on throughout the quiz; when off, camera is optional.</p>
+
+                    <div class="pt-3 border-t border-gray-200">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="proctoring_face_monitor" value="1" {{ old('proctoring_face_monitor', $proctoring_face_monitor ?? true) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm font-medium text-gray-700">Face monitoring (out of frame / no face)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer ml-6">
+                        <input type="radio" name="proctoring_face_monitor" value="0" {{ old('proctoring_face_monitor', $proctoring_face_monitor ?? true) ? '' : 'checked' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm text-gray-600">Face monitoring off</span>
+                    </label>
+                    <p class="text-xs text-gray-500 ml-6 -mt-2">Detect when face is missing or out of frame; repeated violations can auto-submit.</p>
+                    </div>
+
+                    <div class="pt-3 border-t border-gray-200">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="proctoring_tab_switch" value="1" {{ old('proctoring_tab_switch', $proctoring_tab_switch ?? true) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm font-medium text-gray-700">Tab switch / blur detection</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer ml-6">
+                        <input type="radio" name="proctoring_tab_switch" value="0" {{ old('proctoring_tab_switch', $proctoring_tab_switch ?? true) ? '' : 'checked' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm text-gray-600">Tab switch detection off</span>
+                    </label>
+                    <p class="text-xs text-gray-500 ml-6 -mt-2">Record violation when student switches tab or blurs the window.</p>
+                    </div>
+
+                    <div class="pt-3 border-t border-gray-200">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="proctoring_object_detect" value="1" {{ old('proctoring_object_detect', $proctoring_object_detect ?? true) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm font-medium text-gray-700">Object detection (phone, etc.)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer ml-6">
+                        <input type="radio" name="proctoring_object_detect" value="0" {{ old('proctoring_object_detect', $proctoring_object_detect ?? true) ? '' : 'checked' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm text-gray-600">Object detection off</span>
+                    </label>
+                    <p class="text-xs text-gray-500 ml-6 -mt-2">Warn when prohibited objects (e.g. phone) are detected in the camera frame.</p>
+                    </div>
+
+                    <div class="pt-3 border-t border-gray-200">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="proctoring_block_right_click" value="1" {{ old('proctoring_block_right_click', $proctoring_block_right_click ?? true) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm font-medium text-gray-700">Block right-click</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer ml-6">
+                        <input type="radio" name="proctoring_block_right_click" value="0" {{ old('proctoring_block_right_click', $proctoring_block_right_click ?? true) ? '' : 'checked' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm text-gray-600">Allow right-click</span>
+                    </label>
+                    <p class="text-xs text-gray-500 ml-6 -mt-2">Prevent context menu and log violation on right-click.</p>
+                    </div>
+
+                    <div class="pt-3 border-t border-gray-200">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="proctoring_block_copy_paste" value="1" {{ old('proctoring_block_copy_paste', $proctoring_block_copy_paste ?? true) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm font-medium text-gray-700">Block copy / paste</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer ml-6">
+                        <input type="radio" name="proctoring_block_copy_paste" value="0" {{ old('proctoring_block_copy_paste', $proctoring_block_copy_paste ?? true) ? '' : 'checked' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm text-gray-600">Allow copy / paste</span>
+                    </label>
+                    <p class="text-xs text-gray-500 ml-6 -mt-2">Prevent copy, cut, and paste and log violation.</p>
+                    </div>
+                </div>
+                </div>
+                @endif
             </div>
 
             <div class="flex justify-end">
@@ -316,7 +401,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const tabBtns = document.querySelectorAll('.settings-tab-btn');
     const tabContents = document.querySelectorAll('.settings-tab-content');
-    const validTabs = ['general', 'email', 'ai', 'cloudinary', 'otp'];
+    const validTabs = ['general', 'email', 'ai', 'cloudinary', 'otp', 'proctoring'];
 
     function switchToTab(targetTab) {
         if (!validTabs.includes(targetTab)) targetTab = 'general';

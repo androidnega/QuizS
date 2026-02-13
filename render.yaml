@@ -1,4 +1,0 @@
-# Render.com: run migrations automatically on deploy.
-# In Dashboard: Web Service -> Build & Deploy -> Release Command set to:
-#   php artisan migrate --force
-# This applies pending migrations (e.g. users.email column) on each deploy.

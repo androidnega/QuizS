@@ -11,7 +11,7 @@
 
         <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
             <p class="text-xs text-primary-600 font-medium mb-2">Align face in frame</p>
-            <div class="relative bg-gray-900 rounded-lg overflow-hidden border border-gray-200 mx-auto" style="max-width: 280px; aspect-ratio: 4/3;">
+            <div id="video-container" class="relative bg-gray-900 rounded-lg overflow-hidden border-2 border-gray-200 mx-auto transition-all duration-300" style="max-width: 280px; aspect-ratio: 4/3;">
                 <video 
                     id="camera-video" 
                     autoplay 
@@ -50,6 +50,10 @@
             </div>
         </div>
 
+        <div id="face-check-status" class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <p id="face-check-status-text" class="text-xs text-blue-700">Initializing face verification...</p>
+        </div>
+
         <button type="button" class="btn btn-action w-full py-2.5 text-sm font-semibold" id="capture-btn">
             <span id="capture-btn-text">Capture photo</span>
         </button>
@@ -62,6 +66,9 @@
 </div>
 
 @push('scripts')
+<!-- TensorFlow.js + BlazeFace for Face Detection -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.umd.js" crossorigin="anonymous"></script>
 <script src="{{ asset('js/proctoring-capture.js') }}" defer></script>
 <script>
 window.QuizSnapProctoring = {

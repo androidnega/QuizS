@@ -134,6 +134,8 @@ class ProctoringCaptureController extends Controller
                 'student_index' => $studentIndex,
                 'ip_address' => $ip,
                 'start_time' => null,
+                'camera_verified' => true,
+                'camera_started_at' => now(),
                 'pre_face_image' => $imagePath,
                 'pre_face_image_hash' => $preFaceImageHash,
                 'assigned_question_ids' => $assignedIds,

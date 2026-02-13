@@ -52,6 +52,12 @@ class SettingsController extends Controller
             'otp_arkesel_key_set' => (bool) Setting::getValue(Setting::KEY_OTP_ARKESEL_API_KEY),
             'otp_arkesel_key_masked' => ($k = Setting::getValue(Setting::KEY_OTP_ARKESEL_API_KEY)) ? (strlen($k) > 8 ? substr($k, 0, 4) . '…' . substr($k, -4) : '••••') : null,
             'otp_arkesel_sender_id' => Setting::getValue(Setting::KEY_OTP_ARKESEL_SENDER_ID, 'QuizSnap'),
+            'proctoring_camera_required' => Setting::getValue(Setting::KEY_PROCTORING_CAMERA_REQUIRED, '1') === '1',
+            'proctoring_face_monitor' => Setting::getValue(Setting::KEY_PROCTORING_FACE_MONITOR, '1') === '1',
+            'proctoring_tab_switch' => Setting::getValue(Setting::KEY_PROCTORING_TAB_SWITCH, '1') === '1',
+            'proctoring_object_detect' => Setting::getValue(Setting::KEY_PROCTORING_OBJECT_DETECT, '1') === '1',
+            'proctoring_block_right_click' => Setting::getValue(Setting::KEY_PROCTORING_BLOCK_RIGHT_CLICK, '1') === '1',
+            'proctoring_block_copy_paste' => Setting::getValue(Setting::KEY_PROCTORING_BLOCK_COPY_PASTE, '1') === '1',
         ]);
     }
 
@@ -87,6 +93,12 @@ class SettingsController extends Controller
             'otp_arkesel_api_key' => 'nullable|string|max:512',
             'clear_otp_arkesel_key' => 'nullable|boolean',
             'otp_arkesel_sender_id' => 'nullable|string|max:11',
+            'proctoring_camera_required' => 'nullable|boolean',
+            'proctoring_face_monitor' => 'nullable|boolean',
+            'proctoring_tab_switch' => 'nullable|boolean',
+            'proctoring_object_detect' => 'nullable|boolean',
+            'proctoring_block_right_click' => 'nullable|boolean',
+            'proctoring_block_copy_paste' => 'nullable|boolean',
         ]);
 
         Setting::setValue(Setting::KEY_APP_NAME, $request->filled('app_name') ? trim($request->app_name) : null);
@@ -145,6 +157,24 @@ class SettingsController extends Controller
         if ($request->hasAny(['otp_arkesel_api_key', 'clear_otp_arkesel_key', 'otp_arkesel_sender_id'])) {
             Cache::forget('setting:' . Setting::KEY_OTP_ARKESEL_API_KEY);
             Cache::forget('setting:' . Setting::KEY_OTP_ARKESEL_SENDER_ID);
+        }
+        if (session('admin_role') === 'super_admin') {
+            Setting::setValue(Setting::KEY_PROCTORING_CAMERA_REQUIRED, $request->boolean('proctoring_camera_required') ? '1' : '0');
+            Setting::setValue(Setting::KEY_PROCTORING_FACE_MONITOR, $request->boolean('proctoring_face_monitor') ? '1' : '0');
+            Setting::setValue(Setting::KEY_PROCTORING_TAB_SWITCH, $request->boolean('proctoring_tab_switch') ? '1' : '0');
+            Setting::setValue(Setting::KEY_PROCTORING_OBJECT_DETECT, $request->boolean('proctoring_object_detect') ? '1' : '0');
+            Setting::setValue(Setting::KEY_PROCTORING_BLOCK_RIGHT_CLICK, $request->boolean('proctoring_block_right_click') ? '1' : '0');
+            Setting::setValue(Setting::KEY_PROCTORING_BLOCK_COPY_PASTE, $request->boolean('proctoring_block_copy_paste') ? '1' : '0');
+            foreach ([
+                Setting::KEY_PROCTORING_CAMERA_REQUIRED,
+                Setting::KEY_PROCTORING_FACE_MONITOR,
+                Setting::KEY_PROCTORING_TAB_SWITCH,
+                Setting::KEY_PROCTORING_OBJECT_DETECT,
+                Setting::KEY_PROCTORING_BLOCK_RIGHT_CLICK,
+                Setting::KEY_PROCTORING_BLOCK_COPY_PASTE,
+            ] as $key) {
+                Cache::forget('setting:' . $key);
+            }
         }
 
         // Ensure cache is cleared so Test Cloudinary / uploads use fresh DB values

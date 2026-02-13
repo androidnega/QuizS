@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
@@ -306,6 +307,53 @@ class QuizManagementController extends Controller
         }
 
         return view('admin.sessions.show', compact('quiz', 'session'));
+    }
+
+    /**
+     * Live proctor: view all students currently taking this quiz with real-time camera feed.
+     */
+    public function liveProctor(Quiz $quiz): View|RedirectResponse
+    {
+        $this->authorize('view', $quiz);
+        return view('admin.quizzes.live-proctor', compact('quiz'));
+    }
+
+    /**
+     * API: list live sessions for this quiz (started, not ended, recent heartbeat).
+     */
+    public function liveSessions(Quiz $quiz): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('view', $quiz);
+        $cutoff = now()->subSeconds(60);
+        $sessions = $quiz->sessions()
+            ->whereNotNull('start_time')
+            ->whereNull('ended_at')
+            ->where('last_heartbeat_at', '>=', $cutoff)
+            ->orderBy('student_index')
+            ->get(['id', 'student_index', 'last_heartbeat_at']);
+        return response()->json([
+            'sessions' => $sessions->map(fn ($s) => [
+                'id' => $s->id,
+                'student_index' => $s->student_index,
+                'last_heartbeat_at' => $s->last_heartbeat_at?->toIso8601String(),
+            ]),
+        ]);
+    }
+
+    /**
+     * Serve the latest proctor feed frame image for a session (examiner only).
+     */
+    public function proctorFrame(Quiz $quiz, QuizSession $quizSession): \Symfony\Component\HttpFoundation\BinaryFileResponse|Response
+    {
+        $this->authorize('view', $quiz);
+        if ($quizSession->quiz_id !== $quiz->id) {
+            abort(404);
+        }
+        $path = storage_path('app/proctor_feed/' . $quizSession->id . '.jpg');
+        if (!is_file($path)) {
+            abort(404);
+        }
+        return response()->file($path, ['Content-Type' => 'image/jpeg']);
     }
 
     /**
