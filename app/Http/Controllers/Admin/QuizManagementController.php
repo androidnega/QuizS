@@ -10,6 +10,8 @@ use App\Models\FaceImageViewLog;
 use App\Models\Quiz;
 use App\Models\QuizSession;
 use App\Models\Question;
+use App\Models\Result;
+use App\Jobs\SendQuizResultReadyNotification;
 use App\Models\QuestionPool;
 use App\Models\Setting;
 use App\Exports\QuizScoresExport;
@@ -320,6 +322,7 @@ class QuizManagementController extends Controller
 
     /**
      * API: list live sessions for this quiz (started, not ended, recent heartbeat).
+     * Light payload: id, student_index, student_name (from class group), last_heartbeat_at.
      */
     public function liveSessions(Quiz $quiz): \Illuminate\Http\JsonResponse
     {
@@ -331,12 +334,24 @@ class QuizManagementController extends Controller
             ->where('last_heartbeat_at', '>=', $cutoff)
             ->orderBy('student_index')
             ->get(['id', 'student_index', 'last_heartbeat_at']);
+        $studentNames = [];
+        if ($quiz->class_group_id) {
+            $students = \App\Models\ClassGroupStudent::where('class_group_id', $quiz->class_group_id)
+                ->get(['index_number', 'student_name']);
+            foreach ($students as $st) {
+                $studentNames[strtoupper(trim((string) $st->index_number))] = $st->student_name;
+            }
+        }
         return response()->json([
-            'sessions' => $sessions->map(fn ($s) => [
-                'id' => $s->id,
-                'student_index' => $s->student_index,
-                'last_heartbeat_at' => $s->last_heartbeat_at?->toIso8601String(),
-            ]),
+            'sessions' => $sessions->map(function ($s) use ($studentNames) {
+                $key = strtoupper(trim((string) $s->student_index));
+                return [
+                    'id' => $s->id,
+                    'student_index' => $s->student_index,
+                    'student_name' => $studentNames[$key] ?? null,
+                    'last_heartbeat_at' => $s->last_heartbeat_at?->toIso8601String(),
+                ];
+            }),
         ]);
     }
 
@@ -354,6 +369,55 @@ class QuizManagementController extends Controller
             abort(404);
         }
         return response()->file($path, ['Content-Type' => 'image/jpeg']);
+    }
+
+    /**
+     * End a student's quiz from live proctor (examiner ends session due to violation).
+     * Finalizes the attempt and submits; student will see quiz complete on next request.
+     */
+    public function endSessionByExaminer(Quiz $quiz, QuizSession $quizSession): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('view', $quiz);
+        if ($quizSession->quiz_id !== $quiz->id) {
+            return response()->json(['success' => false, 'message' => 'Session not found.'], 404);
+        }
+        if ($quizSession->ended_at) {
+            return response()->json(['success' => true, 'message' => 'Session already ended.']);
+        }
+
+        $quizSession->update(['ended_at' => now()]);
+        $lockedIds = $quizSession->assigned_question_ids ?? [];
+        $correctAnswersSnapshot = $quizSession->assigned_correct_answers ?? [];
+        $total = count($lockedIds);
+        $correct = 0;
+        if ($total > 0) {
+            $answersByQuestion = $quizSession->answers()->whereIn('question_id', $lockedIds)->pluck('student_answer', 'question_id')->toArray();
+            foreach ($lockedIds as $qid) {
+                $correctAnswer = $correctAnswersSnapshot[$qid] ?? $correctAnswersSnapshot[(string) $qid] ?? null;
+                if ($correctAnswer === null) continue;
+                $studentAnswer = $answersByQuestion[$qid] ?? $answersByQuestion[(string) $qid] ?? '';
+                $normalizedStudent = strtoupper(trim((string) $studentAnswer));
+                $normalizedCorrect = strtoupper(trim((string) $correctAnswer));
+                if ($normalizedStudent === $normalizedCorrect && $normalizedStudent !== '') {
+                    $correct++;
+                }
+            }
+        }
+        $correct = min($correct, $total);
+        $score = $total > 0 ? round(100 * $correct / $total, 2) : 0;
+        $score = min($score, 100.00);
+        $violationsCount = $quizSession->violations()->count();
+        Result::create([
+            'quiz_session_id' => $quizSession->id,
+            'score' => $score,
+            'total_questions' => $total,
+            'correct_count' => $correct,
+            'violations_count' => $violationsCount,
+            'submitted_at' => now(),
+        ]);
+        broadcast(new DataUpdated('dashboard'))->toOthers();
+        SendQuizResultReadyNotification::dispatch($quizSession->id);
+        return response()->json(['success' => true, 'message' => 'Quiz ended. Student will see submission on next request.']);
     }
 
     /**

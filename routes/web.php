@@ -193,6 +193,7 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/quizzes/{quiz}/live-proctor', [QuizManagementController::class, 'liveProctor'])->name('quizzes.live-proctor');
         Route::get('/quizzes/{quiz}/live-sessions', [QuizManagementController::class, 'liveSessions'])->name('quizzes.live-sessions');
         Route::get('/quizzes/{quiz}/sessions/{quizSession}/proctor-frame', [QuizManagementController::class, 'proctorFrame'])->name('quizzes.sessions.proctor-frame');
+        Route::post('/quizzes/{quiz}/sessions/{quizSession}/end-by-examiner', [QuizManagementController::class, 'endSessionByExaminer'])->name('quizzes.sessions.end-by-examiner');
 
         // Quizzes — examiner only
         Route::middleware('examiner.only')->group(function () {

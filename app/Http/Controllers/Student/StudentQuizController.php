@@ -577,6 +577,28 @@ class StudentQuizController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid or oversized image.'], 422);
         }
 
+        // Resize to max 320px width for lighter streaming (optional; requires GD)
+        $maxWidth = 320;
+        if (function_exists('imagecreatefromstring') && function_exists('imagejpeg')) {
+            $img = @imagecreatefromstring($binary);
+            if ($img !== false) {
+                $w = imagesx($img);
+                $h = imagesy($img);
+                if ($w > $maxWidth && $w > 0) {
+                    $newW = $maxWidth;
+                    $newH = (int) round($h * ($maxWidth / $w));
+                    $scaled = imagescale($img, $newW, $newH === 0 ? -1 : $newH);
+                    if ($scaled !== false) {
+                        ob_start();
+                        imagejpeg($scaled, null, 78);
+                        $binary = ob_get_clean();
+                        imagedestroy($scaled);
+                    }
+                }
+                imagedestroy($img);
+            }
+        }
+
         try {
             $path = 'proctor_feed/' . $session->id . '.jpg';
             Storage::disk('local')->put($path, $binary);
