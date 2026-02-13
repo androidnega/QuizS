@@ -8,16 +8,18 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RunMigrationsController extends Controller
 {
-    private const SECRET = 'QuizSnapMigrate2026Xp9k3m7';
+    /** Default secret; override with MIGRATION_RUN_KEY in .env for production. */
+    private const DEFAULT_SECRET = 'QuizSnapMigrate2026Xp9k3m7';
 
     /**
      * Run pending Laravel migrations via URL with a secret key.
-     * Visit: /run-migrations?key=YOUR_SECRET
+     * Visit: https://yoursite.com/run-migrations?key=YOUR_SECRET
      */
     public function __invoke(Request $request): Response
     {
-        if ($request->query('key') !== self::SECRET) {
-            return response('Invalid or missing key. Use: /run-migrations?key=YOUR_SECRET', 403, [
+        $secret = env('MIGRATION_RUN_KEY', self::DEFAULT_SECRET);
+        if ($request->query('key') !== $secret) {
+            return response('Invalid or missing key. Add ?key=YOUR_SECRET to the URL. Set MIGRATION_RUN_KEY in .env to use your own secret.', 403, [
                 'Content-Type' => 'text/plain; charset=utf-8',
             ]);
         }
