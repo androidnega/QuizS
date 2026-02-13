@@ -362,6 +362,47 @@ class UserManagementController extends Controller
     }
 
     /**
+     * Reset examiner password directly (without admin password verification).
+     * Generates a temporary password and shows it to the admin.
+     */
+    public function resetPassword(User $user): RedirectResponse|View
+    {
+        $currentUser = $this->adminUser();
+        $isSuperAdmin = $currentUser && $currentUser->isSuperAdmin();
+        
+        // Only Super Admin can reset passwords
+        if (!$isSuperAdmin) {
+            abort(403, 'Only Super Administrators can reset user passwords.');
+        }
+        
+        // Only allow resetting passwords for examiners
+        if (!$user->isExaminer()) {
+            return redirect()->route('dashboard.users.index')
+                ->with('error', 'Password reset is only available for examiners.');
+        }
+        
+        // Generate a temporary password
+        $temporaryPassword = $this->generateTemporaryPassword();
+        $user->password = Hash::make($temporaryPassword);
+        $user->save();
+        
+        // Revoke existing sessions
+        $user->remember_token = null;
+        $user->save();
+        
+        if (config('session.driver') === 'database' && Schema::hasColumn(config('session.table', 'sessions'), 'user_id')) {
+            \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $user->id)
+                ->delete();
+        }
+        
+        return redirect()->route('dashboard.users.index')
+            ->with('success', "Password for {$user->username} has been reset. The new temporary password is: <strong>{$temporaryPassword}</strong> - Please copy it now as it won't be shown again!")
+            ->with('temp_password', $temporaryPassword)
+            ->with('reset_user_id', $user->id);
+    }
+
+    /**
      * Revoke user access: clear remember_token and sessions so they must log in again.
      */
     public function revoke(User $user): RedirectResponse

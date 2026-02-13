@@ -103,11 +103,14 @@ Route::get('/student/proctoring/capture', [ProctoringCaptureController::class, '
 Route::post('/student/proctoring/capture', [ProctoringCaptureController::class, 'store'])->name('student.proctoring.store');
 
 Route::get('/quiz/ready', [StudentQuizController::class, 'ready'])->name('student.quiz.ready')->middleware('rules.accepted');
+Route::post('/quiz/session/start', [StudentQuizController::class, 'startSession'])->name('student.quiz.session.start')->middleware('rules.accepted');
 Route::get('/quiz/take', [StudentQuizController::class, 'show'])->name('student.quiz.show')->middleware('rules.accepted');
 Route::get('/quiz/time-sync', [StudentQuizController::class, 'timeSync'])->name('student.quiz.time-sync')->middleware('rules.accepted');
 Route::post('/quiz/save-answer', [StudentQuizController::class, 'saveAnswer'])->name('student.quiz.save');
 Route::post('/quiz/save-answers', [StudentQuizController::class, 'saveAnswersBatch'])->name('student.quiz.save.batch');
 Route::post('/quiz/violation', [StudentQuizController::class, 'recordViolation'])->name('student.quiz.violation');
+Route::post('/quiz/violation/capture', [StudentQuizController::class, 'captureViolation'])->name('student.quiz.violation.capture');
+Route::post('/quiz/auto-submit', [StudentQuizController::class, 'autoSubmit'])->name('student.quiz.auto-submit');
 Route::post('/quiz/heartbeat', [StudentQuizController::class, 'heartbeat'])->name('student.quiz.heartbeat');
 Route::post('/quiz/finalize', [StudentQuizController::class, 'finalize'])->name('student.quiz.finalize');
 Route::get('/quiz/complete', [StudentQuizController::class, 'quizComplete'])->name('student.quiz.complete');
@@ -269,6 +272,7 @@ Route::middleware('admin.auth')->group(function () {
             Route::post('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('users.store');
             Route::get('/users/{user}/view-password', [\App\Http\Controllers\Admin\UserManagementController::class, 'showPasswordForm'])->name('users.view-password-form');
             Route::post('/users/{user}/view-password', [\App\Http\Controllers\Admin\UserManagementController::class, 'viewPassword'])->name('users.view-password');
+            Route::post('/users/{user}/reset-password', [\App\Http\Controllers\Admin\UserManagementController::class, 'resetPassword'])->name('users.reset-password');
             Route::post('/users/update-sms', [\App\Http\Controllers\Admin\UserManagementController::class, 'updateSms'])->name('users.update-sms');
             Route::post('/users/{user}/revoke', [\App\Http\Controllers\Admin\UserManagementController::class, 'revoke'])->name('users.revoke');
             Route::delete('/users/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])->name('users.destroy');

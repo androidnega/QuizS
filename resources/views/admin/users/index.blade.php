@@ -23,6 +23,52 @@
             @endif
         </div>
 
+        @if(session('success') && session('temp_password') && session('reset_user_id'))
+        <div class="mb-6 p-4 bg-success-50 border-2 border-success-400 rounded-lg">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-success-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <div class="flex-1">
+                    <p class="text-sm font-semibold text-success-900 mb-2">Password Reset Successful</p>
+                    <p class="text-sm text-success-800 mb-3">{!! session('success') !!}</p>
+                    <div class="bg-white border border-success-300 rounded-lg p-3 mb-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Temporary Password:</label>
+                        <div class="flex items-center gap-2">
+                            <input 
+                                type="text" 
+                                id="temp-password-display" 
+                                value="{{ session('temp_password') }}" 
+                                readonly
+                                class="flex-1 font-mono text-base font-bold text-gray-900 bg-gray-50 border border-gray-300 rounded px-3 py-2"
+                            >
+                            <button 
+                                type="button" 
+                                onclick="copyPassword()" 
+                                class="btn btn-success text-sm px-4 py-2"
+                            >
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-success-700">
+                        ⚠️ This password is shown only once. Copy it now - you won't be able to see it again!
+                    </p>
+                </div>
+            </div>
+        </div>
+        @elseif(session('success'))
+        <div class="mb-6 p-4 bg-success-50 border border-success-200 rounded-lg">
+            <p class="text-sm text-success-800">{!! session('success') !!}</p>
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-lg">
+            <p class="text-sm text-danger-800">{{ session('error') }}</p>
+        </div>
+        @endif
+
         <div class="card overflow-hidden min-w-0">
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[600px] divide-y divide-gray-200">
@@ -87,9 +133,18 @@
                                 <td class="px-3 py-2 text-right text-sm">
                                     <div class="flex justify-end gap-1">
                                         @if(isset($isSuperAdmin) && $isSuperAdmin)
+                                            @if($u->role === 'examiner')
+                                            <form action="{{ route('dashboard.users.reset-password', $u) }}" method="post" class="inline" onsubmit="return confirm('Reset password for {{ $u->username }}? A new temporary password will be generated.');">
+                                                @csrf
+                                                <button type="submit" class="inline-flex p-1.5 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="Reset password">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                                                </button>
+                                            </form>
+                                            @else
                                             <a href="{{ route('dashboard.users.view-password-form', $u) }}" class="inline-flex p-1.5 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="Reset password">
                                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                                             </a>
+                                            @endif
                                             <form action="{{ route('dashboard.users.revoke', $u) }}" method="post" class="inline" onsubmit="return confirm('Revoke access? User will need to log in again.');">
                                                 @csrf
                                                 <button type="submit" class="inline-flex p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-colors" title="Revoke access">
@@ -389,4 +444,26 @@ document.getElementById('smsModal').addEventListener('click', function(e) {
         </form>
     </div>
 </div>
+
+@if(session('temp_password'))
+<script>
+function copyPassword() {
+    const passwordInput = document.getElementById('temp-password-display');
+    if (passwordInput) {
+        passwordInput.select();
+        passwordInput.setSelectionRange(0, 99999); // For mobile devices
+        document.execCommand('copy');
+        
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('bg-success-600');
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.classList.remove('bg-success-600');
+        }, 2000);
+    }
+}
+</script>
+@endif
 @endsection
