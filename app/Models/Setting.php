@@ -107,6 +107,9 @@ class Setting extends Model
     public const KEY_OTP_ARKESEL_API_KEY = 'otp_arkesel_api_key';
     public const KEY_OTP_ARKESEL_SENDER_ID = 'otp_arkesel_sender_id';
 
+    /** Super Admin: live examiner view (watch students taking quiz). 1 = on, 0 = off. When off, Live proctor tab and route are unavailable. */
+    public const KEY_LIVE_PROCTOR_ENABLED = 'live_proctor_enabled';
+
     /** Quiz proctoring (Super Admin): enable/disable features. 1 = enabled, 0 = disabled. */
     public const KEY_PROCTORING_CAMERA_REQUIRED = 'proctoring_camera_required';
     public const KEY_PROCTORING_FACE_MONITOR = 'proctoring_face_monitor';

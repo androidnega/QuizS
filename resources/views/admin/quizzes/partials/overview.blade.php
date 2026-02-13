@@ -46,10 +46,12 @@
     @php
         $quizWindowOpen = !$quiz->starts_at || $quiz->starts_at->isPast();
         $showEndQuiz = $quizWindowOpen && (!$quiz->ends_at || $quiz->ends_at->isFuture());
-        $shareUrl = route('student.rules.show.quiz', ['token' => $quiz->link_token]);
+        $quizEnded = $quiz->hasEnded();
     @endphp
     <div class="bg-primary-50 border border-primary-200 rounded-lg p-2 min-w-0">
         <div class="flex flex-wrap items-center gap-2">
+            @if(!$quizEnded)
+            @php $shareUrl = route('student.rules.show.quiz', ['token' => $quiz->link_token]); @endphp
             <span class="text-xs font-medium text-primary-800 shrink-0">Token:</span>
             <input type="text" readonly value="{{ $quiz->link_token }}" id="quiz-token-{{ $quiz->id }}" class="w-36 text-xs font-mono font-semibold text-gray-800 bg-white border border-primary-300 rounded px-1.5 py-0.5" />
             <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('quiz-token-{{ $quiz->id }}').value); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 1500)" class="btn btn-primary text-xs py-0.5 px-2">Copy</button>
@@ -61,6 +63,7 @@
                 </div>
             </details>
             <span class="flex-1"></span>
+            @endif
             @if($quiz->hasStarted() && !$quiz->hasEnded())
             <div class="flex items-center gap-2">
                 <form action="{{ route('dashboard.quizzes.extend-time', $quiz) }}" method="post" class="inline flex items-center gap-1" onsubmit="return confirm('Extend quiz time? This will add time to all active student sessions.');">
@@ -75,8 +78,8 @@
                 @csrf
                 <button type="submit" class="btn bg-danger-100 text-danger-700 hover:bg-danger-200 text-xs py-0.5 px-2">End quiz</button>
             </form>
-            @elseif($quiz->hasEnded())
-            <span class="text-xs font-medium text-gray-600 py-0.5 px-2">Ended — link expired for students; you can still view questions and scores below.</span>
+            @elseif($quizEnded)
+            <span class="text-xs font-medium text-gray-600 py-0.5 px-2">Quiz ended — token and link are no longer available. You can still view questions, sessions, scores, and analytics below.</span>
             @else
             <form action="{{ route('dashboard.quizzes.unpublish', $quiz) }}" method="post" class="inline">
                 @csrf

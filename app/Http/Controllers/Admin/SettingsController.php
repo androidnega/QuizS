@@ -58,6 +58,7 @@ class SettingsController extends Controller
             'proctoring_object_detect' => Setting::getValue(Setting::KEY_PROCTORING_OBJECT_DETECT, '1') === '1',
             'proctoring_block_right_click' => Setting::getValue(Setting::KEY_PROCTORING_BLOCK_RIGHT_CLICK, '1') === '1',
             'proctoring_block_copy_paste' => Setting::getValue(Setting::KEY_PROCTORING_BLOCK_COPY_PASTE, '1') === '1',
+            'live_proctor_enabled' => Setting::getValue(Setting::KEY_LIVE_PROCTOR_ENABLED, '1') === '1',
         ]);
     }
 
@@ -99,6 +100,7 @@ class SettingsController extends Controller
             'proctoring_object_detect' => 'nullable|boolean',
             'proctoring_block_right_click' => 'nullable|boolean',
             'proctoring_block_copy_paste' => 'nullable|boolean',
+            'live_proctor_enabled' => 'nullable|boolean',
         ]);
 
         Setting::setValue(Setting::KEY_APP_NAME, $request->filled('app_name') ? trim($request->app_name) : null);
@@ -159,6 +161,7 @@ class SettingsController extends Controller
             Cache::forget('setting:' . Setting::KEY_OTP_ARKESEL_SENDER_ID);
         }
         if (session('admin_role') === 'super_admin') {
+            Setting::setValue(Setting::KEY_LIVE_PROCTOR_ENABLED, $request->boolean('live_proctor_enabled') ? '1' : '0');
             Setting::setValue(Setting::KEY_PROCTORING_CAMERA_REQUIRED, $request->boolean('proctoring_camera_required') ? '1' : '0');
             Setting::setValue(Setting::KEY_PROCTORING_FACE_MONITOR, $request->boolean('proctoring_face_monitor') ? '1' : '0');
             Setting::setValue(Setting::KEY_PROCTORING_TAB_SWITCH, $request->boolean('proctoring_tab_switch') ? '1' : '0');
@@ -166,6 +169,7 @@ class SettingsController extends Controller
             Setting::setValue(Setting::KEY_PROCTORING_BLOCK_RIGHT_CLICK, $request->boolean('proctoring_block_right_click') ? '1' : '0');
             Setting::setValue(Setting::KEY_PROCTORING_BLOCK_COPY_PASTE, $request->boolean('proctoring_block_copy_paste') ? '1' : '0');
             foreach ([
+                Setting::KEY_LIVE_PROCTOR_ENABLED,
                 Setting::KEY_PROCTORING_CAMERA_REQUIRED,
                 Setting::KEY_PROCTORING_FACE_MONITOR,
                 Setting::KEY_PROCTORING_TAB_SWITCH,
@@ -186,7 +190,7 @@ class SettingsController extends Controller
         }
 
         $tab = $request->input('settings_tab', 'general');
-        $validTabs = ['general', 'email', 'ai', 'cloudinary', 'otp'];
+        $validTabs = ['general', 'email', 'ai', 'cloudinary', 'otp', 'proctoring'];
         if (!in_array($tab, $validTabs, true)) {
             $tab = 'general';
         }

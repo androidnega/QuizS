@@ -254,7 +254,8 @@ class QuizManagementController extends Controller
         // Question analytics: per-question answered count and correct count (from completed sessions only)
         $questionStats = $this->computeQuestionStats($quiz, $completedSessions);
 
-        $data = compact('quiz', 'unapprovedPools', 'unapprovedPoolsTotal', 'approvedQuestions', 'approvedQuestionsTotal', 'sessionsPaginator', 'sessionsStats', 'questionStats');
+        $liveProctorEnabled = Setting::getValue(Setting::KEY_LIVE_PROCTOR_ENABLED, '1') === '1';
+        $data = compact('quiz', 'unapprovedPools', 'unapprovedPoolsTotal', 'approvedQuestions', 'approvedQuestionsTotal', 'sessionsPaginator', 'sessionsStats', 'questionStats', 'liveProctorEnabled');
 
         // Live tab/pagination: return only the tab HTML fragment for AJAX requests
         if ($request->ajax()) {
@@ -364,10 +365,14 @@ class QuizManagementController extends Controller
 
     /**
      * Live proctor: view all students currently taking this quiz with real-time camera feed.
+     * Respects Super Admin setting: when live_proctor_enabled is off, access is forbidden.
      */
     public function liveProctor(Quiz $quiz): View|RedirectResponse
     {
         $this->authorize('view', $quiz);
+        if (Setting::getValue(Setting::KEY_LIVE_PROCTOR_ENABLED, '1') !== '1') {
+            abort(403, 'Live examiner view is disabled by system settings.');
+        }
         return view('admin.quizzes.live-proctor', compact('quiz'));
     }
 
@@ -378,6 +383,9 @@ class QuizManagementController extends Controller
     public function liveSessions(Quiz $quiz): \Illuminate\Http\JsonResponse
     {
         $this->authorize('view', $quiz);
+        if (Setting::getValue(Setting::KEY_LIVE_PROCTOR_ENABLED, '1') !== '1') {
+            return response()->json(['sessions' => []], 403);
+        }
         $cutoff = now()->subSeconds(60);
         $sessions = $quiz->sessions()
             ->whereNotNull('start_time')
@@ -408,10 +416,14 @@ class QuizManagementController extends Controller
 
     /**
      * Serve the latest proctor feed frame image for a session (examiner only).
+     * Respects live_proctor_enabled setting.
      */
     public function proctorFrame(Quiz $quiz, QuizSession $quizSession): \Symfony\Component\HttpFoundation\BinaryFileResponse|Response
     {
         $this->authorize('view', $quiz);
+        if (Setting::getValue(Setting::KEY_LIVE_PROCTOR_ENABLED, '1') !== '1') {
+            abort(403, 'Live examiner view is disabled.');
+        }
         if ($quizSession->quiz_id !== $quiz->id) {
             abort(404);
         }
@@ -425,10 +437,14 @@ class QuizManagementController extends Controller
     /**
      * End a student's quiz from live proctor (examiner ends session due to violation).
      * Finalizes the attempt and submits; student will see quiz complete on next request.
+     * Respects live_proctor_enabled setting.
      */
     public function endSessionByExaminer(Quiz $quiz, QuizSession $quizSession): \Illuminate\Http\JsonResponse
     {
         $this->authorize('view', $quiz);
+        if (Setting::getValue(Setting::KEY_LIVE_PROCTOR_ENABLED, '1') !== '1') {
+            return response()->json(['success' => false, 'message' => 'Live examiner view is disabled.'], 403);
+        }
         if ($quizSession->quiz_id !== $quiz->id) {
             return response()->json(['success' => false, 'message' => 'Session not found.'], 404);
         }

@@ -306,8 +306,23 @@
                 @if(session('admin_role') === 'super_admin')
                 <!-- Tab: Proctoring (Super Admin only) -->
                 <div class="settings-tab-content p-6 hidden" data-tab-content="proctoring" id="tab-content-proctoring">
-                <h2 class="text-lg font-semibold text-gray-900 mb-2">Quiz Proctoring</h2>
-                <p class="text-sm text-gray-600 mb-4">Enable or disable quiz proctoring features. When disabled, the system will not enforce that feature during exams. All options are on by default.</p>
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">Quiz Proctoring &amp; Live View</h2>
+                <p class="text-sm text-gray-600 mb-4">Enable or disable quiz proctoring features and the live examiner view. When disabled, the system will not enforce that feature. All options are on by default.</p>
+
+                <div class="rounded-lg border-2 border-primary-200 bg-primary-50/50 p-4 mb-6">
+                    <p class="text-sm font-medium text-gray-900 mb-2">Live examiner view</p>
+                    <p class="text-xs text-gray-600 mb-3">When on, examiners can open the &quot;Live proctor&quot; tab on a quiz to watch students taking the quiz in real time (camera feed). When off, the Live proctor tab and route are hidden and inaccessible.</p>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="live_proctor_enabled" value="1" {{ old('live_proctor_enabled', $live_proctor_enabled ?? true) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm font-medium text-gray-700">On</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer ml-6 mt-1">
+                        <input type="radio" name="live_proctor_enabled" value="0" {{ old('live_proctor_enabled', $live_proctor_enabled ?? true) ? '' : 'checked' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                        <span class="text-sm text-gray-600">Off</span>
+                    </label>
+                </div>
+
+                <p class="text-sm font-medium text-gray-800 mb-2">Student-side proctoring (during quiz)</p>
                 <div class="space-y-4">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="proctoring_camera_required" value="1" {{ old('proctoring_camera_required', $proctoring_camera_required ?? true) ? 'checked' : '' }} class="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500">
