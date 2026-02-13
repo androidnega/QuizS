@@ -1047,18 +1047,43 @@ class QuizManagementController extends Controller
             $content[] = '';
             
             // Questions
+            $answerKey = [];
             foreach ($questions as $idx => $question) {
                 $content[] = ($idx + 1) . '. ' . $question->text;
                 
                 if ($question->options && is_array($question->options) && count($question->options) > 0) {
                     foreach ($question->options as $option) {
                         if (isset($option['key']) && isset($option['text'])) {
-                            $content[] = '   ' . $option['key'] . '. ' . $option['text'];
+                            $isCorrect = isset($question->correct_answer) && $option['key'] === $question->correct_answer;
+                            $marker = $isCorrect ? ' ***' : '';
+                            $content[] = '   ' . $option['key'] . '. ' . $option['text'] . $marker;
                         }
+                    }
+                } else {
+                    // For non-MCQ questions, show the correct answer directly
+                    if ($question->correct_answer) {
+                        $content[] = '   Answer: ' . $question->correct_answer;
                     }
                 }
                 
+                // Add to answer key
+                if ($question->correct_answer) {
+                    $answerKey[] = ($idx + 1) . '. ' . $question->correct_answer;
+                } else {
+                    $answerKey[] = ($idx + 1) . '. (No answer specified)';
+                }
+                
                 $content[] = '';
+            }
+            
+            // Answer Key Section
+            $content[] = '';
+            $content[] = str_repeat('=', 80);
+            $content[] = 'ANSWER KEY';
+            $content[] = str_repeat('=', 80);
+            $content[] = '';
+            foreach ($answerKey as $answer) {
+                $content[] = $answer;
             }
             
             // Footer
