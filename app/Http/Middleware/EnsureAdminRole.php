@@ -16,7 +16,7 @@ class EnsureAdminRole
     {
         if (session('admin_role') !== User::ROLE_SUPER_ADMIN) {
             return redirect()->route('dashboard')
-                ->with('error', 'This area is for administrators only.');
+                ->with('error', 'Error');
         }
 
         return $next($request);

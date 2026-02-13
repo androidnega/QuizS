@@ -18,14 +18,14 @@ class EnsureStudentAuthenticated
         $studentId = session('student_id');
         if (!$studentId) {
             return redirect()->guest(route('student.account.login.form'))
-                ->with('error', 'Please log in to access your dashboard.');
+                ->with('error', 'Error');
         }
 
         $student = Student::find($studentId);
         if (!$student) {
             session()->forget(['student_id', 'student_index']);
             return redirect()->guest(route('student.account.login.form'))
-                ->with('error', 'Session invalid. Please log in again.');
+                ->with('error', 'Error');
         }
 
         auth()->setUser($student);

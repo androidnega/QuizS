@@ -19,7 +19,7 @@ class EnsureCourseCreationAllowed
         
         if (!$user || !$user->isStaff()) {
             return redirect()->route('dashboard')
-                ->with('error', 'Access denied.');
+                ->with('error', 'Error');
         }
 
         // Super Admin always allowed
@@ -32,7 +32,7 @@ class EnsureCourseCreationAllowed
             $allowed = Setting::getValue(Setting::KEY_ALLOW_EXAMINER_CREATE_COURSE, '0') === '1';
             if (!$allowed) {
                 return redirect()->route('dashboard')
-                    ->with('error', 'Course creation is restricted to Super Administrators. Contact your administrator to enable this feature.');
+                    ->with('error', 'Error');
             }
         }
 

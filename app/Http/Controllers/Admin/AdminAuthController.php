@@ -65,11 +65,11 @@ class AdminAuthController extends Controller
                 'admin_role' => $user->role,
             ]);
             $dashboard = route('dashboard');
-            return redirect()->intended($dashboard)->with('success', 'Welcome back.');
+            return redirect()->intended($dashboard)->with('success', 'Logged in');
         }
 
         return back()->withInput($request->only('username'))
-            ->with('error', 'Invalid username or password.');
+            ->with('error', 'Invalid');
     }
 
     /**

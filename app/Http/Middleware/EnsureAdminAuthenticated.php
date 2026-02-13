@@ -21,14 +21,14 @@ class EnsureAdminAuthenticated
 
         if (!session('admin_authenticated', false)) {
             return redirect()->guest(route('login'))
-                ->with('error', 'Please log in to access the dashboard.');
+                ->with('error', 'Error');
         }
 
         $user = User::find(session('admin_user_id'));
         if (!$user || !$user->isStaff()) {
             session()->forget(['admin_authenticated', 'admin_user_id', 'admin_role']);
             return redirect()->guest(route('login'))
-                ->with('error', 'Session invalid or access revoked. Please log in again.');
+                ->with('error', 'Error');
         }
 
         // Keep session role in sync with database

@@ -31,10 +31,10 @@ class EnsureRulesAccepted
                 $quiz = Quiz::where('id', $quizId)->first();
                 if ($quiz && $quiz->link_token) {
                     return redirect()->route('student.rules.show.quiz', ['token' => $quiz->link_token])
-                        ->with('error', 'You must read and accept the rules before continuing.');
+                        ->with('error', 'Error');
                 }
                 return redirect()->route('student.rules.show')
-                    ->with('error', 'Please read and accept the rules first.');
+                    ->with('error', 'Error');
             }
 
             // Sync session for fast path on subsequent requests
@@ -51,12 +51,12 @@ class EnsureRulesAccepted
             $quiz = Quiz::where('id', $quizId)->first();
             if ($quiz && $quiz->link_token) {
                 return redirect()->route('student.rules.show.quiz', ['token' => $quiz->link_token])
-                    ->with('error', 'You must read and accept the rules before continuing.');
+                    ->with('error', 'Error');
             }
         }
 
         return redirect()->route('student.rules.show')
-            ->with('error', 'Please read and accept the rules first.');
+            ->with('error', 'Error');
     }
 
     /**

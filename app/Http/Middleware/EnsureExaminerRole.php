@@ -18,7 +18,7 @@ class EnsureExaminerRole
         $user = User::find(session('admin_user_id'));
         if (!$user || !$user->isStaff()) {
             return redirect()->route('dashboard')
-                ->with('error', 'Access denied.');
+                ->with('error', 'Error');
         }
 
         return $next($request);

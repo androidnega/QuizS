@@ -18,7 +18,7 @@ class EnsureSuperAdminRole
         $user = User::find(session('admin_user_id'));
         if (!$user || !$user->isSuperAdmin()) {
             return redirect()->route('dashboard')
-                ->with('error', 'This area is for Super Administrators only.');
+                ->with('error', 'Error');
         }
 
         return $next($request);

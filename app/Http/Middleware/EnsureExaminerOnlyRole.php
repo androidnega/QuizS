@@ -17,7 +17,7 @@ class EnsureExaminerOnlyRole
         $user = User::find(session('admin_user_id'));
         if (!$user || !$user->isExaminer()) {
             return redirect()->route('dashboard')
-                ->with('error', 'This area is for Examiners only.');
+                ->with('error', 'Error');
         }
 
         return $next($request);
