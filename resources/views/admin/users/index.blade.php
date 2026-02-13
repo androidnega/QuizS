@@ -24,48 +24,24 @@
         </div>
 
         @if(session('success') && session('temp_password') && session('reset_user_id'))
-        <div class="mb-6 p-4 bg-success-50 border-2 border-success-400 rounded-lg">
-            <div class="flex items-start gap-3">
-                <svg class="w-6 h-6 text-success-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <div class="flex-1">
-                    <p class="text-sm font-semibold text-success-900 mb-2">Password Reset Successful</p>
-                    <p class="text-sm text-success-800 mb-3">{!! session('success') !!}</p>
-                    <div class="bg-white border border-success-300 rounded-lg p-3 mb-2">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Temporary Password:</label>
-                        <div class="flex items-center gap-2">
-                            <input 
-                                type="text" 
-                                id="temp-password-display" 
-                                value="{{ session('temp_password') }}" 
-                                readonly
-                                class="flex-1 font-mono text-base font-bold text-gray-900 bg-gray-50 border border-gray-300 rounded px-3 py-2"
-                            >
-                            <button 
-                                type="button" 
-                                onclick="copyPassword()" 
-                                class="btn btn-success text-sm px-4 py-2"
-                            >
-                                Copy
-                            </button>
-                        </div>
-                    </div>
-                    <p class="text-xs text-success-700">
-                        ⚠️ This password is shown only once. Copy it now - you won't be able to see it again!
-                    </p>
-                </div>
-            </div>
-        </div>
-        @elseif(session('success'))
         <div class="mb-6 p-4 bg-success-50 border border-success-200 rounded-lg">
-            <p class="text-sm text-success-800">{!! session('success') !!}</p>
-        </div>
-        @endif
-
-        @if(session('error'))
-        <div class="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-lg">
-            <p class="text-sm text-danger-800">{{ session('error') }}</p>
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-success-800">Password:</span>
+                <input 
+                    type="text" 
+                    id="temp-password-display" 
+                    value="{{ session('temp_password') }}" 
+                    readonly
+                    class="flex-1 font-mono text-sm bg-white border border-success-300 rounded px-2 py-1"
+                >
+                <button 
+                    type="button" 
+                    onclick="copyPassword()" 
+                    class="btn btn-success text-sm px-3 py-1"
+                >
+                    Copy
+                </button>
+            </div>
         </div>
         @endif
 

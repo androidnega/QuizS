@@ -124,7 +124,7 @@ class UserManagementController extends Controller
         }
 
         return redirect()->route('dashboard.users.index')
-            ->with('success', 'User created.');
+            ->with('success', 'Saved');
     }
 
     public function edit(Request $request, User $user): View|RedirectResponse
@@ -134,7 +134,7 @@ class UserManagementController extends Controller
         
         if (! in_array($user->role, [User::ROLE_SUPER_ADMIN, User::ROLE_EXAMINER], true)) {
             return redirect()->route('dashboard.users.index')
-                ->with('error', 'Cannot edit this user.');
+                ->with('error', 'Error');
         }
         
         // Examiners can only edit themselves
@@ -179,7 +179,7 @@ class UserManagementController extends Controller
         
         if (! in_array($user->role, [User::ROLE_SUPER_ADMIN, User::ROLE_EXAMINER], true)) {
             return redirect()->route('dashboard.users.index')
-                ->with('error', 'Cannot edit this user.');
+                ->with('error', 'Error');
         }
         
         // Examiners can only edit themselves
@@ -279,11 +279,11 @@ class UserManagementController extends Controller
         // If examiner is updating their own profile, redirect to profile page
         if (!$isSuperAdmin && $currentUser && $currentUser->id === $user->id) {
             return redirect()->route('dashboard.profile.show')
-                ->with('success', 'Profile updated successfully.');
+                ->with('success', 'Saved');
         }
 
         return redirect()->route('dashboard.users.index')
-            ->with('success', 'User updated.');
+            ->with('success', 'Saved');
     }
 
     /**
@@ -327,7 +327,7 @@ class UserManagementController extends Controller
         if (!Hash::check($request->admin_password, $currentUser->password)) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Incorrect admin password. Please try again.');
+                ->with('error', 'Invalid password');
         }
         
         // Generate a random password
@@ -350,7 +350,7 @@ class UserManagementController extends Controller
             $user->save();
             
             return redirect()->route('dashboard.users.index')
-                ->with('success', "Password for {$user->username} has been reset successfully.");
+                ->with('success', 'Reset');
         }
         
         // Show password reset form
@@ -378,7 +378,7 @@ class UserManagementController extends Controller
         // Only allow resetting passwords for examiners
         if (!$user->isExaminer()) {
             return redirect()->route('dashboard.users.index')
-                ->with('error', 'Password reset is only available for examiners.');
+                ->with('error', 'Error');
         }
         
         // Generate a temporary password
@@ -397,7 +397,7 @@ class UserManagementController extends Controller
         }
         
         return redirect()->route('dashboard.users.index')
-            ->with('success', "Password for {$user->username} has been reset. The new temporary password is: <strong>{$temporaryPassword}</strong> - Please copy it now as it won't be shown again!")
+            ->with('success', 'Reset')
             ->with('temp_password', $temporaryPassword)
             ->with('reset_user_id', $user->id);
     }
@@ -416,7 +416,7 @@ class UserManagementController extends Controller
 
         if (! in_array($user->role, [User::ROLE_SUPER_ADMIN, User::ROLE_EXAMINER], true)) {
             return redirect()->route('dashboard.users.index')
-                ->with('error', 'Cannot revoke this user.');
+                ->with('error', 'Error');
         }
 
         $user->remember_token = null;
@@ -430,7 +430,7 @@ class UserManagementController extends Controller
         }
 
         return redirect()->route('dashboard.users.index')
-            ->with('success', "Access revoked for {$user->username}. They will need to log in again.");
+            ->with('success', 'Revoked');
     }
 
     /**
@@ -447,20 +447,19 @@ class UserManagementController extends Controller
 
         if ($user->role === User::ROLE_SUPER_ADMIN) {
             return redirect()->route('dashboard.users.index')
-                ->with('error', 'Cannot delete Super Admin accounts.');
+                ->with('error', 'Error');
         }
 
         if ($currentUser && $currentUser->id === $user->id) {
             return redirect()->route('dashboard.users.index')
-                ->with('error', 'You cannot delete your own account.');
+                ->with('error', 'Error');
         }
 
-        $username = $user->username;
         $user->courses()->detach();
         $user->delete();
 
         return redirect()->route('dashboard.users.index')
-            ->with('success', "User {$username} has been deleted.");
+            ->with('success', 'Deleted');
     }
 
     /**

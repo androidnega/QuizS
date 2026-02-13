@@ -36,11 +36,11 @@ class StudentLoginController extends Controller
         $quizId = session('quiz_id_for_login');
         if (!$quizId) {
             return redirect()->route('student.landing')
-                ->with('error', 'Please start from the quiz link. Enter the link on the start page first.');
+                ->with('error', 'Error');
         }
         $quiz = Quiz::where('id', $quizId)->where('is_active', true)->first();
         if (!$quiz || !$quiz->isActive()) {
-            return redirect()->route('student.landing')->with('error', 'This quiz is no longer active or the link has expired.');
+            return redirect()->route('student.landing')->with('error', 'Error');
         }
         return view('student.login', ['quiz' => $quiz]);
     }

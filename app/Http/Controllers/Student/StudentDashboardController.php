@@ -172,7 +172,7 @@ class StudentDashboardController extends Controller
         ]);
         $student->student_name = $request->filled('student_name') ? ucwords(strtolower(trim($request->student_name))) : null;
         $student->save();
-        return redirect()->route('dashboard.my-profile')->with('success', 'Profile updated.');
+        return redirect()->route('dashboard.my-profile')->with('success', 'Saved');
     }
 
     /**
@@ -185,7 +185,7 @@ class StudentDashboardController extends Controller
             
             // Validate session ID is numeric
             if (!is_numeric($sessionId)) {
-                return redirect()->route('dashboard.my-quizzes')->with('error', 'Invalid quiz session.');
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Error');
             }
             
             $quizSession = QuizSession::where('id', $sessionId)
@@ -194,11 +194,11 @@ class StudentDashboardController extends Controller
                 ->first();
             
             if (!$quizSession) {
-                return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz session not found or you do not have access to it.');
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Not found');
             }
 
             if (!$quizSession->quiz) {
-                return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz not found.');
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Not found');
             }
 
             if (!$quizSession->quiz->canShowScore()) {
@@ -219,7 +219,7 @@ class StudentDashboardController extends Controller
                 'student_id' => $student->id ?? null,
                 'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->route('dashboard.my-quizzes')->with('error', 'An error occurred while loading the quiz review. Please try again.');
+            return redirect()->route('dashboard.my-quizzes')->with('error', 'Error');
         }
     }
 
@@ -233,7 +233,7 @@ class StudentDashboardController extends Controller
             
             // Validate session ID is numeric
             if (!is_numeric($sessionId)) {
-                return redirect()->route('dashboard.my-quizzes')->with('error', 'Invalid quiz session.');
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Error');
             }
             
             $quizSession = QuizSession::where('id', $sessionId)
@@ -242,15 +242,15 @@ class StudentDashboardController extends Controller
                 ->first();
             
             if (!$quizSession) {
-                return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz session not found or you do not have access to it.');
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Not found');
             }
 
             if (!$quizSession->quiz) {
-                return redirect()->route('dashboard.my-quizzes')->with('error', 'Quiz not found.');
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Not found');
             }
 
             if (!$quizSession->quiz->canShowScore() || !$quizSession->result) {
-                return redirect()->route('dashboard.my-quizzes')->with('error', 'Results are not available for this quiz.');
+                return redirect()->route('dashboard.my-quizzes')->with('error', 'Not found');
             }
 
             $reviewAvailableWithinDays = 21;
@@ -273,7 +273,7 @@ class StudentDashboardController extends Controller
                 'student_id' => $student->id ?? null,
                 'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->route('dashboard.my-quizzes')->with('error', 'An error occurred while generating the PDF. Please try again.');
+            return redirect()->route('dashboard.my-quizzes')->with('error', 'Error');
         }
     }
 

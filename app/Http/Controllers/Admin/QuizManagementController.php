@@ -73,7 +73,7 @@ class QuizManagementController extends Controller
             ->filter(fn (ClassGroup $g) => $g->students_count > 0);
         $aiApiAvailable = app(AiQuestionService::class)->hasApiKey();
         if ($classGroups->isEmpty()) {
-            session()->flash('error', 'No class group with students available. Create a class group, attach courses, and add students first.');
+            session()->flash('error', 'Error');
         }
         return view('admin.quizzes.create', compact('classGroups', 'aiApiAvailable'));
     }
@@ -84,7 +84,7 @@ class QuizManagementController extends Controller
             $user = $this->adminUser();
             if (!$user) {
                 return redirect()->route('login')
-                    ->with('error', 'Please log in to create a quiz.');
+                    ->with('error', 'Error');
             }
 
             $request->validate([
@@ -108,22 +108,22 @@ class QuizManagementController extends Controller
             if (! $classGroup) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.create')
                     ->withInput()
-                    ->with('error', 'Class group not found.');
+                    ->with('error', 'Not found');
             }
             if (! $user->isSuperAdmin() && (int) $classGroup->examiner_id !== (int) $user->id) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.create')
                     ->withInput()
-                    ->with('error', 'You can only create quizzes for your own class groups.');
+                    ->with('error', 'Error');
             }
             if (! $classGroup || ! $classGroup->hasStudents()) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.create')
                     ->withInput()
-                    ->with('error', 'This class group has no students. Add students before creating a quiz.');
+                    ->with('error', 'Error');
             }
             if (! $classGroup->courses()->where('courses.id', $requestCourseId)->exists()) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.create')
                     ->withInput()
-                    ->with('error', 'The selected course is not attached to this class group.');
+                    ->with('error', 'Error');
             }
 
             $topics = $request->topics;
@@ -157,7 +157,7 @@ class QuizManagementController extends Controller
             if (!$quiz || !$quiz->id) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.create')
                     ->withInput()
-                    ->with('error', 'Failed to create quiz: the quiz was not saved. Please try again.');
+                    ->with('error', 'Failed');
             }
 
             // Generate AI questions only when API key is set; block and show clear message when missing
@@ -204,7 +204,7 @@ class QuizManagementController extends Controller
         } catch (\Throwable $e) {
             return redirect()->route($this->staffRoutePrefix() . '.quizzes.create')
                 ->withInput()
-                ->with('error', 'Quiz creation failed: ' . $e->getMessage());
+                ->with('error', 'Failed');
         }
     }
 
@@ -213,7 +213,7 @@ class QuizManagementController extends Controller
         $quiz = Quiz::query()->find($quiz);
         if (! $quiz) {
             return redirect()->route('dashboard.quizzes.index')
-                ->with('error', 'Quiz not found. It may have been removed or moved.');
+                ->with('error', 'Not found');
         }
 
         $this->authorize('view', $quiz);
@@ -333,7 +333,7 @@ class QuizManagementController extends Controller
         ]);
 
         return redirect()->route($this->staffRoutePrefix() . '.quizzes.sessions.show', [$quiz, $session])
-            ->with('success', 'IP lock reset. The student can now retry from a new IP/session.');
+            ->with('success', 'Reset');
     }
 
     /**
@@ -370,7 +370,7 @@ class QuizManagementController extends Controller
         
         return redirect()
             ->route($this->staffRoutePrefix() . '.quizzes.show', ['quiz' => $quiz, 'tab' => 'sessions'])
-            ->with('success', "Session killed for student {$studentIndex}. The student can now retake the quiz.");
+            ->with('success', 'Reset');
     }
 
     /**
@@ -421,7 +421,7 @@ class QuizManagementController extends Controller
 
         return redirect()
             ->route($this->staffRoutePrefix() . '.quizzes.show', ['quiz' => $quiz, 'tab' => 'sessions'])
-            ->with('success', "Cleared {$deletedSessions} session(s) for {$affectedStudents} student(s). They can retake this quiz.");
+            ->with('success', 'Cleared');
     }
 
     /**
@@ -431,7 +431,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('update', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         if ($pool->quiz_id !== $quiz->id) {
             abort(404);
@@ -452,7 +452,7 @@ class QuizManagementController extends Controller
             'explanation_correct' => $pool->explanation_correct ?? null,
         ]);
         $pool->update(['is_approved' => true]);
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Question approved and added to quiz.');
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Saved');
     }
 
     /**
@@ -462,7 +462,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('update', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         $pools = $quiz->questionPools()->where('is_approved', false)->get();
         $count = 0;
@@ -482,8 +482,7 @@ class QuizManagementController extends Controller
             $pool->update(['is_approved' => true]);
             $count++;
         }
-        $message = $count > 0 ? "{$count} question(s) approved and added to quiz." : 'No unapproved questions in pool.';
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', $message);
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Saved');
     }
 
     /**
@@ -493,11 +492,11 @@ class QuizManagementController extends Controller
     {
         $this->authorize('update', $quiz);
         if (!$quiz->hasEnoughApprovedQuestions()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Cannot publish: quiz needs at least ' . $quiz->getQuestionsPerStudent() . ' approved questions.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         $quiz->update(['is_published' => true]);
         broadcast(new DataUpdated('quizzes'))->toOthers();
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Quiz published successfully! Share the link with your students.');
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Published');
     }
 
     /**
@@ -509,7 +508,7 @@ class QuizManagementController extends Controller
         $this->authorize('update', $quiz);
         $quiz->update(['is_published' => false]);
         broadcast(new DataUpdated('quizzes'))->toOthers();
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Quiz unpublished successfully.');
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Unpublished');
     }
 
     /**
@@ -521,7 +520,7 @@ class QuizManagementController extends Controller
         $this->authorize('update', $quiz);
         $quiz->update(['ends_at' => now()]);
         broadcast(new DataUpdated('quizzes'))->toOthers();
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Quiz ended. Students can no longer start or submit.');
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Ended');
     }
 
     /**
@@ -535,13 +534,13 @@ class QuizManagementController extends Controller
         // Only allow extending time if quiz has started (has active sessions)
         if (!$quiz->hasStarted()) {
             return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
-                ->with('error', 'Cannot extend time: quiz has not started yet.');
+                ->with('error', 'Error');
         }
         
         // Check if quiz has ended
         if ($quiz->hasEnded()) {
             return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
-                ->with('error', 'Cannot extend time: quiz has already ended.');
+                ->with('error', 'Error');
         }
         
         $request->validate([
@@ -554,7 +553,7 @@ class QuizManagementController extends Controller
         // Cap at reasonable maximum (e.g., 600 minutes = 10 hours)
         if ($newDuration > 600) {
             return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
-                ->with('error', 'Total duration cannot exceed 600 minutes (10 hours).');
+                ->with('error', 'Error');
         }
         
         $quiz->update(['duration_minutes' => $newDuration]);
@@ -563,7 +562,7 @@ class QuizManagementController extends Controller
         broadcast(new DataUpdated('quizzes'))->toOthers();
         
         return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
-            ->with('success', "Quiz time extended by {$additionalMinutes} minute(s). New duration: {$newDuration} minutes. Students' timers will update automatically.");
+            ->with('success', 'Extended');
     }
 
     /**
@@ -573,7 +572,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('view', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         if ($pool->quiz_id !== $quiz->id) {
             abort(404);
@@ -591,7 +590,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('update', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         if ($pool->quiz_id !== $quiz->id || $pool->is_approved) {
             abort(404);
@@ -616,7 +615,7 @@ class QuizManagementController extends Controller
             'correct_answer' => $request->correct_answer,
             'topic' => $request->filled('topic') ? $request->topic : null,
         ]);
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Question updated.');
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Saved');
     }
 
     /**
@@ -626,7 +625,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('update', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         if ($pool->quiz_id !== $quiz->id) {
             abort(404);
@@ -635,7 +634,7 @@ class QuizManagementController extends Controller
             return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('info', 'Already approved.');
         }
         $pool->delete();
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Question rejected and removed from pool.');
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Removed');
     }
 
     /**
@@ -645,7 +644,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('view', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         if ($question->quiz_id !== $quiz->id) {
             abort(404);
@@ -660,7 +659,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('update', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         if ($question->quiz_id !== $quiz->id) {
             abort(404);
@@ -686,7 +685,7 @@ class QuizManagementController extends Controller
             'correct_answer' => $request->correct_answer,
             'topic' => $request->filled('topic') ? $request->topic : null,
         ]);
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Question updated.');
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Saved');
     }
 
     /**
@@ -697,7 +696,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('delete', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Cannot delete: this quiz has already been started by students.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         $title = $quiz->title;
         if ($quiz->script_public_id) {
@@ -709,7 +708,7 @@ class QuizManagementController extends Controller
         } catch (\Exception $e) {
             // Ignore broadcast errors
         }
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.index')->with('success', "Quiz \"{$title}\" has been deleted.");
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.index')->with('success', 'Deleted');
     }
 
     /**
@@ -726,20 +725,20 @@ class QuizManagementController extends Controller
             ->whereJsonContains('assigned_question_ids', (int) $question->id)
             ->exists();
         if ($assignedToActiveSession) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Cannot delete: this question is assigned to an active or in-progress session. Wait until all sessions are ended.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         $question->delete();
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Question removed.');
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Removed');
     }
 
     public function edit(Quiz $quiz): View|RedirectResponse
     {
         $this->authorize('view', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         $quiz->load('classGroup.courses');
         $courses = $quiz->classGroup ? $quiz->classGroup->courses()->orderBy('name')->get() : collect();
@@ -751,7 +750,7 @@ class QuizManagementController extends Controller
     {
         $this->authorize('update', $quiz);
         if ($quiz->hasStarted()) {
-            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'This quiz has already been started. Editing is disabled.');
+            return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('error', 'Error');
         }
         $request->validate([
             'title' => 'required|string|max:255',
@@ -773,7 +772,7 @@ class QuizManagementController extends Controller
         if (! $classGroup || ! $classGroup->courses()->where('courses.id', $requestCourseId)->exists()) {
             return redirect()->route($this->staffRoutePrefix() . '.quizzes.edit', $quiz)
                 ->withInput()
-                ->with('error', 'The selected course must be attached to this quiz\'s class group.');
+                ->with('error', 'Error');
         }
         $topics = $request->topics;
         if (is_string($topics) && $topics !== '') {
@@ -799,7 +798,7 @@ class QuizManagementController extends Controller
             } else {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.edit', $quiz)
                     ->withInput()
-                    ->with('error', 'Failed to upload script to Cloudinary. Check settings or try again.');
+                    ->with('error', 'Failed');
             }
         }
         $updateData = [
@@ -830,7 +829,7 @@ class QuizManagementController extends Controller
             if (!$aiService->hasApiKey()) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.edit', $quiz)
                     ->withInput()
-                    ->with('error', 'AI generation requires a Gemini or DeepSeek API key. Add one in Dashboard → Settings, then try again.');
+                    ->with('error', 'Error');
             }
             try {
                 $poolCount = count($aiService->generatePoolAndStore(
@@ -842,19 +841,19 @@ class QuizManagementController extends Controller
                 broadcast(new DataUpdated('quizzes'))->toOthers();
                 if ($poolCount > 0) {
                     return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)
-                        ->with('success', "Quiz updated. {$poolCount} question(s) generated from uploaded file and awaiting approval.");
+                        ->with('success', 'Saved');
                 }
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.edit', $quiz)
                     ->withInput()
-                    ->with('error', 'AI did not generate any questions. Check API keys in Dashboard → Settings (AI tab), try different source/topics, or add questions manually.');
+                    ->with('error', 'Failed');
             } catch (\Throwable $e) {
                 return redirect()->route($this->staffRoutePrefix() . '.quizzes.edit', $quiz)
                     ->withInput()
-                    ->with('error', 'AI generation failed: ' . $e->getMessage());
+                    ->with('error', 'Failed');
             }
         }
         broadcast(new DataUpdated('quizzes'))->toOthers();
-        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Quiz updated.');
+        return redirect()->route($this->staffRoutePrefix() . '.quizzes.show', $quiz)->with('success', 'Saved');
     }
 
     /**

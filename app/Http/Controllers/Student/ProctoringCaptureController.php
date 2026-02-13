@@ -28,11 +28,11 @@ class ProctoringCaptureController extends Controller
         $quizId = session('quiz_id');
         $indexNumber = session('index_number');
         if (!$quizId || !$indexNumber) {
-            return redirect()->route('student.landing')->with('error', 'Session expired. Please enter your quiz link again to continue.');
+            return redirect()->route('student.landing')->with('error', 'Error');
         }
         $quiz = Quiz::find($quizId);
         if (!$quiz || !$quiz->isActive()) {
-            return redirect()->route('student.landing')->with('error', 'This quiz is not active. Please check the link and try again.');
+            return redirect()->route('student.landing')->with('error', 'Error');
         }
         $ip = $request->ip();
         $studentIndex = strtoupper(trim((string) $indexNumber));
@@ -45,7 +45,7 @@ class ProctoringCaptureController extends Controller
                 ->exists();
 
             if ($ipUsedByOther) {
-                return redirect()->route('student.landing')->with('error', 'This IP has already been used for this quiz by another student.');
+                return redirect()->route('student.landing')->with('error', 'Error');
             }
         }
         return view('student.proctoring-capture', [

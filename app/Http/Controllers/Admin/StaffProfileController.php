@@ -19,7 +19,7 @@ class StaffProfileController extends Controller
     {
         $user = $this->adminUser();
         if (!$user) {
-            return redirect()->route('login')->with('error', 'Please sign in again.');
+            return redirect()->route('login')->with('error', 'Error');
         }
         // Load relationships for profile display
         $user->load(['institution', 'faculty', 'department', 'course']);
@@ -30,7 +30,7 @@ class StaffProfileController extends Controller
     {
         $user = $this->adminUser();
         if (!$user) {
-            return redirect()->route('login')->with('error', 'Please sign in again.');
+            return redirect()->route('login')->with('error', 'Error');
         }
         $rules = [
             'name' => 'nullable|string|max:255',
@@ -41,7 +41,7 @@ class StaffProfileController extends Controller
             'name' => $request->input('name'),
             'username' => $request->input('username'),
         ]);
-        return redirect()->route('dashboard.profile.show')->with('success', 'Profile updated.');
+        return redirect()->route('dashboard.profile.show')->with('success', 'Saved');
     }
 
     public function updateAvatar(Request $request): RedirectResponse
@@ -51,7 +51,7 @@ class StaffProfileController extends Controller
         ]);
         $user = $this->adminUser();
         if (!$user) {
-            return redirect()->route('login')->with('error', 'Please sign in again.');
+            return redirect()->route('login')->with('error', 'Error');
         }
 
         $file = $request->file('avatar');
@@ -76,7 +76,7 @@ class StaffProfileController extends Controller
         }
 
         $user->update(['avatar' => $avatarValue]);
-        return redirect()->route('dashboard.profile.show')->with('success', 'Photo updated.');
+        return redirect()->route('dashboard.profile.show')->with('success', 'Saved');
     }
 
     public function password(): View
@@ -92,12 +92,12 @@ class StaffProfileController extends Controller
         ]);
         $user = $this->adminUser();
         if (!$user) {
-            return redirect()->route('login')->with('error', 'Please sign in again.');
+            return redirect()->route('login')->with('error', 'Error');
         }
         if (!Hash::check($request->current_password, $user->password)) {
             return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect.'])->withInput();
         }
         $user->update(['password' => Hash::make($request->password)]);
-        return redirect()->route('dashboard.profile.password')->with('success', 'Password updated.');
+        return redirect()->route('dashboard.profile.password')->with('success', 'Saved');
     }
 }

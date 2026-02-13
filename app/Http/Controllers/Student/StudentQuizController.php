@@ -13,9 +13,11 @@ use App\Models\Result;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Services\AiQuestionService;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 class StudentQuizController extends Controller
 {
@@ -26,7 +28,7 @@ class StudentQuizController extends Controller
     {
         $token = session('quiz_session_token');
         if (!$token) {
-            return redirect()->route('student.landing')->with('error', 'No active quiz session. Please start from the quiz rules.');
+            return redirect()->route('student.landing')->with('error', 'Error');
         }
         $session = QuizSession::with('quiz.course')->where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
@@ -43,18 +45,53 @@ class StudentQuizController extends Controller
     }
 
     /**
+     * Start quiz session with camera verification.
+     * Marks camera_verified = true and camera_started_at = now().
+     */
+    public function startSession(Request $request): JsonResponse
+    {
+        $token = session('quiz_session_token');
+        if (!$token) {
+            return response()->json(['success' => false, 'message' => 'No active quiz session.'], 401);
+        }
+        $session = QuizSession::where('session_token', $token)->first();
+        if (!$session) {
+            return response()->json(['success' => false, 'message' => 'Session not found.'], 404);
+        }
+        if ($session->ended_at) {
+            return response()->json(['success' => false, 'message' => 'Session already ended.'], 403);
+        }
+        if ($session->start_time !== null) {
+            return response()->json(['success' => true, 'redirect' => route('student.quiz.show')]);
+        }
+        $session->update([
+            'camera_verified' => true,
+            'camera_started_at' => now(),
+        ]);
+        return response()->json([
+            'success' => true,
+            'redirect' => route('student.quiz.show'),
+        ]);
+    }
+
+    /**
      * Show quiz interface (StudentQuiz): timer, questions, auto-save.
      * Session token resolved from session (not URL). Timer starts on first load (start_time set here if null).
+     * Requires camera_verified = true before allowing quiz to start.
      */
     public function show(Request $request): View|JsonResponse|\Illuminate\Http\Response
     {
         $token = session('quiz_session_token');
         if (!$token) {
-            return redirect()->route('student.landing')->with('error', 'No active quiz session. Please start from the quiz rules.');
+            return redirect()->route('student.landing')->with('error', 'Error');
         }
         $session = QuizSession::with(['quiz', 'quiz.questions'])->where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
             return redirect()->to($this->quizCompleteUrl());
+        }
+        // Enforce camera verification before quiz starts
+        if (!$session->camera_verified) {
+            return redirect()->route('student.quiz.ready')->with('error', 'Error');
         }
         if ($session->start_time === null) {
             $session->update(['start_time' => now()]);
@@ -67,7 +104,7 @@ class StudentQuizController extends Controller
                 'metadata' => json_encode(['expected' => $session->ip_address, 'got' => $request->ip()]),
                 'occurred_at' => now(),
             ]);
-            return redirect()->route('student.landing')->with('error', 'Session invalid.');
+            return redirect()->route('student.landing')->with('error', 'Error');
         }
         $questionIds = $session->assigned_question_ids ?? [];
         $questions = collect();
@@ -140,6 +177,7 @@ class StudentQuizController extends Controller
 
     /**
      * Auto-save single answer. Session resolved from HttpOnly session only.
+     * Rejects if session is auto-submitted.
      */
     public function saveAnswer(Request $request): JsonResponse
     {
@@ -154,6 +192,9 @@ class StudentQuizController extends Controller
         $session = QuizSession::where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
             return response()->json(['success' => false, 'message' => 'Quiz ended.'], 403);
+        }
+        if ($session->auto_submitted) {
+            return response()->json(['success' => false, 'message' => 'Quiz was auto-submitted due to violations.'], 403);
         }
         if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
             return response()->json(['success' => false], 403);
@@ -173,6 +214,7 @@ class StudentQuizController extends Controller
 
     /**
      * Save multiple answers in one request. Session resolved from HttpOnly session only.
+     * Rejects if session is auto-submitted.
      */
     public function saveAnswersBatch(Request $request): JsonResponse
     {
@@ -189,6 +231,9 @@ class StudentQuizController extends Controller
         if ($session->ended_at) {
             return response()->json(['success' => false, 'message' => 'Quiz ended.'], 403);
         }
+        if ($session->auto_submitted) {
+            return response()->json(['success' => false, 'message' => 'Quiz was auto-submitted due to violations.'], 403);
+        }
         if ($this->isIpDeviceRestrictionEnabled() && $session->ip_address !== $request->ip()) {
             return response()->json(['success' => false], 403);
         }
@@ -202,6 +247,75 @@ class StudentQuizController extends Controller
     }
 
     /**
+     * Capture violation image and upload to Cloudinary.
+     * Creates or updates violation record with image URL.
+     */
+    public function captureViolation(Request $request): JsonResponse
+    {
+        $token = session('quiz_session_token');
+        if (!$token) {
+            return response()->json(['success' => false, 'message' => 'No active session.'], 401);
+        }
+
+        $request->validate([
+            'session_id' => 'required|exists:quiz_sessions,id',
+            'violation_type' => 'required|string',
+            'image_base64' => 'required|string',
+        ]);
+
+        $session = QuizSession::where('session_token', $token)->where('id', $request->session_id)->first();
+        if (!$session) {
+            return response()->json(['success' => false, 'message' => 'Session not found or invalid.'], 404);
+        }
+
+        if ($session->ended_at) {
+            return response()->json(['success' => false, 'message' => 'Session already ended.'], 403);
+        }
+
+        $imageUrl = null;
+        $data = $request->image_base64;
+
+        // Upload to Cloudinary
+        if (Str::startsWith($data, 'data:image')) {
+            try {
+                if (CloudinaryService::isConfigured()) {
+                    $imageUrl = CloudinaryService::uploadFromDataUrl(
+                        $data,
+                        'violation_s' . $session->id . '_' . time() . '_' . Str::random(8)
+                    );
+                }
+            } catch (\Throwable $e) {
+                report($e);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to upload image.',
+                ], 500);
+            }
+        }
+
+        // Create or update violation record
+        $violationType = $request->violation_type;
+        $severity = QuizViolation::severityForType($violationType);
+
+        QuizViolation::create([
+            'quiz_session_id' => $session->id,
+            'type' => $violationType,
+            'severity' => $severity,
+            'metadata' => json_encode(['captured_at' => now()->toIso8601String()]),
+            'image_url' => $imageUrl,
+            'occurred_at' => now(),
+        ]);
+
+        // Check if session should be marked as risky
+        $this->checkAndMarkRiskySession($session);
+
+        return response()->json([
+            'success' => true,
+            'image_url' => $imageUrl,
+        ]);
+    }
+
+    /**
      * Record violation. Right-click = warn only (no auto-submit).
      * Auto-submit: (1) critical (copy_paste, multiple_ip) on first, or (2) tab switch/blur: first time = 20s delay; second time = immediate.
      */
@@ -212,7 +326,7 @@ class StudentQuizController extends Controller
             return response()->json(['success' => false], 401);
         }
         $request->validate([
-            'type' => 'required|string|in:blur,tab_switch,copy_paste,right_click,window_resize,screenshot_attempt,other',
+            'type' => 'required|string|in:blur,tab_switch,copy_paste,right_click,window_resize,screenshot_attempt,camera_disconnected,no_face,multiple_faces,random_snapshot,phone_detected,external_audio,no_blink,head_turn,brief_face_loss,other',
         ]);
         $session = QuizSession::where('session_token', $token)->firstOrFail();
         if ($session->ended_at) {
@@ -238,8 +352,8 @@ class StudentQuizController extends Controller
             $this->finalizeQuiz($session);
             $autoSubmitted = true;
         }
-        // Major violations (blur, tab_switch, window_resize): max 1 warning per session, then auto-submit
-        $majorTypes = ['blur', 'tab_switch', 'window_resize'];
+        // Major violations (blur, tab_switch, window_resize, camera_disconnected, no_face, multiple_faces): max 1 warning per session, then auto-submit
+        $majorTypes = ['blur', 'tab_switch', 'window_resize', 'camera_disconnected', 'no_face', 'multiple_faces'];
         if (!$autoSubmitted && in_array($type, $majorTypes, true)) {
             $majorCount = $session->violations()->whereIn('type', $majorTypes)->count();
             if ($majorCount >= 2) {
@@ -252,6 +366,10 @@ class StudentQuizController extends Controller
                 $autoSubmitted = true;
             }
         }
+
+        // Check if session should be marked as risky
+        $this->checkAndMarkRiskySession($session);
+
         $response = ['success' => true, 'auto_submitted' => $autoSubmitted];
         if (!$autoSubmitted && in_array($type, $majorTypes, true)) {
             $majorCount = $session->violations()->whereIn('type', $majorTypes)->count();
@@ -261,6 +379,85 @@ class StudentQuizController extends Controller
             $response['redirect'] = $this->quizCompleteUrl();
         }
         return response()->json($response);
+    }
+
+    /**
+     * Auto-submit quiz due to violations.
+     */
+    public function autoSubmit(Request $request): JsonResponse
+    {
+        $token = session('quiz_session_token');
+        if (!$token) {
+            return response()->json(['success' => false, 'message' => 'No active session.'], 401);
+        }
+
+        $request->validate([
+            'session_id' => 'required|exists:quiz_sessions,id',
+            'reason' => 'required|string',
+            'violation_summary' => 'nullable|array',
+            'final_snapshot' => 'nullable|string',
+        ]);
+
+        $session = QuizSession::where('session_token', $token)->where('id', $request->session_id)->first();
+        if (!$session) {
+            return response()->json(['success' => false, 'message' => 'Session not found or invalid.'], 404);
+        }
+
+        if ($session->ended_at) {
+            return response()->json(['success' => true, 'redirect' => $this->quizCompleteUrl()]);
+        }
+
+        // Upload final snapshot if provided
+        $finalSnapshotUrl = null;
+        if ($request->final_snapshot && Str::startsWith($request->final_snapshot, 'data:image')) {
+            try {
+                if (CloudinaryService::isConfigured()) {
+                    $finalSnapshotUrl = CloudinaryService::uploadFromDataUrl(
+                        $request->final_snapshot,
+                        'auto_submit_s' . $session->id . '_' . time()
+                    );
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        // Update session with violation counts and auto-submit status
+        $violationSummary = $request->violation_summary ?? [];
+        $minorCount = $violationSummary['minor_count'] ?? 0;
+        $majorCount = $violationSummary['major_count'] ?? 0;
+
+        $session->update([
+            'minor_violations' => $minorCount,
+            'major_violations' => $majorCount,
+            'auto_submitted' => true,
+            'submission_reason' => $request->reason,
+            'post_face_skipped_at' => now(),
+            'post_face_skipped_reason' => 'auto_submit',
+        ]);
+
+        // Finalize quiz
+        $this->finalizeQuiz($session);
+
+        return response()->json([
+            'success' => true,
+            'redirect' => $this->quizCompleteUrl(),
+        ]);
+    }
+
+    /**
+     * Check violation count and update counters.
+     */
+    protected function checkAndMarkRiskySession(QuizSession $session): void
+    {
+        $violations = $session->violations;
+        $minorCount = $violations->where('severity', 'warning')->count();
+        $majorCount = $violations->where('severity', 'critical')->count();
+
+        $session->update([
+            'minor_violations' => $minorCount,
+            'major_violations' => $majorCount,
+        ]);
     }
 
     /**
@@ -427,11 +624,11 @@ class StudentQuizController extends Controller
     {
         $token = session('quiz_session_token') ?? $request->query('token');
         if (!$token || !is_string($token)) {
-            return redirect()->route('student.landing')->with('error', 'No quiz result found. Please complete a quiz first.');
+            return redirect()->route('student.landing')->with('error', 'Not found');
         }
         $session = QuizSession::with(['quiz', 'result', 'answers.question'])->where('session_token', $token)->first();
         if (!$session) {
-            return redirect()->route('student.landing')->with('error', 'No quiz result found. Please complete a quiz first.');
+            return redirect()->route('student.landing')->with('error', 'Not found');
         }
 
         $studentId = session('student_id');

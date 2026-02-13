@@ -106,7 +106,7 @@ class ClassGroupController extends Controller
         $this->authorize('create', ClassGroup::class);
         $user = $this->adminUser();
         if (!$user) {
-            return redirect()->route('login')->with('error', 'Please log in.');
+            return redirect()->route('login')->with('error', 'Error');
         }
 
         $isSuperAdmin = $user->isSuperAdmin();
@@ -134,7 +134,7 @@ class ClassGroupController extends Controller
             if (!$examiner || $examiner->role !== User::ROLE_EXAMINER) {
                 return redirect()->route($this->staffRoutePrefix() . '.class-groups.create')
                     ->withInput()
-                    ->with('error', 'Selected user must be an examiner.');
+                    ->with('error', 'Error');
             }
         }
 
@@ -144,7 +144,7 @@ class ClassGroupController extends Controller
             if (!$user->isSuperAdmin() && !in_array($cid, $courseIds, true)) {
                 return redirect()->route($this->staffRoutePrefix() . '.class-groups.create')
                     ->withInput()
-                    ->with('error', 'You can only attach courses assigned to you.');
+                    ->with('error', 'Error');
             }
         }
 
@@ -155,7 +155,7 @@ class ClassGroupController extends Controller
         $classGroup->courses()->sync($requestCourseIds);
 
         return redirect()->route($this->staffRoutePrefix() . '.class-groups.show', $classGroup)
-            ->with('success', 'Class group created. ' . ($isSuperAdmin ? 'Examiner can add students and create quizzes.' : 'Add students to this class group before creating quizzes.'));
+            ->with('success', 'Saved');
     }
 
     public function show(ClassGroup $classGroup): View
@@ -214,7 +214,7 @@ class ClassGroupController extends Controller
             if (!$examiner || $examiner->role !== User::ROLE_EXAMINER) {
                 return redirect()->route($this->staffRoutePrefix() . '.class-groups.edit', $classGroup)
                     ->withInput()
-                    ->with('error', 'Selected user must be an examiner.');
+                    ->with('error', 'Error');
             }
         }
 
@@ -224,7 +224,7 @@ class ClassGroupController extends Controller
             if (!$isSuperAdmin && !in_array($cid, $courseIds, true)) {
                 return redirect()->route($this->staffRoutePrefix() . '.class-groups.edit', $classGroup)
                     ->withInput()
-                    ->with('error', 'You can only attach courses assigned to you.');
+                    ->with('error', 'Error');
             }
         }
 
@@ -234,7 +234,7 @@ class ClassGroupController extends Controller
         ]);
         $classGroup->courses()->sync($requestCourseIds);
 
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.show', $classGroup)->with('success', 'Class group updated.');
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.show', $classGroup)->with('success', 'Saved');
     }
 
     public function destroy(ClassGroup $classGroup): RedirectResponse
@@ -242,11 +242,11 @@ class ClassGroupController extends Controller
         $this->authorize('delete', $classGroup);
         if ($classGroup->quizzes()->exists()) {
             return redirect()->route($this->staffRoutePrefix() . '.class-groups.index')
-                ->with('error', 'Cannot delete: this class group has quizzes. Delete or reassign the quizzes first.');
+                ->with('error', 'Error');
         }
         $name = $classGroup->name;
         $classGroup->delete();
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.index')->with('success', "Class group \"{$name}\" deleted.");
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.index')->with('success', 'Deleted');
     }
 
     /** Show the student indices management page for this class group. */
@@ -299,7 +299,7 @@ class ClassGroupController extends Controller
         );
         
         return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)
-            ->with('success', 'Student added as new user. They will go through the onboarding process.');
+            ->with('success', 'Saved');
     }
 
     /** Show details page for one student in the class group. */
@@ -389,7 +389,7 @@ class ClassGroupController extends Controller
         if (strcasecmp($student->index_number, $indexNumber) !== 0) {
             if (ClassGroupStudent::where('class_group_id', $classGroup->id)->where('id', '!=', $student->id)->whereRaw('UPPER(TRIM(index_number)) = ?', [strtoupper($indexNumber)])->exists()) {
                 return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)
-                    ->with('error', 'An index with that number already exists in this group.');
+                    ->with('error', 'Error');
             }
         }
         
@@ -404,7 +404,7 @@ class ClassGroupController extends Controller
             if ($otherStudent) {
                 return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.edit', [$classGroup, $student])
                     ->withInput()
-                    ->with('error', 'This phone number is already registered to another student.');
+                    ->with('error', 'Error');
             }
             $studentAccount->phone_contact = $phone;
             $studentAccount->save();
@@ -413,7 +413,7 @@ class ClassGroupController extends Controller
             $studentAccount->save();
         }
         
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.show', [$classGroup, $student])->with('success', 'Student details updated.');
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.show', [$classGroup, $student])->with('success', 'Saved');
     }
 
     /** Upload Excel to replace or merge class group students. */
@@ -547,13 +547,7 @@ class ClassGroupController extends Controller
                 }
             }
         }
-        if ($smsSent > 0) {
-            $message .= ' Login tokens sent by SMS to ' . $smsSent . ' student(s).';
-        } elseif ($examiner && $examiner->isExaminer() && $examiner->sms_remaining <= 0) {
-            $message .= ' No SMS balance—login tokens were not sent.';
-        }
-
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', $message);
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Saved');
     }
 
     /** Remove a student from the class group. */
@@ -586,7 +580,7 @@ class ClassGroupController extends Controller
         $student->delete();
         
         return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)
-            ->with('success', 'Student completely removed. All data deleted. They will be treated as new when added back.');
+            ->with('success', 'Deleted');
     }
 
     /** Remove phone number from a student. */
@@ -603,10 +597,10 @@ class ClassGroupController extends Controller
         if ($studentAccount) {
             $studentAccount->phone_contact = null;
             $studentAccount->save();
-            return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Phone number removed. Student will be asked for a new number on next login.');
+            return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('success', 'Removed');
         }
         
-        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('error', 'No phone number found for this student.');
+        return redirect()->route($this->staffRoutePrefix() . '.class-groups.students.index', $classGroup)->with('error', 'Not found');
     }
 
     /**

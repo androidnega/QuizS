@@ -343,6 +343,6 @@ class StudentAccountController extends Controller
     public function logout(Request $request): RedirectResponse
     {
         session()->forget(['student_id', 'student_index']);
-        return redirect()->route('student.account.login.form')->with('success', 'You have been logged out.');
+        return redirect()->route('student.account.login.form')->with('success', 'Logged out');
     }
 }
