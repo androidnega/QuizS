@@ -25,8 +25,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
-use PhpOffice\PhpWord\PhpWord;
-use PhpOffice\PhpWord\IOFactory;
 
 class QuizManagementController extends Controller
 {
@@ -971,9 +969,9 @@ class QuizManagementController extends Controller
     }
 
     /**
-     * Export quiz questions as DOCX in exam format.
+     * Export quiz questions as TXT in exam format.
      */
-    public function exportQuestionsDocx(Quiz $quiz): Response
+    public function exportQuestionsTxt(Quiz $quiz): Response
     {
         $this->authorize('view', $quiz);
         $quiz->load(['course', 'classGroup', 'questions']);
@@ -1016,27 +1014,6 @@ class QuizManagementController extends Controller
         }
         
         $institutionName = Setting::getValue(Setting::KEY_INSTITUTION_NAME, 'TAKORADI TECHNICAL UNIVERSITY');
-        $logoPath = Setting::getValue(Setting::KEY_INSTITUTION_LOGO, '');
-        $logoFilePath = null;
-        if ($logoPath) {
-            if (str_starts_with($logoPath, 'http')) {
-                try {
-                    $response = \Illuminate\Support\Facades\Http::timeout(10)->get($logoPath);
-                    if ($response->successful()) {
-                        $tempFile = tempnam(sys_get_temp_dir(), 'logo_');
-                        file_put_contents($tempFile, $response->body());
-                        $logoFilePath = $tempFile;
-                    }
-                } catch (\Throwable $e) {
-                    // omit logo on fetch failure
-                }
-            } else {
-                $fullPath = storage_path('app/public/' . $logoPath);
-                if (file_exists($fullPath)) {
-                    $logoFilePath = $fullPath;
-                }
-            }
-        }
         
         $classGroupName = $quiz->classGroup ? $quiz->classGroup->name : '—';
         $programme = $classGroupName !== '—' ? strtoupper($classGroupName) : '—';
@@ -1046,130 +1023,72 @@ class QuizManagementController extends Controller
         $nextYear = now()->addYear()->format('y');
         $examYear = $currentYear . '/' . $nextYear;
         
-        // Check if PhpWord is available
-        // Try to load autoloader first in case it's installed but not loaded
-        $autoloadPath = base_path('vendor/autoload.php');
-        if (file_exists($autoloadPath)) {
-            require_once $autoloadPath;
-        }
-        
-        if (!class_exists(\PhpOffice\PhpWord\PhpWord::class)) {
-            return redirect()->back()->with('error', 'DOCX export requires PhpWord library. Please run: composer require phpoffice/phpword or use the install script at: /install-phpword.php');
-        }
-        
         try {
-            // Create new PhpWord object
-            $phpWord = new PhpWord();
-            $phpWord->setDefaultFontName('Times New Roman');
-            $phpWord->setDefaultFontSize(11);
+            // Build text content
+            $content = [];
             
-            // Add section with margins
-            $section = $phpWord->addSection([
-                'marginTop' => 1134, // 2cm
-                'marginBottom' => 1134,
-                'marginLeft' => 1134,
-                'marginRight' => 1134,
-            ]);
+            // Header
+            $content[] = str_pad('', 80, ' ', STR_PAD_BOTH);
+            $content[] = strtoupper($institutionName);
+            $content[] = 'FACULTY OF APPLIED ARTS AND TECHNOLOGY';
+            $content[] = 'DEPARTMENT OF COMPUTER SCIENCE';
+            $content[] = 'END OF FIRST SEMESTER EXAMINATIONS, ' . $examYear;
+            $content[] = 'PROGRAMME: ' . $programme;
+            $content[] = '';
             
-            // Header table with logo and institution info
-            $headerTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 50]);
-            $headerRow = $headerTable->addRow();
-            
-            // Logo cell (left)
-            $logoCell = $headerRow->addCell(2000);
-            if ($logoFilePath && file_exists($logoFilePath)) {
-                try {
-                    $logoCell->addImage($logoFilePath, [
-                        'width' => 60,
-                        'height' => 60,
-                        'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::LEFT,
-                    ]);
-                } catch (\Throwable $e) {
-                    // Skip logo if image can't be added
-                }
-            }
-            
-            // Institution info cell (right, centered)
-            $infoCell = $headerRow->addCell(14000);
-            $infoCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::CENTER);
-            
-            $institutionStyle = ['bold' => true, 'size' => 12, 'allCaps' => true];
-            $infoCell->addText($institutionName, $institutionStyle, ['spaceAfter' => 60, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-            $infoCell->addText('FACULTY OF APPLIED ARTS AND TECHNOLOGY', $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-            $infoCell->addText('DEPARTMENT OF COMPUTER SCIENCE', $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-            $infoCell->addText('END OF FIRST SEMESTER EXAMINATIONS, ' . $examYear, $institutionStyle, ['spaceAfter' => 30, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-            $infoCell->addText('PROGRAMME: ' . $programme, $institutionStyle, ['spaceAfter' => 120, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-            
-            // Course info table
-            $courseStyle = ['bold' => true, 'size' => 10, 'allCaps' => true];
-            $courseTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 50]);
-            $courseRow = $courseTable->addRow();
-            $courseRow->addCell(7000)->addText('COURSE TITLE: ' . strtoupper($courseName), $courseStyle);
-            $codeCell = $courseRow->addCell(7000);
-            $codeCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::RIGHT);
-            $codeCell->addText('COURSE CODE: ' . strtoupper($courseCode), $courseStyle);
-            
-            $dateRow = $courseTable->addRow();
-            $dateRow->addCell(7000)->addText('DATE: ' . strtoupper($examDate), $courseStyle);
-            $durationCell = $dateRow->addCell(7000);
-            $durationCell->getStyle()->setCellAlignment(\PhpOffice\PhpWord\SimpleType\Jc::RIGHT);
-            $durationCell->addText('DURATION: ' . strtoupper($duration), $courseStyle);
-            
-            $section->addTextBreak(1);
+            // Course info
+            $content[] = 'COURSE TITLE: ' . strtoupper($courseName) . str_pad('COURSE CODE: ' . strtoupper($courseCode), 80 - strlen('COURSE TITLE: ' . strtoupper($courseName)), ' ', STR_PAD_LEFT);
+            $content[] = 'DATE: ' . strtoupper($examDate) . str_pad('DURATION: ' . strtoupper($duration), 80 - strlen('DATE: ' . strtoupper($examDate)), ' ', STR_PAD_LEFT);
+            $content[] = '';
             
             // Instructions
-            $instructionsStyle = ['bold' => true, 'size' => 10, 'allCaps' => true];
-            $section->addText('INSTRUCTIONS:', $instructionsStyle);
-            $section->addText('Answer all questions. Each question carries equal marks. Write clearly and legibly.', ['size' => 9.5]);
-            
-            $section->addTextBreak(1);
+            $content[] = 'INSTRUCTIONS:';
+            $content[] = 'Answer all questions. Each question carries equal marks. Write clearly and legibly.';
+            $content[] = '';
             
             // Questions
             foreach ($questions as $idx => $question) {
-                $questionNumStyle = ['bold' => true, 'size' => 11];
-                $section->addText(($idx + 1) . '.', $questionNumStyle);
-                
-                $questionTextStyle = ['size' => 10];
-                $section->addText($question->text, $questionTextStyle);
+                $content[] = ($idx + 1) . '. ' . $question->text;
                 
                 if ($question->options && is_array($question->options) && count($question->options) > 0) {
                     foreach ($question->options as $option) {
                         if (isset($option['key']) && isset($option['text'])) {
-                            $section->addText('   ' . $option['key'] . '. ' . $option['text'], ['size' => 10], ['indentation' => ['left' => 480]]);
+                            $content[] = '   ' . $option['key'] . '. ' . $option['text'];
                         }
                     }
                 }
                 
-                $section->addTextBreak(1);
+                $content[] = '';
             }
             
             // Footer
-            $section->addTextBreak(1);
-            $footerStyle = ['size' => 8, 'color' => '64748b'];
-            $section->addText('Generated ' . now()->format('M d, Y H:i') . ' — QuizSnap', $footerStyle, ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+            $content[] = '';
+            $content[] = str_pad('Generated ' . now()->format('M d, Y H:i') . ' — QuizSnap', 80, ' ', STR_PAD_BOTH);
             
-            // Create temporary file with .docx extension
+            // Join content with newlines
+            $textContent = implode("\n", $content);
+            
+            // Create temporary file with .txt extension
             $tempDir = sys_get_temp_dir();
-            $tempFile = $tempDir . DIRECTORY_SEPARATOR . 'questions_' . uniqid() . '.docx';
+            $tempFile = $tempDir . DIRECTORY_SEPARATOR . 'questions_' . uniqid() . '.txt';
             
-            // Save document
-            $writer = IOFactory::createWriter($phpWord, 'Word2007');
-            $writer->save($tempFile);
+            // Write content to file
+            file_put_contents($tempFile, $textContent);
             
             // Verify file was created
             if (!file_exists($tempFile)) {
-                throw new \Exception('Failed to create DOCX file');
+                throw new \Exception('Failed to create TXT file');
             }
             
             // Generate filename with class name
             $classSlug = $classGroupName !== '—' ? \Illuminate\Support\Str::slug($classGroupName) : 'class';
             $courseSlug = \Illuminate\Support\Str::slug($courseName ?: 'course');
             $dateStr = now()->format('Y-m-d');
-            $filename = $classSlug . '-' . $courseSlug . '-questions-' . $dateStr . '.docx';
+            $filename = $classSlug . '-' . $courseSlug . '-questions-' . $dateStr . '.txt';
             
-            // Return download with proper headers to force .docx download
+            // Return download with proper headers to force .txt download
             return response()->download($tempFile, $filename, [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'Content-Type' => 'text/plain',
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ])->deleteFileAfterSend(true);
             
@@ -1178,7 +1097,7 @@ class QuizManagementController extends Controller
             if (isset($tempFile) && file_exists($tempFile)) {
                 @unlink($tempFile);
             }
-            abort(500, 'Failed to generate DOCX file: ' . $e->getMessage());
+            abort(500, 'Failed to generate TXT file: ' . $e->getMessage());
         }
     }
 
